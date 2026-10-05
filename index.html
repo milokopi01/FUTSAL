@@ -57,7 +57,24 @@
       <div id="admin-panel" class="hidden bg-yellow-50 p-6 rounded-xl border border-yellow-200 shadow-sm">
         <h2 class="font-bold text-yellow-800 mb-2 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>Panel Master Admin</h2>
         <p class="text-sm text-yellow-700 mb-4">Pastikan semua pasukan telah didaftarkan sebelum menjana jadual perlawanan liga.</p>
-        <button onclick="generateSchedule()" class="w-full bg-yellow-500 text-white font-bold p-3 rounded-lg shadow active:bg-yellow-600 transition">Jana Jadual Kejohanan</button>
+        <button onclick="generateSchedule()" class="w-full bg-yellow-500 text-white font-bold p-3 rounded-lg shadow active:bg-yellow-600 transition mb-6">Jana Jadual Kejohanan</button>
+        
+        <div class="border-t border-yellow-200 pt-4">
+          <h3 class="font-bold text-yellow-800 mb-3 text-sm uppercase tracking-wide">Tetapan Sistem</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-sm text-yellow-700 mb-1 font-semibold">Format Pertandingan</label>
+              <select id="admin-jenis-liga" class="w-full p-3 border border-yellow-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-yellow-500 text-sm font-medium text-gray-700">
+                <option value="Round Robin">Round Robin (Liga - Semua Bertemu)</option>
+                <option value="Kalah Mati">Kalah Mati (Knockout)</option>
+              </select>
+            </div>
+            <button onclick="simpanTetapanSistem()" class="w-full bg-gray-900 text-white font-bold p-3 rounded-lg shadow hover:bg-gray-800 active:bg-black transition text-sm flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+              Simpan Tetapan
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </main>
@@ -227,7 +244,7 @@
 
   <script>
     // ** PENTING: GANTIKAN URL INI DENGAN WEB APP URL DARI GOOGLE APPS SCRIPT ANDA **
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbza3yid2WJOJ52f4La9tAbEObKGxv6s3aQaOLp4IPAOJUsLImtc9XNeOB44uGo_2v2Juw/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycby-CONTOH-GANTIKAN-URL-INI/exec"; 
     
     let savedUser = null;
     try {
@@ -328,6 +345,7 @@
           tGuard.classList.remove('hidden');
           tForm.classList.add('hidden');
           document.getElementById('senarai-pasukan-container').classList.add('hidden');
+          muatTurunTetapan(); // Dapatkan tetapan terkini apabila admin log masuk
         } else {
           aPanel.classList.add('hidden');
           tGuard.classList.add('hidden');
@@ -393,6 +411,21 @@
       state.user = null;
       localStorage.removeItem('futsal_user');
       updateAuthUI();
+    }
+
+    async function muatTurunTetapan() {
+      const res = await apiRequest('dapatkanTetapan');
+      if (res.success && res.data) {
+        document.getElementById('admin-jenis-liga').value = res.data.jenisLiga || 'Round Robin';
+      }
+    }
+
+    async function simpanTetapanSistem() {
+      const jenisLiga = document.getElementById('admin-jenis-liga').value;
+      showLoad();
+      const res = await apiRequest('simpanTetapan', { jenisLiga });
+      hideLoad();
+      showModal(res.message);
     }
 
     async function fetchMyTeams() {
