@@ -63,7 +63,7 @@
   </main>
 
   <main id="tab-pasukan" class="tab-content p-4">
-    <div class="max-w-md mx-auto">
+    <div class="max-w-md mx-auto space-y-6">
       <div id="pasukan-auth-guard" class="bg-blue-50 text-blue-800 p-6 rounded-xl text-center shadow-sm border border-blue-100 flex flex-col items-center">
         <svg class="w-12 h-12 text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
         <p class="font-medium">Sila log masuk sebagai Guru untuk mengakses modul pendaftaran pasukan.</p>
@@ -71,13 +71,33 @@
       </div>
       
       <div id="pasukan-form" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <h2 class="text-xl font-bold mb-4 text-gray-800">Daftar Pasukan Baru</h2>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-800" id="team-form-title">Daftar Pasukan Baru</h2>
+          <button id="btn-batal-edit" onclick="resetTeamForm()" class="hidden text-sm text-red-500 font-bold bg-red-50 px-3 py-1 rounded-lg">Batal Edit</button>
+        </div>
+        
+        <input type="hidden" id="team-id">
         <input type="text" id="team-nama" placeholder="Nama Pasukan (cth: Harimau PK)" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
         <select id="team-kategori" class="w-full p-3 border rounded-lg mb-5 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="BP">Masalah Pembelajaran (BP)</option>
           <option value="BD">Kurang Upaya Pendengaran (BD)</option>
         </select>
-        <button onclick="registerTeam()" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg shadow active:bg-blue-700 transition">Hantar Pendaftaran</button>
+
+        <div id="pemain-section" class="hidden mb-5 border-t pt-4">
+          <h3 class="font-bold text-gray-700 mb-2">Senarai Pemain (Murid)</h3>
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="input-pemain" placeholder="Nama Penuh Murid" class="flex-1 p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <button onclick="tambahPemain()" class="bg-green-500 text-white px-5 rounded-lg font-bold hover:bg-green-600 active:bg-green-700 transition">+</button>
+          </div>
+          <ul id="senarai-pemain-ul" class="space-y-2 text-sm"></ul>
+        </div>
+
+        <button id="btn-submit-team" onclick="submitTeam()" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg shadow active:bg-blue-700 transition">Hantar Pendaftaran</button>
+      </div>
+
+      <div id="senarai-pasukan-container" class="hidden space-y-3">
+        <h3 class="font-bold text-gray-800 text-lg border-b pb-2">Pasukan Sekolah Anda</h3>
+        <div id="list-my-teams" class="space-y-3"></div>
       </div>
     </div>
   </main>
@@ -207,7 +227,7 @@
 
   <script>
     // ** PENTING: GANTIKAN URL INI DENGAN WEB APP URL DARI GOOGLE APPS SCRIPT ANDA **
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwRSx2_zQCo7uKJbn7_y4djAUdoxo5V5ppa3LBQfKWuyUUWE7WRYLwOcep5bIeE903CoA/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycby-CONTOH-GANTIKAN-URL-INI/exec"; 
     
     let savedUser = null;
     try {
@@ -219,8 +239,11 @@
     let state = {
       user: savedUser || null,
       matches: [],
-      standings: []
+      standings: [],
+      myTeams: []
     };
+    
+    let activeTeamPlayers = [];
 
     // UI Helpers (Mengelak masalah override Tailwind pada sesetengah peranti)
     const showLoad = () => {
@@ -304,10 +327,12 @@
           aPanel.classList.remove('hidden');
           tGuard.classList.remove('hidden');
           tForm.classList.add('hidden');
+          document.getElementById('senarai-pasukan-container').classList.add('hidden');
         } else {
           aPanel.classList.add('hidden');
           tGuard.classList.add('hidden');
           tForm.classList.remove('hidden');
+          fetchMyTeams(); // Muat turun senarai pasukan milik guru ini
         }
       } else {
         uView.classList.remove('hidden');
@@ -370,18 +395,139 @@
       updateAuthUI();
     }
 
-    async function registerTeam() {
+    async function fetchMyTeams() {
+      if(!state.user || state.user.role !== 'guru') return;
+      const res = await apiRequest('dapatkanPasukanGuru', { kodSekolah: state.user.kodSekolah });
+      if(res.success) {
+        state.myTeams = res.data || [];
+        renderMyTeams();
+      }
+    }
+
+    function renderMyTeams() {
+      const container = document.getElementById('senarai-pasukan-container');
+      const list = document.getElementById('list-my-teams');
+      list.innerHTML = '';
+
+      if(state.myTeams.length > 0) {
+        container.classList.remove('hidden');
+        state.myTeams.forEach(t => {
+          list.innerHTML += `
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 flex justify-between items-center shadow-sm">
+              <div>
+                <h4 class="font-bold text-blue-900 text-lg">${t.namaPasukan}</h4>
+                <p class="text-xs text-blue-700 mt-1 font-medium bg-blue-100 inline-block px-2 py-1 rounded">Kategori: ${t.kategori}</p>
+                <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                  ${t.pemain ? t.pemain.length : 0} Pemain Didaftarkan
+                </p>
+              </div>
+              <button onclick="editTeam('${t.id}')" class="bg-white border border-blue-300 text-blue-600 text-sm px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-blue-50 transition">Urus</button>
+            </div>
+          `;
+        });
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    function editTeam(id) {
+      const team = state.myTeams.find(t => t.id === id);
+      if(!team) return;
+
+      document.getElementById('team-id').value = team.id;
+      document.getElementById('team-nama').value = team.namaPasukan;
+      document.getElementById('team-kategori').value = team.kategori;
+      
+      activeTeamPlayers = team.pemain || [];
+      renderPemain();
+
+      document.getElementById('team-form-title').innerText = "Urus Pasukan & Pemain";
+      document.getElementById('btn-submit-team').innerText = "Simpan Perubahan";
+      document.getElementById('btn-submit-team').classList.replace('bg-blue-600', 'bg-green-600');
+      document.getElementById('btn-submit-team').classList.replace('active:bg-blue-700', 'active:bg-green-700');
+      
+      document.getElementById('btn-batal-edit').classList.remove('hidden');
+      document.getElementById('pemain-section').classList.remove('hidden');
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Tatal ke atas borang
+    }
+
+    function resetTeamForm() {
+      document.getElementById('team-id').value = '';
+      document.getElementById('team-nama').value = '';
+      document.getElementById('team-kategori').value = 'BP';
+      activeTeamPlayers = [];
+      
+      document.getElementById('team-form-title').innerText = "Daftar Pasukan Baru";
+      document.getElementById('btn-submit-team').innerText = "Hantar Pendaftaran";
+      document.getElementById('btn-submit-team').classList.replace('bg-green-600', 'bg-blue-600');
+      document.getElementById('btn-submit-team').classList.replace('active:bg-green-700', 'active:bg-blue-700');
+      
+      document.getElementById('btn-batal-edit').classList.add('hidden');
+      document.getElementById('pemain-section').classList.add('hidden');
+    }
+
+    function tambahPemain() {
+      const input = document.getElementById('input-pemain');
+      const nama = input.value.trim();
+      if(nama) {
+        activeTeamPlayers.push(nama);
+        input.value = '';
+        renderPemain();
+      }
+    }
+
+    function padamPemain(idx) {
+      activeTeamPlayers.splice(idx, 1);
+      renderPemain();
+    }
+
+    function renderPemain() {
+      const ul = document.getElementById('senarai-pemain-ul');
+      ul.innerHTML = '';
+      if(activeTeamPlayers.length === 0) {
+        ul.innerHTML = '<li class="text-gray-400 italic text-center p-3 border border-dashed rounded-lg">Tiada nama pemain didaftarkan lagi. Sila tambah di atas.</li>';
+      } else {
+        activeTeamPlayers.forEach((p, idx) => {
+          ul.innerHTML += `
+            <li class="flex justify-between items-center bg-white p-3 rounded-lg border shadow-sm">
+              <span class="font-bold text-gray-700"><span class="text-gray-400 mr-2">${idx+1}.</span> ${p}</span>
+              <button onclick="padamPemain(${idx})" class="text-red-500 font-bold bg-red-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-100 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </li>`;
+        });
+      }
+    }
+
+    async function submitTeam() {
+      const id = document.getElementById('team-id').value;
       const namaPasukan = document.getElementById('team-nama').value;
       const kategori = document.getElementById('team-kategori').value;
       if(!namaPasukan) return showModal("Sila masukkan nama pasukan anda.");
       
       showLoad();
-      const res = await apiRequest('daftarPasukan', {
-        namaPasukan, kategori, kodSekolah: state.user.kodSekolah
-      });
+      let res;
+      if (id) {
+        // Mod Edit & Tambah Pemain
+        res = await apiRequest('kemaskiniPasukan', {
+          idPasukan: id, namaPasukan, kategori, pemain: activeTeamPlayers
+        });
+      } else {
+        // Mod Daftar Pasukan Baru
+        res = await apiRequest('daftarPasukan', {
+          namaPasukan, kategori, kodSekolah: state.user.kodSekolah
+        });
+      }
+      
       hideLoad();
       showModal(res.message);
-      if(res.success) document.getElementById('team-nama').value = '';
+      
+      if(res.success) {
+        resetTeamForm();
+        fetchMyTeams(); // Segarkan kembali senarai pasukan
+      }
     }
 
     async function generateSchedule() {
