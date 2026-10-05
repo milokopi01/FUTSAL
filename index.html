@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Futsal Pendidikan Khas</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .tab-content { display: none; padding-bottom: 90px; }
+    .tab-content.active { display: block; }
+    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    .nav-item.active { color: #2563eb; font-weight: 600; }
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-screen overflow-x-hidden">
+
+  <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Futsal PK</h1>
+    <span id="network-status" class="text-xs bg-green-500 px-3 py-1 rounded-full font-bold shadow">Online</span>
+  </header>
+
+  <main id="tab-utama" class="tab-content active p-4">
+    <div id="unauth-view" class="space-y-6 max-w-md mx-auto">
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <h2 class="text-xl font-bold mb-4 text-center text-gray-700">Log Masuk Sistem</h2>
+        <input type="email" id="login-email" placeholder="Emel Guru (Kosongkan jika Admin)" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 focus:bg-white transition outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="password" id="login-pwd" placeholder="Kata Laluan" class="w-full p-3 border rounded-lg mb-4 bg-gray-50 focus:bg-white transition outline-none focus:ring-2 focus:ring-blue-500">
+        <button onclick="login()" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg shadow active:bg-blue-700 transition">Log Masuk</button>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <h2 class="text-lg font-bold mb-4 text-center text-gray-700">Pendaftaran Guru Baru</h2>
+        <input type="text" id="reg-nama" placeholder="Nama Penuh" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="email" id="reg-email" placeholder="Alamat Emel" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="password" id="reg-pwd" placeholder="Kata Laluan" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="reg-sekolah" placeholder="Nama Sekolah" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="reg-kod" placeholder="Kod Sekolah" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="tel" id="reg-tel" placeholder="No. Telefon" class="w-full p-3 border rounded-lg mb-4 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+        <button onclick="registerGuru()" class="w-full bg-green-500 text-white font-bold p-3 rounded-lg shadow active:bg-green-600 transition">Daftar Sekarang</button>
+      </div>
+    </div>
+
+    <!-- Paparan Selepas Log Masuk -->
+    <div id="auth-view" class="hidden space-y-4 max-w-md mx-auto">
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center">
+        <div class="text-5xl mb-3">👤</div>
+        <h2 id="profil-nama" class="text-xl font-bold text-gray-800"></h2>
+        <p id="profil-sekolah" class="text-gray-500 mb-4 font-medium"></p>
+        <button onclick="logout()" class="px-4 py-3 bg-red-50 text-red-600 font-bold rounded-lg w-full border border-red-100 hover:bg-red-100 transition">Log Keluar dari Sistem</button>
+      </div>
+      
+      <div id="admin-panel" class="hidden bg-yellow-50 p-6 rounded-xl border border-yellow-200 shadow-sm">
+        <h2 class="font-bold text-yellow-800 mb-2 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>Panel Master Admin</h2>
+        <p class="text-sm text-yellow-700 mb-4">Pastikan semua pasukan telah didaftarkan sebelum menjana jadual perlawanan liga.</p>
+        <button onclick="generateSchedule()" class="w-full bg-yellow-500 text-white font-bold p-3 rounded-lg shadow active:bg-yellow-600 transition">Jana Jadual Kejohanan</button>
+      </div>
+    </div>
+  </main>
+
+  <main id="tab-pasukan" class="tab-content p-4">
+    <div class="max-w-md mx-auto">
+      <div id="pasukan-auth-guard" class="bg-blue-50 text-blue-800 p-6 rounded-xl text-center shadow-sm border border-blue-100 flex flex-col items-center">
+        <svg class="w-12 h-12 text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        <p class="font-medium">Sila log masuk sebagai Guru untuk mengakses modul pendaftaran pasukan.</p>
+        <button onclick="switchTab('utama')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">Log Masuk</button>
+      </div>
+      
+      <div id="pasukan-form" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">Daftar Pasukan Baru</h2>
+        <input type="text" id="team-nama" placeholder="Nama Pasukan (cth: Harimau PK)" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+        <select id="team-kategori" class="w-full p-3 border rounded-lg mb-5 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="BP">Masalah Pembelajaran (BP)</option>
+          <option value="BD">Kurang Upaya Pendengaran (BD)</option>
+        </select>
+        <button onclick="registerTeam()" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg shadow active:bg-blue-700 transition">Hantar Pendaftaran</button>
+      </div>
+    </div>
+  </main>
+
+  <main id="tab-jadual" class="tab-content p-4">
+    <div class="max-w-xl mx-auto space-y-6">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-2xl font-bold text-gray-800">Carta Kedudukan</h2>
+        <button onclick="fetchData()" class="px-4 py-2 bg-white border border-gray-200 shadow-sm rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-gray-50 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Segarkan
+        </button>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-center whitespace-nowrap">
+            <thead class="bg-gray-50 font-bold text-gray-600 border-b">
+              <tr>
+                <th class="p-4 text-left">Pasukan</th>
+                <th class="p-4">P</th><th class="p-4">W</th><th class="p-4">D</th><th class="p-4">L</th>
+                <th class="p-4">GD</th><th class="p-4 text-blue-600">Pts</th>
+              </tr>
+            </thead>
+            <tbody id="table-kedudukan" class="divide-y divide-gray-100">
+              <tr><td colspan="7" class="p-8 text-center text-gray-400">Tiada data kedudukan dikesan.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="text-2xl font-bold pt-4 text-gray-800">Jadual Perlawanan</h2>
+      <div id="list-perlawanan" class="space-y-3">
+        <div class="text-center p-8 text-gray-400 bg-white rounded-xl border border-dashed">Tiada perlawanan dikesan.</div>
+      </div>
+    </div>
+  </main>
+
+  <main id="tab-pengadil" class="tab-content p-4">
+    <div id="pengadil-pin" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center">
+      <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+      <h2 class="text-xl font-bold mb-2 text-center text-gray-800">Akses Khas Pengadil</h2>
+      <p class="text-sm text-gray-500 mb-6 text-center">Sila masukkan PIN untuk mengemas kini keputusan perlawanan.</p>
+      <input type="password" id="ref-pin" placeholder="PIN" class="w-full p-4 border rounded-xl mb-4 text-center text-3xl tracking-[0.5em] font-bold bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500">
+      <button onclick="verifyRef()" class="w-full bg-gray-900 text-white font-bold p-4 rounded-xl shadow active:bg-black transition">Buka Akses</button>
+    </div>
+
+    <div id="pengadil-panel" class="hidden max-w-md mx-auto space-y-4">
+      <button onclick="syncOfflineScores()" class="w-full bg-green-500 text-white font-bold p-3 rounded-xl shadow-md text-sm hidden flex items-center justify-center gap-2" id="btn-sync">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg> Data Luar Talian Ditemui - Klik untuk Selaras (Sync)
+      </button>
+      
+      <select id="select-perlawanan" class="w-full p-4 border rounded-xl bg-white shadow-sm font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500" onchange="loadMatchPanel()">
+        <option value="">-- Sila Pilih Perlawanan --</option>
+      </select>
+
+      <div id="match-panel" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
+        <div class="flex justify-between items-center mb-8">
+          <div class="text-center w-5/12">
+            <p id="ref-p1" class="font-bold text-lg mb-3 truncate bg-gray-100 p-2 rounded-lg text-gray-700"></p>
+            <div class="flex items-center justify-center space-x-3">
+              <button onclick="adjScore(1, -1)" class="w-12 h-12 bg-red-100 text-red-600 font-bold rounded-full text-2xl active:bg-red-200 transition">-</button>
+              <span id="score-p1" class="text-5xl font-black text-gray-800 w-12">0</span>
+              <button onclick="adjScore(1, 1)" class="w-12 h-12 bg-green-100 text-green-600 font-bold rounded-full text-2xl active:bg-green-200 transition">+</button>
+            </div>
+          </div>
+          <div class="text-2xl font-black text-gray-300">VS</div>
+          <div class="text-center w-5/12">
+            <p id="ref-p2" class="font-bold text-lg mb-3 truncate bg-gray-100 p-2 rounded-lg text-gray-700"></p>
+            <div class="flex items-center justify-center space-x-3">
+              <button onclick="adjScore(2, -1)" class="w-12 h-12 bg-red-100 text-red-600 font-bold rounded-full text-2xl active:bg-red-200 transition">-</button>
+              <span id="score-p2" class="text-5xl font-black text-gray-800 w-12">0</span>
+              <button onclick="adjScore(2, 1)" class="w-12 h-12 bg-green-100 text-green-600 font-bold rounded-full text-2xl active:bg-green-200 transition">+</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="border-t pt-5 mb-6 bg-gray-50 -mx-6 px-6 pb-2">
+          <p class="text-center text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Sepakan Penalti (Jika Seri)</p>
+          <div class="flex justify-between max-w-[200px] mx-auto pb-4">
+            <input type="number" id="pen-p1" value="0" min="0" class="w-16 p-2 border rounded-lg text-center font-bold text-xl outline-none focus:ring-2 focus:ring-blue-500">
+            <span class="text-gray-400 font-bold text-xl pt-2">-</span>
+            <input type="number" id="pen-p2" value="0" min="0" class="w-16 p-2 border rounded-lg text-center font-bold text-xl outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
+        <button onclick="submitScore()" class="w-full bg-blue-600 text-white font-bold p-4 rounded-xl shadow active:bg-blue-700 transition text-lg flex items-center justify-center gap-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Sahkan Keputusan Perlawanan
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav fixed bottom-0 w-full border-t border-gray-200 flex justify-around text-gray-400 text-xs pb-safe z-40">
+    <button onclick="switchTab('utama', this)" class="nav-item active flex-1 py-3 flex flex-col items-center gap-1 transition-colors">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      Utama
+    </button>
+    <button onclick="switchTab('pasukan', this)" class="nav-item flex-1 py-3 flex flex-col items-center gap-1 transition-colors">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+      Pasukan
+    </button>
+    <button onclick="switchTab('jadual', this)" class="nav-item flex-1 py-3 flex flex-col items-center gap-1 transition-colors">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      Jadual
+    </button>
+    <button onclick="switchTab('pengadil', this)" class="nav-item flex-1 py-3 flex flex-col items-center gap-1 transition-colors">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      Pengadil
+    </button>
+  </nav>
+
+  <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
+      <div class="mb-4 text-blue-500 flex justify-center">
+        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      </div>
+      <p id="modal-msg" class="text-lg font-medium mb-6 text-gray-800"></p>
+      <button onclick="closeModal()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow hover:bg-blue-700 transition">Tutup</button>
+    </div>
+  </div>
+  
+  <div id="loading" class="fixed inset-0 bg-white bg-opacity-90 z-50 hidden flex-col items-center justify-center backdrop-blur-sm">
+    <div class="loader mb-4"></div>
+    <p class="font-bold text-gray-600">Memproses Data...</p>
+    <p class="text-xs text-gray-400 mt-2">Sila tunggu sebentar.</p>
+  </div>
+
+  <script>
+    // ** PENTING: GANTIKAN URL INI DENGAN WEB APP URL DARI GOOGLE APPS SCRIPT ANDA **
+    const GAS_URL = "https://script.google.com/macros/s/AKfycby-CONTOH-GANTIKAN-URL-INI/exec"; 
+    
+    let savedUser = null;
+    try {
+      savedUser = JSON.parse(localStorage.getItem('futsal_user'));
+    } catch(err) {
+      localStorage.removeItem('futsal_user');
+    }
+
+    let state = {
+      user: savedUser || null,
+      matches: [],
+      standings: []
+    };
+
+    // UI Helpers (Mengelak masalah override Tailwind pada sesetengah peranti)
+    const showLoad = () => {
+      document.getElementById('loading').style.display = 'flex';
+    };
+    const hideLoad = () => {
+      document.getElementById('loading').style.display = 'none';
+    };
+    const showModal = (msg) => { 
+      document.getElementById('modal-msg').innerText = msg; 
+      document.getElementById('modal').style.display = 'flex';
+    };
+    const closeModal = () => { 
+      document.getElementById('modal').style.display = 'none';
+    };
+
+    // Tab Logic
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      
+      document.getElementById('tab-' + tabId).classList.add('active');
+      
+      if(el) {
+        el.classList.add('active');
+      } else {
+        // Jika dipanggil via fungsi programatik, cari nav yang sepadan
+        const targetNav = Array.from(document.querySelectorAll('.nav-item')).find(n => n.getAttribute('onclick').includes(tabId));
+        if(targetNav) targetNav.classList.add('active');
+      }
+      
+      if(tabId === 'jadual') fetchData();
+      if(tabId === 'pengadil') renderRefereeMatches();
+      updateAuthUI();
+    }
+
+    async function apiRequest(action, data = {}) {
+      if(!navigator.onLine && action !== 'dapatkanData') {
+        if(action === 'kemaskiniSkor') {
+          saveScoreOffline(data);
+          return { success: true, message: 'Disimpan luar talian. Sistem akan selaras secara automatik bila internet kembali.' };
+        }
+        return { success: false, message: 'Tiada sambungan internet. Operasi ini ditangguhkan.' };
+      }
+
+      if (GAS_URL.includes("CONTOH-GANTIKAN-URL-INI")) {
+        return { success: false, message: 'AMARAN PENGATURCARA: Sila kemas kini pembolehubah GAS_URL di dalam fail index.html terlebih dahulu!' };
+      }
+
+      try {
+        const payload = JSON.stringify({ action, data });
+        // Menggunakan fetch dengan mode 'no-cors' akan merosakkan respons JSON. 
+        // Google Apps Script Post menyokong content-type text/plain untuk melangkau isu Preflight CORS.
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          body: payload,
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+        });
+        const result = await res.json();
+        return result;
+      } catch (err) {
+        console.error(err);
+        return { success: false, message: 'Ralat menyambung ke pangkalan data. Sila periksa internet anda.' };
+      }
+    }
+
+    function updateAuthUI() {
+      const uView = document.getElementById('unauth-view');
+      const aView = document.getElementById('auth-view');
+      const aPanel = document.getElementById('admin-panel');
+      const tGuard = document.getElementById('pasukan-auth-guard');
+      const tForm = document.getElementById('pasukan-form');
+
+      if (state.user) {
+        uView.classList.add('hidden');
+        aView.classList.remove('hidden');
+        document.getElementById('profil-nama').innerText = state.user.nama;
+        document.getElementById('profil-sekolah').innerText = state.user.sekolah || 'Akses Sistem Induk';
+        
+        if(state.user.role === 'admin') {
+          aPanel.classList.remove('hidden');
+          tGuard.classList.remove('hidden');
+          tForm.classList.add('hidden');
+        } else {
+          aPanel.classList.add('hidden');
+          tGuard.classList.add('hidden');
+          tForm.classList.remove('hidden');
+        }
+      } else {
+        uView.classList.remove('hidden');
+        aView.classList.add('hidden');
+        tGuard.classList.remove('hidden');
+        tForm.classList.add('hidden');
+      }
+    }
+
+    async function registerGuru() {
+      const data = {
+        nama: document.getElementById('reg-nama').value,
+        emel: document.getElementById('reg-email').value,
+        password: document.getElementById('reg-pwd').value,
+        sekolah: document.getElementById('reg-sekolah').value,
+        kodSekolah: document.getElementById('reg-kod').value,
+        telefon: document.getElementById('reg-tel').value
+      };
+      if(Object.values(data).includes('')) return showModal("Sila lengkapkan semua ruangan pendaftaran.");
+      
+      showLoad();
+      const res = await apiRequest('daftarGuru', data);
+      hideLoad();
+      showModal(res.message);
+      if(res.success) {
+        document.querySelectorAll('#unauth-view input').forEach(i => i.value = '');
+      }
+    }
+
+    async function login() {
+      const emel = document.getElementById('login-email').value;
+      const pwd = document.getElementById('login-pwd').value;
+      
+      if(!pwd) return showModal("Sila masukkan kata laluan untuk log masuk.");
+
+      // Master Admin Login Logic
+      if (pwd === '101010' && emel === '') {
+        state.user = { role: 'admin', nama: 'PENGURUS KEJOHANAN' };
+        localStorage.setItem('futsal_user', JSON.stringify(state.user));
+        updateAuthUI();
+        return;
+      }
+
+      showLoad();
+      const res = await apiRequest('logMasukGuru', {emel, password: pwd});
+      hideLoad();
+      
+      if(res.success) {
+        state.user = { role: 'guru', ...res.data };
+        localStorage.setItem('futsal_user', JSON.stringify(state.user));
+        updateAuthUI();
+      } else {
+        showModal(res.message);
+      }
+    }
+
+    function logout() {
+      state.user = null;
+      localStorage.removeItem('futsal_user');
+      updateAuthUI();
+    }
+
+    async function registerTeam() {
+      const namaPasukan = document.getElementById('team-nama').value;
+      const kategori = document.getElementById('team-kategori').value;
+      if(!namaPasukan) return showModal("Sila masukkan nama pasukan anda.");
+      
+      showLoad();
+      const res = await apiRequest('daftarPasukan', {
+        namaPasukan, kategori, kodSekolah: state.user.kodSekolah
+      });
+      hideLoad();
+      showModal(res.message);
+      if(res.success) document.getElementById('team-nama').value = '';
+    }
+
+    async function generateSchedule() {
+      showLoad();
+      const res = await apiRequest('janaJadual');
+      hideLoad();
+      showModal(res.message);
+      if(res.success) switchTab('jadual');
+    }
+
+    async function fetchData() {
+      showLoad();
+      const res = await apiRequest('dapatkanData');
+      hideLoad();
+      
+      if(res.success) {
+        state.matches = res.perlawanan || [];
+        state.standings = res.kedudukan || [];
+        
+        // Render Carta Kedudukan
+        const kBody = document.getElementById('table-kedudukan');
+        kBody.innerHTML = '';
+        if(state.standings.length === 0) {
+           kBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">Jadual liga belum dijana.</td></tr>`;
+        } else {
+          state.standings.forEach((k, idx) => {
+            kBody.innerHTML += `
+              <tr class="${idx < 2 ? 'bg-blue-50/50' : 'hover:bg-gray-50'} transition">
+                <td class="p-4 text-left font-semibold"><span class="text-gray-400 mr-2 w-4 inline-block">${idx+1}.</span> ${k.pasukan}</td>
+                <td class="p-4">${k.p}</td>
+                <td class="p-4 text-green-600 font-medium">${k.w}</td>
+                <td class="p-4 text-gray-500">${k.d}</td>
+                <td class="p-4 text-red-500">${k.l}</td>
+                <td class="p-4">${k.gd > 0 ? '+'+k.gd : k.gd}</td>
+                <td class="p-4 font-bold text-blue-600 text-base">${k.mata}</td>
+              </tr>`;
+          });
+        }
+
+        // Render Jadual Perlawanan
+        const mBody = document.getElementById('list-perlawanan');
+        mBody.innerHTML = '';
+        if(state.matches.length === 0) {
+           mBody.innerHTML = `<div class="text-center p-8 text-gray-400 bg-white rounded-xl border border-dashed">Tiada perlawanan dikesan.</div>`;
+        } else {
+          state.matches.forEach(m => {
+            let scoreHTML = m.status === 'Tamat' 
+              ? `<div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-black text-lg shadow-inner">${m.s1} - ${m.s2}</div>`
+              : `<div class="bg-yellow-50 text-yellow-700 text-xs px-3 py-1.5 rounded-full border border-yellow-200 font-bold shadow-sm">B. Mula</div>`;
+            
+            let penHTML = (m.status === 'Tamat' && (m.pen1 > 0 || m.pen2 > 0)) 
+              ? `<div class="w-full text-center mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 font-medium">Keputusan Penalti: <span class="font-bold">${m.pen1} - ${m.pen2}</span></div>` : '';
+
+            mBody.innerHTML += `
+              <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-wrap items-center justify-between mb-3 hover:border-blue-300 transition">
+                <div class="w-2/5 text-right font-semibold truncate pr-2 text-gray-700">${m.p1}</div>
+                <div class="w-1/5 flex justify-center">${scoreHTML}</div>
+                <div class="w-2/5 text-left font-semibold truncate pl-2 text-gray-700">${m.p2}</div>
+                ${penHTML}
+              </div>`;
+          });
+        }
+      }
+    }
+
+    function verifyRef() {
+      const pin = document.getElementById('ref-pin').value;
+      if(pin === '1234') {
+        document.getElementById('pengadil-pin').classList.add('hidden');
+        document.getElementById('pengadil-panel').classList.remove('hidden');
+        renderRefereeMatches();
+      } else {
+        showModal("Ralat: PIN Pengadil Tidak Sah");
+      }
+    }
+
+    function renderRefereeMatches() {
+      const select = document.getElementById('select-perlawanan');
+      select.innerHTML = '<option value="">-- Pilih Perlawanan --</option>';
+      const availableMatches = state.matches.filter(m => m.status !== 'Tamat');
+      
+      availableMatches.forEach(m => {
+        select.innerHTML += `<option value="${m.id}">[${m.id}] ${m.p1} lwn ${m.p2}</option>`;
+      });
+      
+      checkOfflineQueueUI();
+    }
+
+    let activeMatch = null;
+    function loadMatchPanel() {
+      const mid = document.getElementById('select-perlawanan').value;
+      const panel = document.getElementById('match-panel');
+      if(!mid) { panel.classList.add('hidden'); return; }
+      
+      activeMatch = state.matches.find(m => m.id === mid);
+      document.getElementById('ref-p1').innerText = activeMatch.p1;
+      document.getElementById('ref-p2').innerText = activeMatch.p2;
+      document.getElementById('score-p1').innerText = '0';
+      document.getElementById('score-p2').innerText = '0';
+      document.getElementById('pen-p1').value = '0';
+      document.getElementById('pen-p2').value = '0';
+      panel.classList.remove('hidden');
+    }
+
+    function adjScore(team, val) {
+      const el = document.getElementById('score-p' + team);
+      let curr = parseInt(el.innerText) + val;
+      if(curr < 0) curr = 0;
+      el.innerText = curr;
+    }
+
+    async function submitScore() {
+      if(!activeMatch) return;
+      
+      const s1 = parseInt(document.getElementById('score-p1').innerText);
+      const s2 = parseInt(document.getElementById('score-p2').innerText);
+      const pen1 = parseInt(document.getElementById('pen-p1').value) || 0;
+      const pen2 = parseInt(document.getElementById('pen-p2').value) || 0;
+
+      const data = { idPerlawanan: activeMatch.id, s1, s2, pen1, pen2 };
+      
+      showLoad();
+      const res = await apiRequest('kemaskiniSkor', data);
+      hideLoad();
+      showModal(res.message);
+      
+      if(res.success || !navigator.onLine) {
+        document.getElementById('match-panel').classList.add('hidden');
+        document.getElementById('select-perlawanan').value = '';
+        if(navigator.onLine) fetchData(); // Refresh jika online
+      }
+    }
+
+    function saveScoreOffline(data) {
+      let queue = [];
+      try { queue = JSON.parse(localStorage.getItem('offline_scores') || '[]'); } 
+      catch(e) { localStorage.removeItem('offline_scores'); }
+      
+      queue.push(data);
+      localStorage.setItem('offline_scores', JSON.stringify(queue));
+      checkOfflineQueueUI();
+    }
+
+    function checkOfflineQueueUI() {
+      let queue = [];
+      try { queue = JSON.parse(localStorage.getItem('offline_scores') || '[]'); } catch(e) {}
+      if(queue.length > 0) {
+        document.getElementById('btn-sync').classList.remove('hidden');
+      } else {
+        document.getElementById('btn-sync').classList.add('hidden');
+      }
+    }
+
+    async function syncOfflineScores() {
+      if(!navigator.onLine) return showModal("Peranti anda masih tiada capaian internet. Sila cuba lagi nanti.");
+      
+      let queue = [];
+      try { queue = JSON.parse(localStorage.getItem('offline_scores') || '[]'); } 
+      catch(e) { localStorage.removeItem('offline_scores'); return; }
+      
+      if(queue.length === 0) return;
+
+      showLoad();
+      let allSuccess = true;
+      for(let data of queue) {
+        const res = await apiRequest('kemaskiniSkor', data);
+        if(!res.success) allSuccess = false;
+      }
+      hideLoad();
+      
+      if(allSuccess) {
+        localStorage.removeItem('offline_scores');
+        checkOfflineQueueUI();
+        showModal("Semua data tertunggak berjaya diselaraskan dengan pelayan!");
+        fetchData();
+      } else {
+        showModal("Terdapat gangguan. Sebahagian data gagal diselaraskan.");
+      }
+    }
+
+    // Pemantau Status Rangkaian (Network Status Monitor)
+    window.addEventListener('online', () => {
+      const statusEl = document.getElementById('network-status');
+      statusEl.innerText = 'Online';
+      statusEl.className = 'text-xs bg-green-500 px-3 py-1 rounded-full font-bold shadow';
+      
+      let queue = [];
+      try { queue = JSON.parse(localStorage.getItem('offline_scores') || '[]'); } catch(e) {}
+      if(queue.length > 0) syncOfflineScores(); // Auto-sync bila kembali online
+    });
+    
+    window.addEventListener('offline', () => {
+      const statusEl = document.getElementById('network-status');
+      statusEl.innerText = 'Offline Mode';
+      statusEl.className = 'text-xs bg-red-500 px-3 py-1 rounded-full font-bold shadow';
+    });
+
+    // Pendaftaran Progressive Web App (Service Worker)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          console.log('PWA Service Worker Berjaya Didaftarkan.', reg.scope);
+        }).catch(err => {
+          console.warn('Pendaftaran Service Worker Gagal:', err);
+        });
+      });
+    }
+
+    // Init Mula-Mula Load
+    window.onload = function() {
+      updateAuthUI();
+      if(navigator.onLine === false) {
+        const statusEl = document.getElementById('network-status');
+        statusEl.innerText = 'Offline Mode';
+        statusEl.className = 'text-xs bg-red-500 px-3 py-1 rounded-full font-bold shadow';
+      }
+      // Dapatkan data jadual terkini di latar belakang
+      fetchData(); 
+    }
+  </script>
+</body>
+</html>
