@@ -1,1090 +1,1133 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LigaPro KBB - Sistem Pengurusan Kejohanan & Simulasi Gelanggang</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LigaPro KBB 2026 - Sistem Pengurusan Kejohanan</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
   <style>
     :root {
       --bg: #0f172a;
       --card: #1e293b;
-      --card-border: #334155;
+      --card-hover: #26354d;
+      --border: #334155;
       --text: #f8fafc;
       --muted: #94a3b8;
       --primary: #3b82f6;
       --success: #10b981;
-      --danger: #ef4444;
       --warning: #f59e0b;
+      --danger: #ef4444;
       --purple: #8b5cf6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 60px; }
+    
+    /* Header & Topbar */
     header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-      border-bottom: 1px solid var(--card-border);
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
       padding: 14px 20px;
-      position: sticky; top: 0; z-index: 100;
+      position: sticky; top: 0; z-index: 50;
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;
     }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-badge {
-      background: var(--primary); color: #fff; font-weight: 800;
-      padding: 6px 10px; border-radius: 8px; font-size: 14px;
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand h1 { font-size: 1.2rem; font-weight: 700; color: #fff; }
+    .badge {
+      padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .brand h1 { font-size: 18px; font-weight: 700; }
-    .brand p { font-size: 12px; color: var(--muted); }
-    .top-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .badge-guest { background: #334155; color: #cbd5e1; }
+    .badge-master { background: var(--purple); color: #fff; }
+    .badge-urusetia { background: var(--primary); color: #fff; }
+    .badge-pengadil { background: var(--warning); color: #000; }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     select, input, button {
-      background: var(--card); color: var(--text); border: 1px solid var(--card-border);
-      padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none;
+      background: #0f172a; color: var(--text); border: 1px solid var(--border);
+      padding: 8px 12px; border-radius: 8px; font-size: 0.88rem;
     }
-    button { cursor: pointer; font-weight: 600; transition: 0.2s; }
+    button { cursor: pointer; font-weight: 600; transition: 0.2s; border: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-warning { background: var(--warning); color: #000; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-purple { background: var(--purple); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
     button:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
-    .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
-    .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
-    .btn-warning { background: var(--warning); border-color: var(--warning); color: #000; }
-    .btn-purple { background: var(--purple); border-color: var(--purple); color: #fff; }
-    .container { max-width: 1280px; margin: 18px auto; padding: 0 16px; }
-    
-    /* Role Banner */
-    .role-banner {
-      background: rgba(59, 130, 246, 0.12); border: 1px solid var(--primary);
-      padding: 10px 16px; border-radius: 10px; margin-bottom: 16px;
-      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;
-      font-size: 13px;
-    }
 
     /* Navigation Tabs */
-    .nav-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--card-border); padding-bottom: 10px; }
-    .tab-btn { background: var(--card); color: var(--muted); border: 1px solid var(--card-border); padding: 9px 16px; border-radius: 8px; }
-    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .badge-count { background: var(--danger); color: #fff; padding: 2px 7px; border-radius: 99px; font-size: 11px; margin-left: 5px; }
+    .nav-tabs {
+      display: flex; gap: 8px; padding: 12px 20px; overflow-x: auto;
+      background: #131c31; border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: transparent; color: var(--muted); padding: 8px 16px;
+      border-radius: 8px; white-space: nowrap; border: 1px solid transparent;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+
+    .container { max-width: 1320px; margin: 20px auto; padding: 0 16px; }
+    .section { display: none; }
+    .section.active { display: block; }
 
     /* Live Court Grid */
-    .courts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .court-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px;
+    }
     .court-card {
-      background: var(--card); border-radius: 12px; padding: 16px;
-      border: 2px solid var(--card-border); position: relative; overflow: hidden;
+      background: var(--card); border-radius: 14px; padding: 18px;
+      border: 1px solid var(--border); border-top: 5px solid var(--success);
+      display: flex; flex-direction: column; justify-content: space-between;
     }
-    .court-KOSONG { border-color: var(--success); }
-    .court-SEDANG_BERLANGSUNG { border-color: var(--danger); animation: pulseRed 2s infinite; }
-    .court-MENUNGGU_PENGESAHAN { border-color: var(--warning); animation: pulseAmber 1.8s infinite; }
+    .court-card.live { border-top-color: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.15); }
+    .court-card.waiting { border-top-color: var(--warning); box-shadow: 0 0 20px rgba(245, 158, 11, 0.15); }
+    .court-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .court-title { font-weight: 700; font-size: 1.05rem; }
+    .status-pill { font-size: 0.75rem; padding: 3px 9px; border-radius: 99px; font-weight: 700; }
+    .pill-ready { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .pill-live { background: rgba(239, 68, 68, 0.2); color: #f87171; animation: pulse 1.5s infinite; }
+    .pill-wait { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-    @keyframes pulseRed {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
-      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    .match-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; }
+    .scoreboard {
+      background: #0f172a; border-radius: 10px; padding: 14px 10px;
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+      margin-bottom: 12px; border: 1px solid #1e293b;
     }
-    @keyframes pulseAmber {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
-      50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    .team-box { text-align: center; }
+    .team-code { font-size: 0.75rem; color: var(--primary); font-weight: 700; }
+    .team-name { font-size: 0.88rem; font-weight: 600; margin-top: 2px; line-height: 1.2; }
+    .score-num { font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: 2px; padding: 0 8px; }
+    .phase-bar { text-align: center; font-size: 0.82rem; color: #cbd5e1; margin-bottom: 12px; padding: 4px; background: rgba(255,255,255,0.04); border-radius: 6px; }
+    .court-controls { display: flex; flex-direction: column; gap: 8px; }
+    .score-stepper { display: flex; justify-content: space-between; gap: 6px; }
+    .score-stepper button { flex: 1; padding: 6px; font-size: 0.8rem; }
+
+    /* Tables */
+    .card-box {
+      background: var(--card); border-radius: 12px; padding: 18px;
+      border: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto;
     }
-
-    .court-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .court-title { font-size: 16px; font-weight: 800; }
-    .status-pill { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 99px; text-transform: uppercase; }
-    .pill-KOSONG { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    .pill-SEDANG_BERLANGSUNG { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
-    .pill-MENUNGGU_PENGESAHAN { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
-
-    .score-board {
-      background: #0f172a; border-radius: 10px; padding: 14px; margin: 10px 0;
-      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; gap: 8px;
-    }
-    .team-box .code { font-size: 11px; color: var(--muted); font-weight: 700; }
-    .team-box .name { font-size: 13px; font-weight: 700; margin-top: 2px; line-height: 1.25; }
-    .score-num { font-size: 30px; font-weight: 900; color: #fff; letter-spacing: 2px; }
-    .phase-tag { text-align: center; font-size: 12px; color: #38bdf8; font-weight: 700; margin-bottom: 10px; }
-
-    /* Cards & Tables */
-    .section-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
-    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 9px 10px; border-bottom: 1px solid var(--card-border); text-align: left; }
-    th { background: #0f172a; color: var(--muted); font-size: 11px; text-transform: uppercase; }
-    tr:hover { background: rgba(255,255,255,0.02); }
+    .card-box h3 { margin-bottom: 12px; font-size: 1.05rem; display: flex; justify-content: space-between; align-items: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: #0f172a; color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+    tr:hover { background: var(--card-hover); }
     .text-center { text-align: center; }
 
     /* Modals */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-      display: none; justify-content: center; align-items: center; z-index: 200; padding: 16px;
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      z-index: 100; align-items: center; justify-content: center; padding: 16px;
     }
-    .modal-overlay.show { display: flex; }
+    .modal.show { display: flex; }
     .modal-box {
-      background: var(--card); border: 1px solid var(--card-border);
-      border-radius: 12px; max-width: 480px; width: 100%; padding: 20px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 24px; width: 100%; max-width: 440px;
     }
+    .modal-box h3 { margin-bottom: 14px; }
     .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .form-group label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
     .form-group input, .form-group select { width: 100%; }
-    .ref-controls { display: flex; justify-content: center; gap: 6px; margin-top: 6px; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+    .alert-banner {
+      background: rgba(245, 158, 11, 0.15); border: 1px solid var(--warning);
+      color: #fde68a; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <span class="brand-badge">LIGAPRO</span>
     <div>
-      <h1 id="headerTitle">Sistem Pengurusan Kejohanan & Simulasi Gelanggang</h1>
-      <p id="headerSub">Automasi Liga, Kawalan Urusetia & Skor Masa Nyata</p>
+      <h1 id="appTitle">🏆 LigaPro Futsal Pendidikan Khas KBB 2026</h1>
+      <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+        <span id="roleBadge" class="badge badge-guest">Penonton (View Only)</span>
+        <span id="userLabel" style="font-size:0.78rem; color:var(--muted);">Mod Paparan Awam</span>
+      </div>
     </div>
   </div>
-  <div class="top-controls">
-    <select id="eventSelector" onchange="switchEvent(this.value)"></select>
-    <button onclick="copyShareLink()" title="Salin Pautan Penonton (View-Only)">🔗 Kongsi Link</button>
-    <button onclick="openModal('cloudModal')">☁️ Google Sheet</button>
-    <button id="btnAuth" class="btn-primary" onclick="openModal('loginModal')">🔐 Log Masuk / Daftar</button>
-    <button id="btnLogout" class="btn-danger" style="display:none;" onclick="logout()">Keluar</button>
+
+  <div class="header-actions">
+    <select id="eventSelector" onchange="switchEvent(this.value)">
+      <option value="ALL">Semua Kategori (Gelanggang A, B, C, D)</option>
+      <option value="FUTSAL_SR_2026">Sekolah Rendah (Gelanggang C & D)</option>
+      <option value="FUTSAL_SM_2026">Sekolah Menengah (Gelanggang A & B)</option>
+    </select>
+    <button class="btn-outline" onclick="copyShareLink()">🔗 Kongsi Link Live</button>
+    <button class="btn-outline" id="btnRegister" onclick="openModal('registerModal')">Daftar Sub-Admin</button>
+    <button class="btn-primary" id="btnLogin" onclick="openModal('loginModal')">Log Masuk</button>
+    <button class="btn-danger" id="btnLogout" style="display:none;" onclick="logout()">Log Keluar</button>
   </div>
 </header>
 
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="openTab('tabLive', this)">🔴 Simulasi Gelanggang Live</button>
+  <button class="tab-btn" onclick="openTab('tabStandings', this)">📊 Carta Liga & Kedudukan</button>
+  <button class="tab-btn" onclick="openTab('tabSchedule', this)">📅 Jadual & Auto-Susun (65 Match)</button>
+  <button class="tab-btn" id="tabBtnApproval" style="display:none;" onclick="openTab('tabApproval', this)">✅ Peti Kelulusan Urusetia <span id="pendingCount" class="badge badge-pengadil">0</span></button>
+  <button class="tab-btn" id="tabBtnMaster" style="display:none;" onclick="openTab('tabMaster', this)">⚙️ Tetapan Master Admin</button>
+</nav>
+
 <div class="container">
-  <div class="role-banner">
-    <div>
-      <strong>Status Akses Semasa:</strong> <span id="currentRoleText">PENONTON AWAM (MOD LIHAT SAHAJA)</span>
-    </div>
-    <div id="syncStatusText" style="color: var(--muted);">Mod Storan: Tempatan (Sedia Disambung ke Google Sheets)</div>
+
+  <!-- Banner Notifikasi Kelulusan untuk Urusetia/Master -->
+  <div id="approvalBanner" class="alert-banner" style="display:none;">
+    <span>🔔 Terdapat keputusan perlawanan daripada Pengadil yang menunggu pengesahan Urusetia!</span>
+    <button class="btn-warning" onclick="document.getElementById('tabBtnApproval').click()">Semak & Sahkan Sekarang</button>
   </div>
 
-  <div class="nav-tabs">
-    <button class="tab-btn active" onclick="showTab('tabLive', this)">🏟️ Simulasi Gelanggang (Live)</button>
-    <button class="tab-btn" onclick="showTab('tabStandings', this)">📊 Carta Liga & Kumpulan</button>
-    <button class="tab-btn" onclick="showTab('tabMatches', this)">📅 Jadual & Keputusan Penuh</button>
-    <button class="tab-btn" id="tabBtnReferee" style="display:none;" onclick="showTab('tabReferee', this)"> whistle Panel Pengadil</button>
-    <button class="tab-btn" id="tabBtnUrusetia" style="display:none;" onclick="showTab('tabUrusetia', this)">
-      ✅ Kawalan Urusetia <span id="pendingApproveBadge" class="badge-count">0</span>
-    </button>
-    <button class="tab-btn" id="tabBtnMaster" style="display:none;" onclick="showTab('tabMaster', this)">
-      👑 Master Admin <span id="pendingUserBadge" class="badge-count">0</span>
-    </button>
-  </div>
-
-  <!-- TAB 1: LIVE COURT SIMULATION -->
-  <div id="tabLive" class="tab-pane">
-    <div class="section-title">
-      <span>Status Gelanggang Masa Nyata (Semua Gelanggang)</span>
-      <span style="font-size:12px; color:var(--muted);">🟢 Kosong/Sedia &nbsp;|&nbsp; 🔴 Sedang Berlangsung &nbsp;|&nbsp; 🟡 Menunggu Pengesahan Urusetia</span>
+  <!-- TAB 1: LIVE COURTS -->
+  <div id="tabLive" class="section active">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+      <h2>Paparan Masa Nyata Gelanggang (Live Command Center)</h2>
+      <div id="autoAssignWrap" style="display:none; gap:8px;">
+        <button class="btn-success" onclick="autoAssignCourts()">⚡ Auto-Susun Perlawanan Seterusnya Ke Gelanggang Kosong</button>
+      </div>
     </div>
-    <div class="courts-grid" id="courtsContainer"></div>
+    <div class="court-grid" id="courtGrid"></div>
   </div>
 
   <!-- TAB 2: CARTA LIGA -->
-  <div id="tabStandings" class="tab-pane" style="display:none;">
-    <div class="section-title">
-      <span>Kedudukan Terkini Kumpulan (Dikira Automatik Selepas Pengesahan Urusetia)</span>
-      <button id="btnDrawXY" class="btn-purple" style="display:none;" onclick="autoDrawGroupXY()">🎲 Auto-Undi Kumpulan X & Y (Sekolah Rendah)</button>
+  <div id="tabStandings" class="section">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+      <h2>Carta Kedudukan Liga (Dikemas Kini Automatik Selepas Pengesahan)</h2>
+      <div id="progressionBtns" style="display:none; gap:8px; flex-wrap:wrap;">
+        <button class="btn-purple" onclick="generateSRGroupXY()">🎲 Jana Undian Kumpulan X & Y (Rendah)</button>
+        <button class="btn-primary" onclick="generateSMKnockout()">⚡ Jana Suku Akhir & Kalah Mati (Menengah & Rendah)</button>
+      </div>
     </div>
-    <div id="standingsContainer"></div>
+    <div class="grid-2" id="standingsContainer"></div>
   </div>
 
   <!-- TAB 3: JADUAL PENUH -->
-  <div id="tabMatches" class="tab-pane" style="display:none;">
-    <div class="section-card">
-      <div class="section-title">
-        <span>Senarai Keseluruhan Perlawanan</span>
-        <select id="filterStage" onchange="renderMatchesTable()">
-          <option value="ALL">Semua Peringkat</option>
-          <option value="KUMPULAN">Peringkat Kumpulan</option>
-          <option value="PUSINGAN_2_XY">Pusingan Kedua (Kumpulan X & Y)</option>
-          <option value="SUKU_AKHIR">Suku Akhir</option>
-          <option value="SEPARUH_AKHIR">Separuh Akhir</option>
-          <option value="TEMPAT_3_4">Tempat 3/4</option>
-          <option value="AKHIR">Perlawanan Akhir</option>
-        </select>
-      </div>
-      <div class="table-wrap">
+  <div id="tabSchedule" class="section">
+    <div class="card-box">
+      <h3>
+        <span>Senarai Perlawanan Rasmi</span>
+        <div style="display:flex; gap:8px;">
+          <select id="filterStage" onchange="renderSchedule()">
+            <option value="ALL">Semua Peringkat</option>
+            <option value="Pusingan Awal">Pusingan Awal</option>
+            <option value="Pusingan Kedua (X/Y)">Pusingan Kedua (X & Y)</option>
+            <option value="Suku Akhir">Suku Akhir</option>
+            <option value="Separuh Akhir">Separuh Akhir</option>
+            <option value="Tempat 3/4">Tempat 3/4</option>
+            <option value="Akhir">Akhir</option>
+          </select>
+        </div>
+      </h3>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Kategori</th>
+            <th>Peringkat / Kump</th>
+            <th>Pasukan 1</th>
+            <th class="text-center">Skor</th>
+            <th>Pasukan 2</th>
+            <th>Gelanggang</th>
+            <th>Fasa / Status</th>
+            <th>Pengesahan</th>
+            <th>Tindakan</th>
+          </tr>
+        </thead>
+        <tbody id="scheduleBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 4: PETI KELULUSAN URUSETIA -->
+  <div id="tabApproval" class="section">
+    <div class="card-box">
+      <h3>Peti Masuk Pengesahan Keputusan Pengadil</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>ID Match</th>
+            <th>Gelanggang</th>
+            <th>Kategori & Kump</th>
+            <th>Perlawanan</th>
+            <th class="text-center">Keputusan Dihantar</th>
+            <th>Pengadil</th>
+            <th>Tindakan Urusetia</th>
+          </tr>
+        </thead>
+        <tbody id="approvalBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 5: MASTER ADMIN -->
+  <div id="tabMaster" class="section">
+    <div class="grid-2">
+      <!-- Pengurusan Sub-Admin / Pengadil -->
+      <div class="card-box">
+        <h3>👥 Kelulusan & Lantikan Sub-Admin / Pengadil</h3>
         <table>
           <thead>
             <tr>
-              <th>No</th>
-              <th>Peringkat</th>
-              <th>Gelanggang</th>
-              <th>Pasukan 1</th>
-              <th class="text-center">Skor</th>
-              <th>Pasukan 2</th>
-              <th>Fasa</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="matchesTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB 4: PANEL PENGADIL -->
-  <div id="tabReferee" class="tab-pane" style="display:none;">
-    <div class="section-card">
-      <div class="section-title">
-        <span>Panel Kawalan Skor Pengadil (Masa Nyata)</span>
-        <span id="refCourtInfo" style="font-size:12px; color:var(--muted);"></span>
-      </div>
-      <div id="refereeActiveContainer"></div>
-    </div>
-  </div>
-
-  <!-- TAB 5: PANEL URUSETIA -->
-  <div id="tabUrusetia" class="tab-pane" style="display:none;">
-    <div class="section-card">
-      <div class="section-title">
-        <span>1. Peti Masuk Pengesahan Keputusan Pengadil (Waiting Approval)</span>
-      </div>
-      <div id="approvalQueueContainer"></div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-title">
-        <span>2. Susunan Automatik Perlawanan Seterusnya Mengikut Gelanggang</span>
-      </div>
-      <div id="nextMatchQueueContainer"></div>
-    </div>
-  </div>
-
-  <!-- TAB 6: PANEL MASTER ADMIN -->
-  <div id="tabMaster" class="tab-pane" style="display:none;">
-    <div class="section-card">
-      <div class="section-title">
-        <span>Luluskan / Urus Sub-Admin (Urusetia & Pengadil)</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Nama Penuh</th>
+              <th>Nama</th>
               <th>Peranan</th>
-              <th>Gelanggang</th>
+              <th>PIN</th>
+              <th>Tugasan</th>
               <th>Status</th>
               <th>Tindakan</th>
             </tr>
           </thead>
-          <tbody id="usersTableBody"></tbody>
+          <tbody id="userTableBody"></tbody>
         </table>
       </div>
-    </div>
 
-    <div class="section-card">
-      <div class="section-title">
-        <span>Cipta Kejohanan / Event Baharu (Multi-Event)</span>
+      <!-- Cipta Kejohanan Baru & Sambungan Google Sheets -->
+      <div>
+        <div class="card-box">
+          <h3>➕ Tambah Kejohanan Baharu (Multi-Event)</h3>
+          <div class="form-group">
+            <label>ID Kejohanan (Tanpa Jarak)</label>
+            <input type="text" id="newEventId" placeholder="Contoh: BOLA_JARING_2026">
+          </div>
+          <div class="form-group">
+            <label>Nama Kejohanan</label>
+            <input type="text" id="newEventName" placeholder="Contoh: Kejohanan Bola Jaring KBB 2026">
+          </div>
+          <div class="form-group">
+            <label>Gelanggang Digunakan (Pisahkan dengan koma)</label>
+            <input type="text" id="newEventCourts" placeholder="Gelanggang A, Gelanggang B">
+          </div>
+          <button class="btn-success" style="width:100%;" onclick="createNewEvent()">Simpan Kejohanan Baharu</button>
+        </div>
+
+        <div class="card-box">
+          <h3>☁️ Integrasi Google Sheets (Google Apps Script URL)</h3>
+          <div class="form-group">
+            <label>Web App URL (Code.gs)</label>
+            <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-primary" style="flex:1;" onclick="saveGasUrl()">Simpan URL</button>
+            <button class="btn-success" style="flex:1;" onclick="syncToGoogleSheets()">⬆️ Push Semua Ke Sheet</button>
+            <button class="btn-danger" onclick="resetFactoryData()">Reset Data Asal</button>
+          </div>
+        </div>
       </div>
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-        <div class="form-group">
-          <label>Nama Kejohanan</label>
-          <input type="text" id="newEvName" placeholder="Cth: Kejohanan Bola Jaring KBB 2026" />
-        </div>
-        <div class="form-group">
-          <label>Kategori</label>
-          <input type="text" id="newEvCat" placeholder="Cth: Bawah 12 Tahun" />
-        </div>
-        <div class="form-group">
-          <label>Format Pusingan Kedua</label>
-          <select id="newEvFormat">
-            <option value="SUKU_AKHIR_SILANG">Liga Kumpulan -> Suku Akhir Silang</option>
-            <option value="KUMPULAN_XY">Liga Kumpulan -> Undian Kumpulan X & Y</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Senarai Gelanggang (Pisahkan koma)</label>
-          <input type="text" id="newEvCourts" value="A, B" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Senarai Pasukan (Satu baris satu pasukan: Kumpulan,Kod,Nama Pasukan)</label>
-        <textarea id="newEvTeams" rows="4" style="width:100%; background:#0f172a; color:#fff; border:1px solid var(--card-border); padding:8px; border-radius:8px; font-size:12px;" placeholder="A,A1,SK CONTOH 1&#10;A,A2,SK CONTOH 2&#10;B,B1,SK CONTOH 3&#10;B,B2,SK CONTOH 4"></textarea>
-      </div>
-      <button class="btn-success" onclick="createNewTournament()">➕ Jana Kejohanan & Jadual Automatik</button>
     </div>
   </div>
+
 </div>
 
-<!-- MODAL LOG MASUK & DAFTAR -->
-<div class="modal-overlay" id="loginModal">
+<!-- MODAL LOG MASUK -->
+<div class="modal" id="loginModal">
   <div class="modal-box">
-    <h3 style="margin-bottom:12px;">Log Masuk atau Daftar Sub-Admin</h3>
-    <div class="form-group">
-      <label>Username (Untuk Master Admin: masukkan <strong>master</strong>)</label>
-      <input type="text" id="loginUser" placeholder="master / urusetia1 / refA" />
-    </div>
-    <div class="form-group">
-      <label>Kata Laluan (Master Admin Default: <strong>101010</strong>)</label>
-      <input type="password" id="loginPass" placeholder="Masukkan kata laluan" />
-    </div>
-    <div style="display:flex; gap:8px; margin-bottom:16px;">
-      <button class="btn-primary" style="flex:1;" onclick="handleLogin()">Log Masuk</button>
-      <button onclick="closeModal('loginModal')">Tutup</button>
-    </div>
-    <hr style="border:0; border-top:1px solid var(--card-border); margin:14px 0;" />
-    <h4 style="margin-bottom:10px; font-size:14px;">Belum Ada Akaun? Daftar Sebagai Sub-Admin</h4>
-    <div class="form-group">
-      <label>Nama Penuh</label>
-      <input type="text" id="regName" placeholder="Cth: Cikgu Ahmad (Pengadil)" />
-    </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-      <div class="form-group">
-        <label>Username Pilihan</label>
-        <input type="text" id="regUser" placeholder="ahmad88" />
-      </div>
-      <div class="form-group">
-        <label>Kata Laluan</label>
-        <input type="password" id="regPass" placeholder="******" />
-      </div>
-    </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-      <div class="form-group">
-        <label>Peranan Dipohon</label>
-        <select id="regRole">
-          <option value="PENGADIL">Pengadil</option>
-          <option value="URUSETIA">Urusetia</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Gelanggang Tugasan</label>
-        <select id="regCourt">
-          <option value="A">Gelanggang A</option>
-          <option value="B">Gelanggang B</option>
-          <option value="C">Gelanggang C</option>
-          <option value="D">Gelanggang D</option>
-          <option value="SEMUA">Semua Gelanggang</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn-warning" style="width:100%;" onclick="handleRegister()">📝 Hantar Permohonan Pendaftaran</button>
-  </div>
-</div>
-
-<!-- MODAL GOOGLE SHEETS SYNC -->
-<div class="modal-overlay" id="cloudModal">
-  <div class="modal-box">
-    <h3 style="margin-bottom:10px;">Sambungan Pangkalan Data Google Sheets</h3>
-    <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
-      Tampal URL Web App daripada Google Apps Script (<code>Code.gs</code>) untuk menyelaraskan data secara langsung dengan Google Sheets.
+    <h3>🔐 Log Masuk Sistem</h3>
+    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:14px;">
+      Master Admin PIN: <b>101010</b> | Urusetia: <b>202020</b><br>
+      Pengadil Gelanggang A/B/C/D: <b>1111 / 2222 / 3333 / 4444</b>
     </p>
     <div class="form-group">
-      <label>Google Apps Script Web App URL</label>
-      <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" />
+      <label>Masukkan PIN / Kata Laluan</label>
+      <input type="password" id="loginPin" placeholder="Masukkan PIN anda">
     </div>
-    <div style="display:flex; flex-wrap:wrap; gap:8px;">
-      <button class="btn-primary" onclick="saveGasUrl()">Simpan URL</button>
-      <button class="btn-success" onclick="pullFromCloud()">⬇️ Tarik Data Sheet</button>
-      <button class="btn-warning" onclick="pushToCloud()">⬆️ Hantar Data ke Sheet</button>
-      <button onclick="resetDefaultData()">🔄 Reset Data Asal</button>
-      <button onclick="closeModal('cloudModal')">Tutup</button>
+    <div style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn-primary" style="flex:1;" onclick="handleLogin()">Log Masuk</button>
+      <button class="btn-outline" onclick="closeModal('loginModal')">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DAFTAR SUB-ADMIN / PENGADIL -->
+<div class="modal" id="registerModal">
+  <div class="modal-box">
+    <h3>📝 Pendaftaran Sub-Admin / Pengadil</h3>
+    <p style="font-size:0.8rem; color:var(--muted); margin-bottom:12px;">
+      Akaun yang didaftarkan perlu diluluskan oleh Master Admin sebelum boleh digunakan.
+    </p>
+    <div class="form-group">
+      <label>Nama Penuh</label>
+      <input type="text" id="regName" placeholder="Contoh: Cikgu Ahmad">
+    </div>
+    <div class="form-group">
+      <label>Peranan</label>
+      <select id="regRole">
+        <option value="PENGADIL">Pengadil Gelanggang</option>
+        <option value="URUSETIA">Urusetia Kejohanan</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Gelanggang Tugasan</label>
+      <select id="regCourt">
+        <option value="Gelanggang A">Gelanggang A</option>
+        <option value="Gelanggang B">Gelanggang B</option>
+        <option value="Gelanggang C">Gelanggang C</option>
+        <option value="Gelanggang D">Gelanggang D</option>
+        <option value="SEMUA">Semua Gelanggang (Urusetia)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Cipta PIN Log Masuk (4-6 Angka)</label>
+      <input type="password" id="regPin" placeholder="Contoh: 5566">
+    </div>
+    <div style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn-success" style="flex:1;" onclick="handleRegister()">Hantar Pendaftaran</button>
+      <button class="btn-outline" onclick="closeModal('registerModal')">Batal</button>
     </div>
   </div>
 </div>
 
 <script>
-const STORAGE_KEY = "LIGAPRO_KBB_STATE_2026";
-let state = null;
-let currentUser = null; // null = Penonton (View-Only)
-let currentEventId = "EV01";
+// ==================== PANGKALAN DATA ASAL (65 PERLAWANAN) ====================
+const INITIAL_TEAMS = [
+  // SEKOLAH RENDAH
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"A", code:"A1", name:"SK SELAMA" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"A", code:"A2", name:"SK TAMAN KENARI" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"A", code:"A3", name:"SK SG KARANGAN" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"A", code:"A4", name:"SK PERMATANG TIONG" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"B", code:"B1", name:"SK SRI LIMAU" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"B", code:"B2", name:"SK SG KOB" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"B", code:"B3", name:"SK DATO HJ ZAINUDDIN" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"B", code:"B4", name:"SK LINDUNGAN RAJA" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"C", code:"C1", name:"SK LUNAS JAYA" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"C", code:"C2", name:"SK PERMATANG TOK DIK" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"C", code:"C3", name:"SK TUNKU ABDUL MALIK" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"X", code:"X1", name:"UNDIAN X1" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"X", code:"X2", name:"UNDIAN X2" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"X", code:"X3", name:"UNDIAN X3" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"Y", code:"Y1", name:"UNDIAN Y1" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"Y", code:"Y2", name:"UNDIAN Y2" },
+  { eventId:"FUTSAL_SR_2026", cat:"Sekolah Rendah", grp:"Y", code:"Y3", name:"UNDIAN Y3" },
+  // SEKOLAH MENENGAH
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"A", code:"A1", name:"SMK LABU BESAR (A)" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"A", code:"A2", name:"SMK JUNJUNG" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"A", code:"A3", name:"SMK TAMAN KENARI" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"A", code:"A4", name:"SMK TAMAN MUTIARA" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"A", code:"A5", name:"SMK LUNAS (A)" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"B", code:"B1", name:"SMK SG KOB (A)" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"B", code:"B2", name:"SMK SELAMA" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"B", code:"B3", name:"SMK TAMAN SELASIH" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"B", code:"B4", name:"SMK SERDANG BARU" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"B", code:"B5", name:"SMK PADANG SERAI (A)" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"C", code:"C1", name:"SMK SG KARANGAN" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"C", code:"C2", name:"SMK PAYA BESAR" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"C", code:"C3", name:"SMK SG KOB (B)" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"C", code:"C4", name:"SMK LABU BESAR (B)" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"D", code:"D1", name:"SMK LUNAS (B)" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"D", code:"D2", name:"SMK AYER MERAH" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"D", code:"D3", name:"SMK PADANG SERAI (B)" },
+  { eventId:"FUTSAL_SM_2026", cat:"Sekolah Menengah", grp:"D", code:"D4", name:"SMK AHMAD TAJUDIN" }
+];
 
-function getInitialData() {
-  const tournaments = [
-    { Event_ID: "EV01", Nama_Kejohanan: "Pertandingan Futsal Pendidikan Khas KBB 2026", Kategori: "Sekolah Rendah", Format_Pusingan_2: "KUMPULAN_XY", Gelanggang_Utama: "C, D", Status_Event: "AKTIF" },
-    { Event_ID: "EV02", Nama_Kejohanan: "Pertandingan Futsal Pendidikan Khas KBB 2026", Kategori: "Sekolah Menengah", Format_Pusingan_2: "SUKU_AKHIR_SILANG", Gelanggang_Utama: "A, B", Status_Event: "AKTIF" }
+function buildInitialMatches() {
+  const srRaw = [
+    [1,"Pusingan Awal","A","A1","A2","Gelanggang C"],[2,"Pusingan Awal","A","A3","A4","Gelanggang C"],
+    [3,"Pusingan Awal","A","A1","A4","Gelanggang C"],[4,"Pusingan Awal","A","A2","A3","Gelanggang C"],
+    [5,"Pusingan Awal","A","A1","A3","Gelanggang C"],[6,"Pusingan Awal","A","A4","A2","Gelanggang C"],
+    [7,"Pusingan Awal","B","B1","B2","Gelanggang D"],[8,"Pusingan Awal","B","B3","B4","Gelanggang D"],
+    [9,"Pusingan Awal","B","B1","B4","Gelanggang D"],[10,"Pusingan Awal","B","B2","B3","Gelanggang D"],
+    [11,"Pusingan Awal","B","B1","B3","Gelanggang D"],[12,"Pusingan Awal","B","B4","B2","Gelanggang D"],
+    [13,"Pusingan Awal","C","C1","C2","Gelanggang C"],[14,"Pusingan Awal","C","C2","C3","Gelanggang C"],
+    [15,"Pusingan Awal","C","C3","C1","Gelanggang C"],
+    [16,"Pusingan Kedua (X/Y)","X","X1","X2","Gelanggang C"],[17,"Pusingan Kedua (X/Y)","X","X2","X3","Gelanggang C"],
+    [18,"Pusingan Kedua (X/Y)","X","X3","X1","Gelanggang C"],[19,"Pusingan Kedua (X/Y)","Y","Y1","Y2","Gelanggang D"],
+    [20,"Pusingan Kedua (X/Y)","Y","Y2","Y3","Gelanggang D"],[21,"Pusingan Kedua (X/Y)","Y","Y3","Y1","Gelanggang D"],
+    [22,"Separuh Akhir","SA1","JOHAN X","N. JOHAN Y","Gelanggang C"],
+    [23,"Separuh Akhir","SA2","JOHAN Y","N. JOHAN X","Gelanggang D"],
+    [24,"Tempat 3/4","3/4","KALAH 22","KALAH 23","Gelanggang D"],
+    [25,"Akhir","AKHIR","MENANG 22","MENANG 23","Gelanggang C"]
+  ];
+  const smRaw = [
+    [1,"Pusingan Awal","A","A1","A2","Gelanggang A"],[2,"Pusingan Awal","A","A3","A4","Gelanggang A"],
+    [3,"Pusingan Awal","A","A1","A3","Gelanggang A"],[4,"Pusingan Awal","A","A2","A5","Gelanggang A"],
+    [5,"Pusingan Awal","A","A4","A5","Gelanggang A"],[6,"Pusingan Awal","A","A1","A4","Gelanggang A"],
+    [7,"Pusingan Awal","A","A2","A3","Gelanggang A"],[8,"Pusingan Awal","A","A1","A5","Gelanggang A"],
+    [9,"Pusingan Awal","A","A3","A5","Gelanggang A"],[10,"Pusingan Awal","A","A2","A4","Gelanggang A"],
+    [11,"Pusingan Awal","B","B1","B2","Gelanggang B"],[12,"Pusingan Awal","B","B3","B4","Gelanggang B"],
+    [13,"Pusingan Awal","B","B1","B3","Gelanggang B"],[14,"Pusingan Awal","B","B2","B5","Gelanggang B"],
+    [15,"Pusingan Awal","B","B4","B5","Gelanggang B"],[16,"Pusingan Awal","B","B1","B4","Gelanggang B"],
+    [17,"Pusingan Awal","B","B2","B3","Gelanggang B"],[18,"Pusingan Awal","B","B1","B5","Gelanggang B"],
+    [19,"Pusingan Awal","B","B3","B5","Gelanggang B"],[20,"Pusingan Awal","B","B2","B4","Gelanggang B"],
+    [21,"Pusingan Awal","C","C1","C2","Gelanggang A"],[22,"Pusingan Awal","C","C3","C4","Gelanggang A"],
+    [23,"Pusingan Awal","C","C1","C4","Gelanggang A"],[24,"Pusingan Awal","C","C2","C3","Gelanggang A"],
+    [25,"Pusingan Awal","C","C1","C3","Gelanggang A"],[26,"Pusingan Awal","C","C4","C2","Gelanggang A"],
+    [27,"Pusingan Awal","D","D1","D2","Gelanggang B"],[28,"Pusingan Awal","D","D3","D4","Gelanggang B"],
+    [29,"Pusingan Awal","D","D1","D4","Gelanggang B"],[30,"Pusingan Awal","D","D2","D3","Gelanggang B"],
+    [31,"Pusingan Awal","D","D1","D3","Gelanggang B"],[32,"Pusingan Awal","D","D4","D2","Gelanggang B"],
+    [33,"Suku Akhir","QF1","JOHAN A","N. JOHAN D","Gelanggang A"],
+    [34,"Suku Akhir","QF2","JOHAN B","N. JOHAN C","Gelanggang B"],
+    [35,"Suku Akhir","QF3","JOHAN C","N. JOHAN B","Gelanggang A"],
+    [36,"Suku Akhir","QF4","JOHAN D","N. JOHAN A","Gelanggang B"],
+    [37,"Separuh Akhir","SF1","MENANG 33","MENANG 34","Gelanggang A"],
+    [38,"Separuh Akhir","SF2","MENANG 35","MENANG 36","Gelanggang B"],
+    [39,"Tempat 3/4","3/4","KALAH 37","KALAH 38","Gelanggang B"],
+    [40,"Akhir","AKHIR","MENANG 37","MENANG 38","Gelanggang A"]
   ];
 
-  const users = [
-    { User_ID: "U01", Username: "master", Password: "101010", Nama_Penuh: "Master Admin Utama", Peranan: "MASTER_ADMIN", Gelanggang_Tugasan: "SEMUA", Status_Akaun: "AKTIF" },
-    { User_ID: "U02", Username: "urusetia1", Password: "123456", Nama_Penuh: "Urusetia Teknikal KBB", Peranan: "URUSETIA", Gelanggang_Tugasan: "SEMUA", Status_Akaun: "AKTIF" },
-    { User_ID: "U03", Username: "refA", Password: "111111", Nama_Penuh: "Pengadil Gelanggang A", Peranan: "PENGADIL", Gelanggang_Tugasan: "A", Status_Akaun: "AKTIF" },
-    { User_ID: "U04", Username: "refB", Password: "222222", Nama_Penuh: "Pengadil Gelanggang B", Peranan: "PENGADIL", Gelanggang_Tugasan: "B", Status_Akaun: "AKTIF" },
-    { User_ID: "U05", Username: "refC", Password: "333333", Nama_Penuh: "Pengadil Gelanggang C", Peranan: "PENGADIL", Gelanggang_Tugasan: "C", Status_Akaun: "AKTIF" },
-    { User_ID: "U06", Username: "refD", Password: "444444", Nama_Penuh: "Pengadil Gelanggang D", Peranan: "PENGADIL", Gelanggang_Tugasan: "D", Status_Akaun: "AKTIF" }
-  ];
-
-  const courts = [
-    { Kod_Gelanggang: "A", Nama_Gelanggang: "Gelanggang A", Kategori_Semasa: "Sekolah Menengah", Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" },
-    { Kod_Gelanggang: "B", Nama_Gelanggang: "Gelanggang B", Kategori_Semasa: "Sekolah Menengah", Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" },
-    { Kod_Gelanggang: "C", Nama_Gelanggang: "Gelanggang C", Kategori_Semasa: "Sekolah Rendah", Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" },
-    { Kod_Gelanggang: "D", Nama_Gelanggang: "Gelanggang D", Kategori_Semasa: "Sekolah Rendah", Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" }
-  ];
-
-  const srRawTeams = [
-    ["A","A1","SK SELAMA"],["A","A2","SK TAMAN KENARI"],["A","A3","SK SG KARANGAN"],["A","A4","SK PERMATANG TIONG"],
-    ["B","B1","SK SRI LIMAU"],["B","B2","SK SG KOB"],["B","B3","SK DATO HJ ZAINUDDIN"],["B","B4","SK LINDUNGAN RAJA"],
-    ["C","C1","SK LUNAS JAYA"],["C","C2","SK PERMATANG TOK DIK"],["C","C3","SK TUNKU ABDUL MALIK"],
-    ["X","X1","MENUNGGU UNDIAN X1"],["X","X2","MENUNGGU UNDIAN X2"],["X","X3","MENUNGGU UNDIAN X3"],
-    ["Y","Y1","MENUNGGU UNDIAN Y1"],["Y","Y2","MENUNGGU UNDIAN Y2"],["Y","Y3","MENUNGGU UNDIAN Y3"]
-  ];
-
-  const smRawTeams = [
-    ["A","A1","SMK LABU BESAR (A)"],["A","A2","SMK JUNJUNG"],["A","A3","SMK TAMAN KENARI"],["A","A4","SMK TAMAN MUTIARA"],["A","A5","SMK LUNAS (A)"],
-    ["B","B1","SMK SG KOB (A)"],["B","B2","SMK SELAMA"],["B","B3","SMK TAMAN SELASIH"],["B","B4","SMK SERDANG BARU"],["B","B5","SMK PADANG SERAI (A)"],
-    ["C","C1","SMK SG KARANGAN"],["C","C2","SMK PAYA BESAR"],["C","C3","SMK SG KOB (B)"],["C","C4","SMK LABU BESAR (B)"],
-    ["D","D1","SMK LUNAS (B)"],["D","D2","SMK AYER MERAH"],["D","D3","SMK PADANG SERAI (B)"],["D","D4","SMK AHMAD TAJUDIN"]
-  ];
-
-  const teams = [];
-  const srMap = {};
-  srRawTeams.forEach(([grp, code, name]) => {
-    srMap[code] = name;
-    teams.push({
-      Team_ID: "SR-" + code, Event_ID: "EV01", Kategori: "Sekolah Rendah",
-      Peringkat: ["A","B","C"].includes(grp) ? "PUSINGAN_1" : "PUSINGAN_2_XY",
-      Kumpulan: grp, Kod_Pasukan: code, Nama_Pasukan: name,
-      Main: 0, Menang: 0, Seri: 0, Kalah: 0, Jaringan: 0, Bolos: 0, Beza_Gol: 0, Mata: 0
+  const list = [];
+  srRaw.forEach(r => {
+    const t1 = INITIAL_TEAMS.find(t => t.eventId==="FUTSAL_SR_2026" && t.code===r[3]);
+    const t2 = INITIAL_TEAMS.find(t => t.eventId==="FUTSAL_SR_2026" && t.code===r[4]);
+    list.push({
+      id: `SR-${String(r[0]).padStart(2,'0')}`, no: r[0], eventId: "FUTSAL_SR_2026", cat: "Sekolah Rendah",
+      stage: r[1], grp: r[2], p1Code: r[3], p1Name: t1 ? t1.name : r[3],
+      p2Code: r[4], p2Name: t2 ? t2.name : r[4], s1: 0, s2: 0, court: r[5],
+      phase: "Belum Mula", status: "MENUNGGU GILIRAN", approval: "BELUM DISAHKAN", ref: "-"
     });
   });
-
-  const smMap = {};
-  smRawTeams.forEach(([grp, code, name]) => {
-    smMap[code] = name;
-    teams.push({
-      Team_ID: "SM-" + code, Event_ID: "EV02", Kategori: "Sekolah Menengah",
-      Peringkat: "PUSINGAN_1", Kumpulan: grp, Kod_Pasukan: code, Nama_Pasukan: name,
-      Main: 0, Menang: 0, Seri: 0, Kalah: 0, Jaringan: 0, Bolos: 0, Beza_Gol: 0, Mata: 0
+  smRaw.forEach(r => {
+    const t1 = INITIAL_TEAMS.find(t => t.eventId==="FUTSAL_SM_2026" && t.code===r[3]);
+    const t2 = INITIAL_TEAMS.find(t => t.eventId==="FUTSAL_SM_2026" && t.code===r[4]);
+    list.push({
+      id: `SM-${String(r[0]).padStart(2,'0')}`, no: r[0], eventId: "FUTSAL_SM_2026", cat: "Sekolah Menengah",
+      stage: r[1], grp: r[2], p1Code: r[3], p1Name: t1 ? t1.name : r[3],
+      p2Code: r[4], p2Name: t2 ? t2.name : r[4], s1: 0, s2: 0, court: r[5],
+      phase: "Belum Mula", status: "MENUNGGU GILIRAN", approval: "BELUM DISAHKAN", ref: "-"
     });
   });
-
-  const srMatchesSpec = [
-    [1,"KUMPULAN","A","C","A1","A2"],[2,"KUMPULAN","A","C","A3","A4"],[3,"KUMPULAN","A","C","A1","A4"],
-    [4,"KUMPULAN","A","C","A2","A3"],[5,"KUMPULAN","A","C","A1","A3"],[6,"KUMPULAN","A","C","A4","A2"],
-    [7,"KUMPULAN","B","D","B1","B2"],[8,"KUMPULAN","B","D","B3","B4"],[9,"KUMPULAN","B","D","B1","B4"],
-    [10,"KUMPULAN","B","D","B2","B3"],[11,"KUMPULAN","B","D","B1","B3"],[12,"KUMPULAN","B","D","B4","B2"],
-    [13,"KUMPULAN","C","C","C1","C2"],[14,"KUMPULAN","C","C","C2","C3"],[15,"KUMPULAN","C","C","C3","C1"],
-    [16,"PUSINGAN_2_XY","X","C","X1","X2"],[17,"PUSINGAN_2_XY","X","C","X2","X3"],[18,"PUSINGAN_2_XY","X","C","X3","X1"],
-    [19,"PUSINGAN_2_XY","Y","D","Y1","Y2"],[20,"PUSINGAN_2_XY","Y","D","Y2","Y3"],[21,"PUSINGAN_2_XY","Y","D","Y3","Y1"],
-    [22,"SEPARUH_AKHIR","SA1","C","JOHAN X","N. JOHAN Y"],[23,"SEPARUH_AKHIR","SA2","D","JOHAN Y","N. JOHAN X"],
-    [24,"TEMPAT_3_4","T34","D","KALAH 22","KALAH 23"],[25,"AKHIR","FINAL","C","MENANG 22","MENANG 23"]
-  ];
-
-  const smMatchesSpec = [
-    [1,"KUMPULAN","A","A","A1","A2"],[2,"KUMPULAN","A","A","A3","A4"],[3,"KUMPULAN","A","A","A1","A3"],
-    [4,"KUMPULAN","A","A","A2","A5"],[5,"KUMPULAN","A","A","A4","A5"],[6,"KUMPULAN","A","A","A1","A4"],
-    [7,"KUMPULAN","A","A","A2","A3"],[8,"KUMPULAN","A","A","A1","A5"],[9,"KUMPULAN","A","A","A3","A5"],[10,"KUMPULAN","A","A","A2","A4"],
-    [11,"KUMPULAN","B","B","B1","B2"],[12,"KUMPULAN","B","B","B3","B4"],[13,"KUMPULAN","B","B","B1","B3"],
-    [14,"KUMPULAN","B","B","B2","B5"],[15,"KUMPULAN","B","B","B4","B5"],[16,"KUMPULAN","B","B","B1","B4"],
-    [17,"KUMPULAN","B","B","B2","B3"],[18,"KUMPULAN","B","B","B1","B5"],[19,"KUMPULAN","B","B","B3","B5"],[20,"KUMPULAN","B","B","B2","B4"],
-    [21,"KUMPULAN","C","A","C1","C2"],[22,"KUMPULAN","C","A","C3","C4"],[23,"KUMPULAN","C","A","C1","C4"],
-    [24,"KUMPULAN","C","A","C2","C3"],[25,"KUMPULAN","C","A","C1","C3"],[26,"KUMPULAN","C","A","C4","C2"],
-    [27,"KUMPULAN","D","B","D1","D2"],[28,"KUMPULAN","D","B","D3","D4"],[29,"KUMPULAN","D","B","D1","D4"],
-    [30,"KUMPULAN","D","B","D2","D3"],[31,"KUMPULAN","D","B","D1","D3"],[32,"KUMPULAN","D","B","D4","D2"],
-    [33,"SUKU_AKHIR","QF1","A","JOHAN A","N. JOHAN D"],[34,"SUKU_AKHIR","QF2","B","JOHAN B","N. JOHAN C"],
-    [35,"SUKU_AKHIR","QF3","A","JOHAN C","N. JOHAN B"],[36,"SUKU_AKHIR","QF4","B","JOHAN D","N. JOHAN A"],
-    [37,"SEPARUH_AKHIR","SF1","A","MENANG 33","MENANG 34"],[38,"SEPARUH_AKHIR","SF2","B","MENANG 35","MENANG 36"],
-    [39,"TEMPAT_3_4","T34","B","KALAH 37","KALAH 38"],[40,"AKHIR","FINAL","A","MENANG 37","MENANG 38"]
-  ];
-
-  const matches = [];
-  srMatchesSpec.forEach(([no, stage, grp, court, t1, t2]) => {
-    matches.push({
-      Match_ID: `SR-M${String(no).padStart(2,'0')}`, Event_ID: "EV01", Kategori: "Sekolah Rendah",
-      No_Perlawanan: no, Peringkat: stage, Kumpulan: grp, Gelanggang: court,
-      Kod_Pasukan_1: t1, Nama_Pasukan_1: srMap[t1] || `MENUNGGU (${t1})`,
-      Skor_1: 0, Skor_2: 0,
-      Kod_Pasukan_2: t2, Nama_Pasukan_2: srMap[t2] || `MENUNGGU (${t2})`,
-      Fasa_Semasa: "BELUM MULA", Status_Perlawanan: "MENUNGGU",
-      Pengadil_Kemaskini: "-", Disahkan_Oleh: "-"
-    });
-  });
-
-  smMatchesSpec.forEach(([no, stage, grp, court, t1, t2]) => {
-    matches.push({
-      Match_ID: `SM-M${String(no).padStart(2,'0')}`, Event_ID: "EV02", Kategori: "Sekolah Menengah",
-      No_Perlawanan: no, Peringkat: stage, Kumpulan: grp, Gelanggang: court,
-      Kod_Pasukan_1: t1, Nama_Pasukan_1: smMap[t1] || `MENUNGGU (${t1})`,
-      Skor_1: 0, Skor_2: 0,
-      Kod_Pasukan_2: t2, Nama_Pasukan_2: smMap[t2] || `MENUNGGU (${t2})`,
-      Fasa_Semasa: "BELUM MULA", Status_Perlawanan: "MENUNGGU",
-      Pengadil_Kemaskini: "-", Disahkan_Oleh: "-"
-    });
-  });
-
-  return { tournaments, users, courts, teams, matches };
+  return list;
 }
 
-function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try { state = JSON.parse(saved); } catch(e) { state = getInitialData(); }
-  } else {
-    state = getInitialData();
-  }
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("event")) {
-    currentEventId = urlParams.get("event");
-  }
-  const savedGas = localStorage.getItem("LIGAPRO_GAS_URL");
-  if (savedGas) {
-    document.getElementById("gasUrlInput").value = savedGas;
-    document.getElementById("syncStatusText").innerText = "Mod Storan: Tersambung Google Sheets";
-  }
-  renderAll();
-}
+const INITIAL_COURTS = [
+  { id: "Gelanggang A", cat: "Sekolah Menengah", matchId: "SM-01" },
+  { id: "Gelanggang B", cat: "Sekolah Menengah", matchId: "SM-11" },
+  { id: "Gelanggang C", cat: "Sekolah Rendah", matchId: "SR-01" },
+  { id: "Gelanggang D", cat: "Sekolah Rendah", matchId: "SR-07" }
+];
+
+const INITIAL_USERS = [
+  { id: "U1", name: "Master Admin", role: "MASTER_ADMIN", pin: "101010", court: "SEMUA", status: "AKTIF" },
+  { id: "U2", name: "Urusetia Utama", role: "URUSETIA", pin: "202020", court: "SEMUA", status: "AKTIF" },
+  { id: "U3", name: "Pengadil Gelanggang A", role: "PENGADIL", pin: "1111", court: "Gelanggang A", status: "AKTIF" },
+  { id: "U4", name: "Pengadil Gelanggang B", role: "PENGADIL", pin: "2222", court: "Gelanggang B", status: "AKTIF" },
+  { id: "U5", name: "Pengadil Gelanggang C", role: "PENGADIL", pin: "3333", court: "Gelanggang C", status: "AKTIF" },
+  { id: "U6", name: "Pengadil Gelanggang D", role: "PENGADIL", pin: "4444", court: "Gelanggang D", status: "AKTIF" }
+];
+
+// ==================== STATE PENGURUSAN ====================
+let state = {
+  currentEvent: "ALL",
+  currentUser: null, // null = Penonton (View-Only)
+  teams: JSON.parse(localStorage.getItem("lp_teams")) || INITIAL_TEAMS,
+  matches: JSON.parse(localStorage.getItem("lp_matches")) || buildInitialMatches(),
+  courts: JSON.parse(localStorage.getItem("lp_courts")) || INITIAL_COURTS,
+  users: JSON.parse(localStorage.getItem("lp_users")) || INITIAL_USERS,
+  gasUrl: localStorage.getItem("lp_gas_url") || ""
+};
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  const savedGas = localStorage.getItem("LIGAPRO_GAS_URL");
-  if (savedGas) {
-    fetch(savedGas, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "syncState", ...state })
-    }).catch(() => {});
-  }
+  localStorage.setItem("lp_teams", JSON.stringify(state.teams));
+  localStorage.setItem("lp_matches", JSON.stringify(state.matches));
+  localStorage.setItem("lp_courts", JSON.stringify(state.courts));
+  localStorage.setItem("lp_users", JSON.stringify(state.users));
   renderAll();
 }
 
-function renderAll() {
-  renderEventSelector();
-  renderRoleUI();
-  renderLiveCourts();
-  renderStandings();
-  renderMatchesTable();
-  renderRefereePanel();
-  renderUrusetiaPanel();
-  renderMasterPanel();
-}
-
-function renderEventSelector() {
-  const sel = document.getElementById("eventSelector");
-  sel.innerHTML = state.tournaments.map(t =>
-    `<option value="${t.Event_ID}" ${t.Event_ID === currentEventId ? 'selected' : ''}>${t.Nama_Kejohanan} (${t.Kategori})</option>`
-  ).join("");
-  const curEv = state.tournaments.find(t => t.Event_ID === currentEventId);
-  if (curEv) {
-    document.getElementById("btnDrawXY").style.display =
-      (curEv.Format_Pusingan_2 === "KUMPULAN_XY" && canApprove()) ? "inline-block" : "none";
-  }
-}
-
-function switchEvent(evId) {
-  currentEventId = evId;
+// ==================== LOG MASUK & PENDAFTARAN ====================
+function handleLogin() {
+  const pin = document.getElementById("loginPin").value.trim();
+  const user = state.users.find(u => u.pin === pin);
+  if (!user) return alert("PIN tidak sah! Sila semak semula.");
+  if (user.status !== "AKTIF") return alert("Akaun anda masih menunggu kelulusan Master Admin.");
+  
+  state.currentUser = user;
+  document.getElementById("loginPin").value = "";
+  closeModal("loginModal");
+  updateAuthUI();
   renderAll();
 }
 
-function canApprove() {
-  return currentUser && (currentUser.Peranan === "MASTER_ADMIN" || currentUser.Peranan === "URUSETIA");
+function logout() {
+  state.currentUser = null;
+  updateAuthUI();
+  renderAll();
 }
 
-function renderRoleUI() {
-  const roleTxt = document.getElementById("currentRoleText");
-  const btnAuth = document.getElementById("btnAuth");
+function handleRegister() {
+  const name = document.getElementById("regName").value.trim();
+  const role = document.getElementById("regRole").value;
+  const court = document.getElementById("regCourt").value;
+  const pin = document.getElementById("regPin").value.trim();
+  if (!name || !pin) return alert("Sila lengkapkan nama dan PIN.");
+  if (state.users.some(u => u.pin === pin)) return alert("PIN ini telah digunakan. Sila pilih PIN lain.");
+
+  state.users.push({
+    id: "U" + Date.now(), name, role, pin, court, status: "MENUNGGU KELULUSAN"
+  });
+  saveState();
+  closeModal("registerModal");
+  alert("Pendaftaran dihantar! Sila minta Master Admin (101010) luluskan akaun anda.");
+}
+
+function updateAuthUI() {
+  const badge = document.getElementById("roleBadge");
+  const label = document.getElementById("userLabel");
+  const btnLogin = document.getElementById("btnLogin");
   const btnLogout = document.getElementById("btnLogout");
-  const tabRef = document.getElementById("tabBtnReferee");
-  const tabUru = document.getElementById("tabBtnUrusetia");
-  const tabMas = document.getElementById("tabBtnMaster");
+  const tabApproval = document.getElementById("tabBtnApproval");
+  const tabMaster = document.getElementById("tabBtnMaster");
+  const autoWrap = document.getElementById("autoAssignWrap");
+  const progBtns = document.getElementById("progressionBtns");
 
-  if (!currentUser) {
-    roleTxt.innerHTML = `<span style="color:#38bdf8;">PENONTON AWAM (MOD LIHAT SAHAJA)</span>`;
-    btnAuth.style.display = "inline-block";
+  if (!state.currentUser) {
+    badge.className = "badge badge-guest";
+    badge.innerText = "Penonton (View Only)";
+    label.innerText = "Mod Paparan Awam";
+    btnLogin.style.display = "inline-block";
     btnLogout.style.display = "none";
-    tabRef.style.display = "none";
-    tabUru.style.display = "none";
-    tabMas.style.display = "none";
+    tabApproval.style.display = "none";
+    tabMaster.style.display = "none";
+    autoWrap.style.display = "none";
+    progBtns.style.display = "none";
   } else {
-    roleTxt.innerHTML = `<span style="color:#34d399;">${currentUser.Nama_Penuh} (${currentUser.Peranan} - Gelanggang: ${currentUser.Gelanggang_Tugasan})</span>`;
-    btnAuth.style.display = "none";
+    const u = state.currentUser;
+    btnLogin.style.display = "none";
     btnLogout.style.display = "inline-block";
-    tabRef.style.display = ["PENGADIL","URUSETIA","MASTER_ADMIN"].includes(currentUser.Peranan) ? "inline-block" : "none";
-    tabUru.style.display = ["URUSETIA","MASTER_ADMIN"].includes(currentUser.Peranan) ? "inline-block" : "none";
-    tabMas.style.display = currentUser.Peranan === "MASTER_ADMIN" ? "inline-block" : "none";
+    label.innerText = `${u.name} (${u.court})`;
+
+    if (u.role === "MASTER_ADMIN") {
+      badge.className = "badge badge-master";
+      badge.innerText = "MASTER ADMIN";
+      tabApproval.style.display = "inline-block";
+      tabMaster.style.display = "inline-block";
+      autoWrap.style.display = "flex";
+      progBtns.style.display = "flex";
+    } else if (u.role === "URUSETIA") {
+      badge.className = "badge badge-urusetia";
+      badge.innerText = "URUSETIA";
+      tabApproval.style.display = "inline-block";
+      tabMaster.style.display = "none";
+      autoWrap.style.display = "flex";
+      progBtns.style.display = "flex";
+    } else {
+      badge.className = "badge badge-pengadil";
+      badge.innerText = "PENGADIL";
+      tabApproval.style.display = "none";
+      tabMaster.style.display = "none";
+      autoWrap.style.display = "none";
+      progBtns.style.display = "none";
+    }
   }
-
-  const pendingApprovals = state.matches.filter(m => m.Status_Perlawanan === "MENUNGGU_PENGESAHAN").length;
-  document.getElementById("pendingApproveBadge").innerText = pendingApprovals;
-
-  const pendingUsers = state.users.filter(u => u.Status_Akaun === "MENUNGGU_KELULUSAN").length;
-  document.getElementById("pendingUserBadge").innerText = pendingUsers;
 }
 
-/* SIMULASI GELANGGANG MASA NYATA */
-function renderLiveCourts() {
-  const container = document.getElementById("courtsContainer");
-  container.innerHTML = state.courts.map(court => {
-    const activeMatch = state.matches.find(m =>
-      m.Gelanggang === court.Kod_Gelanggang &&
-      (m.Status_Perlawanan === "SEDANG_BERLANGSUNG" || m.Status_Perlawanan === "MENUNGGU_PENGESAHAN")
-    );
-    const nextMatch = state.matches.find(m =>
-      m.Gelanggang === court.Kod_Gelanggang &&
-      m.Status_Perlawanan === "MENUNGGU" &&
-      !m.Nama_Pasukan_1.startsWith("MENUNGGU") &&
-      !m.Nama_Pasukan_2.startsWith("MENUNGGU")
-    );
+// ==================== PAPARAN GELANGGANG LIVE ====================
+function renderCourts() {
+  const grid = document.getElementById("courtGrid");
+  grid.innerHTML = "";
 
-    const status = activeMatch ? activeMatch.Status_Perlawanan : "KOSONG";
-    const statusLabel = status === "SEDANG_BERLANGSUNG"
-      ? "🔴 SEDANG BERLANGSUNG"
-      : status === "MENUNGGU_PENGESAHAN"
-      ? "🟡 TAMAT (MENUNGGU PENGESAHAN)"
-      : "🟢 GELANGGANG KOSONG / SEDIA";
+  state.courts.forEach(c => {
+    const m = state.matches.find(x => x.id === c.matchId);
+    if (state.currentEvent !== "ALL" && m && m.eventId !== state.currentEvent) return;
 
-    let bodyHtml = "";
-    if (activeMatch) {
-      bodyHtml = `
-        <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">
-          ${activeMatch.Kategori} • Perlawanan #${activeMatch.No_Perlawanan} (${activeMatch.Peringkat} ${activeMatch.Kumpulan})
-        </div>
-        <div class="phase-tag">⏱️ Fasa: ${activeMatch.Fasa_Semasa}</div>
-        <div class="score-board">
-          <div class="team-box">
-            <div class="code">${activeMatch.Kod_Pasukan_1}</div>
-            <div class="name">${activeMatch.Nama_Pasukan_1}</div>
+    const isLive = m && m.status === "SEDANG BERLANGSUNG";
+    const isWait = m && m.status === "TAMAT - TUNGGU SAH";
+    const cardClass = isLive ? "court-card live" : (isWait ? "court-card waiting" : "court-card");
+    const pillClass = isLive ? "status-pill pill-live" : (isWait ? "status-pill pill-wait" : "status-pill pill-ready");
+    const pillText = isLive ? "🔴 SEDANG BERLANGSUNG" : (isWait ? "⏳ TUNGGU PENGESAHAN URUSETIA" : "🟢 SEDIA / MENUNGGU MULA");
+
+    const canReferee = state.currentUser && (
+      state.currentUser.role === "MASTER_ADMIN" ||
+      state.currentUser.role === "URUSETIA" ||
+      (state.currentUser.role === "PENGADIL" && (state.currentUser.court === c.id || state.currentUser.court === "SEMUA"))
+    );
+    const canApprove = state.currentUser && (state.currentUser.role === "MASTER_ADMIN" || state.currentUser.role === "URUSETIA");
+
+    let controlsHtml = "";
+    if (m) {
+      // Kawalan Urusetia Mulakan Perlawanan
+      if (canApprove && (m.status === "MENUNGGU GILIRAN" || m.status === "SEDIA MULA")) {
+        controlsHtml += `<button class="btn-primary" onclick="startMatch('${m.id}')">▶️ Sahkan & Mula Perlawanan</button>`;
+      }
+      // Kawalan Pengadil Semasa Perlawanan Berlangsung
+      if (canReferee && m.status === "SEDANG BERLANGSUNG") {
+        controlsHtml += `
+          <div class="score-stepper">
+            <button class="btn-outline" onclick="updateScore('${m.id}', 1, 1)">+1 ${m.p1Code}</button>
+            <button class="btn-outline" onclick="updateScore('${m.id}', 1, -1)">-1</button>
+            <button class="btn-outline" onclick="updateScore('${m.id}', 2, 1)">+1 ${m.p2Code}</button>
+            <button class="btn-outline" onclick="updateScore('${m.id}', 2, -1)">-1</button>
           </div>
-          <div class="score-num">${activeMatch.Skor_1} - ${activeMatch.Skor_2}</div>
-          <div class="team-box">
-            <div class="code">${activeMatch.Kod_Pasukan_2}</div>
-            <div class="name">${activeMatch.Nama_Pasukan_2}</div>
+          <div class="score-stepper">
+            <button class="btn-outline" onclick="setPhase('${m.id}', 'Separuh Masa 1')">Separuh 1</button>
+            <button class="btn-outline" onclick="setPhase('${m.id}', 'Waktu Rehat')">Rehat</button>
+            <button class="btn-outline" onclick="setPhase('${m.id}', 'Separuh Masa 2')">Separuh 2</button>
           </div>
-        </div>
-        ${status === "MENUNGGU_PENGESAHAN" && canApprove() ? `
-          <div style="display:flex; gap:8px; margin-top:10px;">
-            <button class="btn-success" style="flex:1;" onclick="approveMatch('${activeMatch.Match_ID}')">✅ Sahkan Keputusan</button>
-            <button class="btn-danger" onclick="reopenMatch('${activeMatch.Match_ID}')">↩️ Semak Semula</button>
-          </div>
-        ` : ""}
-      `;
-    } else if (nextMatch) {
-      bodyHtml = `
-        <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">
-          Susunan Auto Seterusnya: <strong>Perlawanan #${nextMatch.No_Perlawanan} (${nextMatch.Kategori})</strong>
-        </div>
-        <div class="score-board" style="opacity:0.85;">
-          <div class="team-box">
-            <div class="code">${nextMatch.Kod_Pasukan_1}</div>
-            <div class="name">${nextMatch.Nama_Pasukan_1}</div>
-          </div>
-          <div style="font-weight:800; color:var(--muted);">LWN</div>
-          <div class="team-box">
-            <div class="code">${nextMatch.Kod_Pasukan_2}</div>
-            <div class="name">${nextMatch.Nama_Pasukan_2}</div>
-          </div>
-        </div>
-        ${canApprove() ? `
-          <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="startMatch('${nextMatch.Match_ID}')">
-            ▶️ Sahkan & Mula Perlawanan #${nextMatch.No_Perlawanan}
-          </button>
-        ` : `<div style="text-align:center; font-size:12px; color:var(--muted);">Menunggu Urusetia memulakan perlawanan...</div>`}
-      `;
-    } else {
-      bodyHtml = `<div style="padding:26px 0; text-align:center; color:var(--muted); font-size:13px;">Tiada perlawanan menunggu di gelanggang ini.</div>`;
+          <button class="btn-warning" onclick="refereeSubmitMatch('${m.id}')">🏁 Tamat & Hantar Keputusan Ke Urusetia</button>
+        `;
+      }
+      // Kawalan Urusetia Sahkan Keputusan
+      if (canApprove && m.status === "TAMAT - TUNGGU SAH") {
+        controlsHtml += `<button class="btn-success" onclick="approveMatch('${m.id}')">✅ Urusetia Sahkan Keputusan & Auto-Giliran</button>`;
+      }
     }
 
-    return `
-      <div class="court-card court-${status}">
-        <div class="court-header">
-          <span class="court-title">🏟️ ${court.Nama_Gelanggang}</span>
-          <span class="status-pill pill-${status}">${statusLabel}</span>
+    grid.innerHTML += `
+      <div class="${cardClass}">
+        <div>
+          <div class="court-header">
+            <span class="court-title">🏟️ ${c.id}</span>
+            <span class="${pillClass}">${pillText}</span>
+          </div>
+          ${m ? `
+            <div class="match-meta">
+              <b>#${m.id}</b> • ${m.cat} • ${m.stage} (Kump ${m.grp})
+            </div>
+            <div class="scoreboard">
+              <div class="team-box">
+                <div class="team-code">${m.p1Code}</div>
+                <div class="team-name">${m.p1Name}</div>
+              </div>
+              <div class="score-num">${m.s1} : ${m.s2}</div>
+              <div class="team-box">
+                <div class="team-code">${m.p2Code}</div>
+                <div class="team-name">${m.p2Name}</div>
+              </div>
+            </div>
+            <div class="phase-bar">⏱️ Fasa: <b>${m.phase}</b> | Status: <b>${m.status}</b></div>
+          ` : `<div class="phase-bar">Tiada perlawanan aktif di gelanggang ini.</div>`}
         </div>
-        ${bodyHtml}
+        <div class="court-controls">${controlsHtml}</div>
       </div>
     `;
-  }).join("");
-}
-
-/* KIRAAN CARTA LIGA AUTOMATIK */
-function recalculateStandings(eventId) {
-  const evTeams = state.teams.filter(t => t.Event_ID === eventId);
-  evTeams.forEach(t => {
-    t.Main = 0; t.Menang = 0; t.Seri = 0; t.Kalah = 0;
-    t.Jaringan = 0; t.Bolos = 0; t.Beza_Gol = 0; t.Mata = 0;
-  });
-
-  const approvedMatches = state.matches.filter(m =>
-    m.Event_ID === eventId &&
-    m.Status_Perlawanan === "DISAHKAN" &&
-    (m.Peringkat === "KUMPULAN" || m.Peringkat === "PUSINGAN_2_XY")
-  );
-
-  approvedMatches.forEach(m => {
-    const team1 = evTeams.find(t => t.Kod_Pasukan === m.Kod_Pasukan_1);
-    const team2 = evTeams.find(t => t.Kod_Pasukan === m.Kod_Pasukan_2);
-    if (!team1 || !team2) return;
-
-    const s1 = Number(m.Skor_1);
-    const s2 = Number(m.Skor_2);
-    team1.Main++; team2.Main++;
-    team1.Jaringan += s1; team1.Bolos += s2;
-    team2.Jaringan += s2; team2.Bolos += s1;
-
-    if (s1 > s2) {
-      team1.Menang++; team1.Mata += 3;
-      team2.Kalah++;
-    } else if (s2 > s1) {
-      team2.Menang++; team2.Mata += 3;
-      team1.Kalah++;
-    } else {
-      team1.Seri++; team1.Mata += 1;
-      team2.Seri++; team2.Mata += 1;
-    }
-    team1.Beza_Gol = team1.Jaringan - team1.Bolos;
-    team2.Beza_Gol = team2.Jaringan - team2.Bolos;
-  });
-
-  autoAdvanceKnockout(eventId);
-}
-
-function getSortedGroup(eventId, groupCode) {
-  return state.teams
-    .filter(t => t.Event_ID === eventId && t.Kumpulan === groupCode)
-    .sort((a, b) => (b.Mata - a.Mata) || (b.Beza_Gol - a.Beza_Gol) || (b.Jaringan - a.Jaringan));
-}
-
-/* AUTOMASI KEMARAAN SUKU AKHIR / SEPARUH AKHIR / AKHIR */
-function autoAdvanceKnockout(eventId) {
-  const ev = state.tournaments.find(t => t.Event_ID === eventId);
-  if (!ev) return;
-
-  if (ev.Format_Pusingan_2 === "SUKU_AKHIR_SILANG") {
-    ["A","B","C","D"].forEach(grp => {
-      const grpMatches = state.matches.filter(m => m.Event_ID === eventId && m.Peringkat === "KUMPULAN" && m.Kumpulan === grp);
-      const allDone = grpMatches.length > 0 && grpMatches.every(m => m.Status_Perlawanan === "DISAHKAN");
-      if (allDone) {
-        const sorted = getSortedGroup(eventId, grp);
-        if (sorted[0]) replacePlaceholderTeam(eventId, `JOHAN ${grp}`, sorted[0].Nama_Pasukan);
-        if (sorted[1]) replacePlaceholderTeam(eventId, `N. JOHAN ${grp}`, sorted[1].Nama_Pasukan);
-      }
-    });
-  }
-
-  if (ev.Format_Pusingan_2 === "KUMPULAN_XY") {
-    ["X","Y"].forEach(grp => {
-      const grpMatches = state.matches.filter(m => m.Event_ID === eventId && m.Peringkat === "PUSINGAN_2_XY" && m.Kumpulan === grp);
-      const allDone = grpMatches.length > 0 && grpMatches.every(m => m.Status_Perlawanan === "DISAHKAN");
-      if (allDone) {
-        const sorted = getSortedGroup(eventId, grp);
-        if (sorted[0]) replacePlaceholderTeam(eventId, `JOHAN ${grp}`, sorted[0].Nama_Pasukan);
-        if (sorted[1]) replacePlaceholderTeam(eventId, `N. JOHAN ${grp}`, sorted[1].Nama_Pasukan);
-      }
-    });
-  }
-
-  // Kemaraan berdasarkan Nombor Perlawanan (MENANG XX / KALAH XX)
-  state.matches
-    .filter(m => m.Event_ID === eventId && m.Status_Perlawanan === "DISAHKAN")
-    .forEach(m => {
-      const s1 = Number(m.Skor_1);
-      const s2 = Number(m.Skor_2);
-      if (s1 === s2) return;
-      const winner = s1 > s2 ? m.Nama_Pasukan_1 : m.Nama_Pasukan_2;
-      const loser = s1 > s2 ? m.Nama_Pasukan_2 : m.Nama_Pasukan_1;
-      replacePlaceholderTeam(eventId, `MENANG ${m.No_Perlawanan}`, winner);
-      replacePlaceholderTeam(eventId, `KALAH ${m.No_Perlawanan}`, loser);
-    });
-}
-
-function replacePlaceholderTeam(eventId, placeholderCode, actualTeamName) {
-  state.matches.filter(m => m.Event_ID === eventId).forEach(m => {
-    if (m.Kod_Pasukan_1 === placeholderCode) m.Nama_Pasukan_1 = actualTeamName;
-    if (m.Kod_Pasukan_2 === placeholderCode) m.Nama_Pasukan_2 = actualTeamName;
   });
 }
 
-/* UNDIAN AUTOMATIK KUMPULAN X DAN Y (SEKOLAH RENDAH) */
-function autoDrawGroupXY() {
-  const groups = ["A","B","C"];
-  const qualified = [];
-  groups.forEach(g => {
-    const sorted = getSortedGroup("EV01", g);
-    if (sorted[0]) qualified.push(sorted[0].Nama_Pasukan);
-    if (sorted[1]) qualified.push(sorted[1].Nama_Pasukan);
-  });
-
-  if (qualified.length < 6) {
-    alert("Sila pastikan kumpulan A, B, dan C mempunyai pasukan yang mencukupi.");
-    return;
-  }
-
-  // Kocok (shuffle) 6 pasukan layak untuk undian X1-X3 & Y1-Y3
-  const shuffled = [...qualified].sort(() => Math.random() - 0.5);
-  const xyCodes = ["X1","X2","X3","Y1","Y2","Y3"];
-
-  xyCodes.forEach((code, idx) => {
-    const tObj = state.teams.find(t => t.Event_ID === "EV01" && t.Kod_Pasukan === code);
-    if (tObj) tObj.Nama_Pasukan = shuffled[idx];
-    replacePlaceholderTeam("EV01", code, shuffled[idx]);
-  });
-
-  saveState();
-  alert("Undian Kumpulan X & Y selesai! Jadual Perlawanan #16 hingga #21 telah dikemas kini secara automatik.");
-}
-
-function renderStandings() {
-  const container = document.getElementById("standingsContainer");
-  const evTeams = state.teams.filter(t => t.Event_ID === currentEventId);
-  const groups = [...new Set(evTeams.map(t => t.Kumpulan))];
-
-  container.innerHTML = groups.map(grp => {
-    const rows = getSortedGroup(currentEventId, grp);
-    return `
-      <div class="section-card">
-        <div class="section-title"><span>Kumpulan ${grp}</span></div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Ked</th>
-                <th>Kod</th>
-                <th>Nama Pasukan</th>
-                <th class="text-center">P</th>
-                <th class="text-center">M</th>
-                <th class="text-center">S</th>
-                <th class="text-center">K</th>
-                <th class="text-center">J</th>
-                <th class="text-center">B</th>
-                <th class="text-center">BG</th>
-                <th class="text-center">Mata</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.map((r, i) => `
-                <tr>
-                  <td><strong>${i + 1}</strong></td>
-                  <td>${r.Kod_Pasukan}</td>
-                  <td><strong>${r.Nama_Pasukan}</strong></td>
-                  <td class="text-center">${r.Main}</td>
-                  <td class="text-center">${r.Menang}</td>
-                  <td class="text-center">${r.Seri}</td>
-                  <td class="text-center">${r.Kalah}</td>
-                  <td class="text-center">${r.Jaringan}</td>
-                  <td class="text-center">${r.Bolos}</td>
-                  <td class="text-center">${r.Beza_Gol}</td>
-                  <td class="text-center"><strong style="color:#38bdf8;">${r.Mata}</strong></td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderMatchesTable() {
-  const stageFilter = document.getElementById("filterStage").value;
-  const tbody = document.getElementById("matchesTableBody");
-  const list = state.matches.filter(m =>
-    m.Event_ID === currentEventId &&
-    (stageFilter === "ALL" || m.Peringkat === stageFilter)
-  );
-
-  tbody.innerHTML = list.map(m => `
-    <tr>
-      <td><strong>#${m.No_Perlawanan}</strong></td>
-      <td>${m.Peringkat} (${m.Kumpulan})</td>
-      <td><span class="brand-badge" style="background:#334155;">Gel. ${m.Gelanggang}</span></td>
-      <td><strong>${m.Nama_Pasukan_1}</strong> <small style="color:var(--muted);">(${m.Kod_Pasukan_1})</small></td>
-      <td class="text-center"><strong style="font-size:15px;">${m.Skor_1} - ${m.Skor_2}</strong></td>
-      <td><strong>${m.Nama_Pasukan_2}</strong> <small style="color:var(--muted);">(${m.Kod_Pasukan_2})</small></td>
-      <td>${m.Fasa_Semasa}</td>
-      <td><span class="status-pill pill-${m.Status_Perlawanan === 'DISAHKAN' ? 'KOSONG' : m.Status_Perlawanan}">${m.Status_Perlawanan}</span></td>
-    </tr>
-  `).join("");
-}
-
-/* PANEL PENGADIL */
-function renderRefereePanel() {
-  const container = document.getElementById("refereeActiveContainer");
-  if (!currentUser) return;
-  document.getElementById("refCourtInfo").innerText = `Tugasan Gelanggang: ${currentUser.Gelanggang_Tugasan}`;
-
-  const activeMatches = state.matches.filter(m =>
-    m.Status_Perlawanan === "SEDANG_BERLANGSUNG" &&
-    (currentUser.Gelanggang_Tugasan === "SEMUA" || m.Gelanggang === currentUser.Gelanggang_Tugasan)
-  );
-
-  if (activeMatches.length === 0) {
-    container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--muted);">Tiada perlawanan yang sedang berlangsung di gelanggang anda. Tunggu Urusetia memulakan perlawanan.</div>`;
-    return;
-  }
-
-  container.innerHTML = activeMatches.map(m => `
-    <div class="court-card court-SEDANG_BERLANGSUNG" style="margin-bottom:14px;">
-      <div class="court-header">
-        <span class="court-title">Gelanggang ${m.Gelanggang} • Perlawanan #${m.No_Perlawanan} (${m.Kategori})</span>
-        <select onchange="updatePhase('${m.Match_ID}', this.value)">
-          <option value="SEPARUH MASA 1" ${m.Fasa_Semasa === 'SEPARUH MASA 1' ? 'selected' : ''}>Separuh Masa 1</option>
-          <option value="REHAT" ${m.Fasa_Semasa === 'REHAT' ? 'selected' : ''}>Waktu Rehat</option>
-          <option value="SEPARUH MASA 2" ${m.Fasa_Semasa === 'SEPARUH MASA 2' ? 'selected' : ''}>Separuh Masa 2</option>
-        </select>
-      </div>
-      <div class="score-board">
-        <div class="team-box">
-          <div class="code">${m.Kod_Pasukan_1}</div>
-          <div class="name">${m.Nama_Pasukan_1}</div>
-          <div class="ref-controls">
-            <button class="btn-success" onclick="adjustScore('${m.Match_ID}', 1, 1)">+1 Gol</button>
-            <button class="btn-danger" onclick="adjustScore('${m.Match_ID}', 1, -1)">-1</button>
-          </div>
-        </div>
-        <div class="score-num">${m.Skor_1} - ${m.Skor_2}</div>
-        <div class="team-box">
-          <div class="code">${m.Kod_Pasukan_2}</div>
-          <div class="name">${m.Nama_Pasukan_2}</div>
-          <div class="ref-controls">
-            <button class="btn-success" onclick="adjustScore('${m.Match_ID}', 2, 1)">+1 Gol</button>
-            <button class="btn-danger" onclick="adjustScore('${m.Match_ID}', 2, -1)">-1</button>
-          </div>
-        </div>
-      </div>
-      <button class="btn-warning" style="width:100%; margin-top:10px;" onclick="finishMatchByReferee('${m.Match_ID}')">
-        🏁 Tamatkan Perlawanan & Hantar Keputusan Kepada Urusetia
-      </button>
-    </div>
-  `).join("");
-}
-
-function adjustScore(matchId, teamNum, delta) {
-  const m = state.matches.find(x => x.Match_ID === matchId);
-  if (!m) return;
-  if (teamNum === 1) m.Skor_1 = Math.max(0, Number(m.Skor_1) + delta);
-  if (teamNum === 2) m.Skor_2 = Math.max(0, Number(m.Skor_2) + delta);
-  m.Pengadil_Kemaskini = currentUser ? currentUser.Username : "ref";
-  saveState();
-}
-
-function updatePhase(matchId, newPhase) {
-  const m = state.matches.find(x => x.Match_ID === matchId);
-  if (!m) return;
-  m.Fasa_Semasa = newPhase;
-  saveState();
-}
-
-function finishMatchByReferee(matchId) {
-  const m = state.matches.find(x => x.Match_ID === matchId);
-  if (!m) return;
-  m.Fasa_Semasa = "TAMAT MASA PENUH";
-  m.Status_Perlawanan = "MENUNGGU_PENGESAHAN";
-  m.Pengadil_Kemaskini = currentUser ? currentUser.Username : "ref";
-  saveState();
-}
-
-/* PANEL KAWALAN URUSETIA */
+// ==================== TINDAKAN PERLAWANAN & KELULUSAN ====================
 function startMatch(matchId) {
-  const m = state.matches.find(x => x.Match_ID === matchId);
+  const m = state.matches.find(x => x.id === matchId);
   if (!m) return;
-  const busy = state.matches.find(x =>
-    x.Gelanggang === m.Gelanggang &&
-    (x.Status_Perlawanan === "SEDANG_BERLANGSUNG" || x.Status_Perlawanan === "MENUNGGU_PENGESAHAN")
-  );
-  if (busy) {
-    alert(`Gelanggang ${m.Gelanggang} masih digunakan oleh Perlawanan #${busy.No_Perlawanan}! Sila selesaikan dan sahkan dahulu.`);
-    return;
-  }
-  m.Status_Perlawanan = "SEDANG_BERLANGSUNG";
-  m.Fasa_Semasa = "SEPARUH MASA 1";
+  m.status = "SEDANG BERLANGSUNG";
+  m.phase = "Separuh Masa 1 (Live)";
+  saveState();
+}
+
+function updateScore(matchId, teamNum, delta) {
+  const m = state.matches.find(x => x.id === matchId);
+  if (!m) return;
+  if (teamNum === 1) m.s1 = Math.max(0, m.s1 + delta);
+  if (teamNum === 2) m.s2 = Math.max(0, m.s2 + delta);
+  saveState();
+}
+
+function setPhase(matchId, phaseText) {
+  const m = state.matches.find(x => x.id === matchId);
+  if (!m) return;
+  m.phase = phaseText;
+  saveState();
+}
+
+function refereeSubmitMatch(matchId) {
+  const m = state.matches.find(x => x.id === matchId);
+  if (!m) return;
+  m.phase = "Masa Penuh (Tamat)";
+  m.status = "TAMAT - TUNGGU SAH";
+  m.approval = "MENUNGGU URUSETIA";
+  m.ref = state.currentUser ? state.currentUser.name : "Pengadil";
   saveState();
 }
 
 function approveMatch(matchId) {
-  const m = state.matches.find(x => x.Match_ID === matchId);
+  const m = state.matches.find(x => x.id === matchId);
   if (!m) return;
-  m.Status_Perlawanan = "DISAHKAN";
-  m.Disahkan_Oleh = currentUser ? currentUser.Username : "urusetia";
-  recalculateStandings(m.Event_ID);
-  saveState();
-}
+  m.status = "SELESAI";
+  m.approval = "DISAHKAN";
+  m.phase = "Keputusan Rasmi";
 
-function reopenMatch(matchId) {
-  const m = state.matches.find(x => x.Match_ID === matchId);
-  if (!m) return;
-  m.Status_Perlawanan = "SEDANG_BERLANGSUNG";
-  m.Fasa_Semasa = "SEPARUH MASA 2";
-  saveState();
-}
+  // Kemas kini automatik perlawanan Separuh Akhir / Akhir jika perlawanan kalah mati selesai
+  autoUpdateBracketWinners(m);
 
-function renderUrusetiaPanel() {
-  const qContainer = document.getElementById("approvalQueueContainer");
-  const waiting = state.matches.filter(m => m.Status_Perlawanan === "MENUNGGU_PENGESAHAN");
-
-  if (waiting.length === 0) {
-    qContainer.innerHTML = `<div style="color:var(--muted); font-size:13px;">Tiada keputusan perlawanan yang sedang menunggu pengesahan.</div>`;
-  } else {
-    qContainer.innerHTML = waiting.map(m => `
-      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#0f172a; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid var(--warning);">
-        <div>
-          <strong>Gelanggang ${m.Gelanggang} • #${m.No_Perlawanan} (${m.Kategori})</strong><br/>
-          <span>${m.Nama_Pasukan_1} <strong>(${m.Skor_1} - ${m.Skor_2})</strong> ${m.Nama_Pasukan_2}</span>
-          <small style="color:var(--muted); display:block;">Dihantar oleh: ${m.Pengadil_Kemaskini}</small>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="btn-success" onclick="approveMatch('${m.Match_ID}')">✅ Sahkan & Kemas Kini Liga</button>
-          <button class="btn-danger" onclick="reopenMatch('${m.Match_ID}')">↩️ Minta Semak Semula</button>
-        </div>
-      </div>
-    `).join("");
+  // Cari perlawanan seterusnya yang belum mula untuk gelanggang tersebut secara automatik
+  const nextMatch = state.matches.find(x => x.court === m.court && x.status === "MENUNGGU GILIRAN");
+  const courtObj = state.courts.find(c => c.id === m.court);
+  if (courtObj) {
+    courtObj.matchId = nextMatch ? nextMatch.id : "";
   }
-
-  const nextContainer = document.getElementById("nextMatchQueueContainer");
-  const pendingMatches = state.matches.filter(m =>
-    m.Status_Perlawanan === "MENUNGGU" &&
-    !m.Nama_Pasukan_1.startsWith("MENUNGGU") &&
-    !m.Nama_Pasukan_2.startsWith("MENUNGGU")
-  ).slice(0, 8);
-
-  nextContainer.innerHTML = pendingMatches.map(m => `
-    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#0f172a; padding:10px 12px; border-radius:8px; margin-bottom:8px;">
-      <div>
-        <span class="brand-badge" style="background:#334155;">Gelanggang ${m.Gelanggang}</span>
-        <strong style="margin-left:8px;">#${m.No_Perlawanan} (${m.Kategori})</strong>:
-        ${m.Nama_Pasukan_1} lwn ${m.Nama_Pasukan_2}
-      </div>
-      <button class="btn-primary" onclick="startMatch('${m.Match_ID}')">▶️ Mula Perlawanan</button>
-    </div>
-  `).join("");
-}
-
-/* PANEL MASTER ADMIN */
-function renderMasterPanel() {
-  const tbody = document.getElementById("usersTableBody");
-  if (!tbody) return;
-  tbody.innerHTML = state.users.map(u => `
-    <tr>
-      <td><strong>${u.Username}</strong></td>
-      <td>${u.Nama_Penuh}</td>
-      <td>${u.Peranan}</td>
-      <td>${u.Gelanggang_Tugasan}</td>
-      <td><span class="status-pill ${u.Status_Akaun === 'AKTIF' ? 'pill-KOSONG' : 'pill-MENUNGGU_PENGESAHAN'}">${u.Status_Akaun}</span></td>
-      <td>
-        ${u.Status_Akaun !== "AKTIF" ? `<button class="btn-success" onclick="approveUser('${u.Username}')">Luluskan</button>` : ""}
-        ${u.Peranan !== "MASTER_ADMIN" ? `<button class="btn-danger" onclick="deleteUser('${u.Username}')">Padam</button>` : "-"}
-      </td>
-    </tr>
-  `).join("");
-}
-
-function approveUser(username) {
-  const u = state.users.find(x => x.Username === username);
-  if (u) { u.Status_Akaun = "AKTIF"; saveState(); }
-}
-
-function deleteUser(username) {
-  state.users = state.users.filter(x => x.Username !== username);
   saveState();
 }
 
-function createNewTournament() {
-  const name = document.getElementById("newEvName").value.trim();
-  const cat = document.getElementById("newEvCat").value.trim();
-  const format = document.getElementById("newEvFormat").value;
-  const courtsRaw = document.getElementById("newEvCourts").value.trim();
-  const teamsRaw = document.getElementById("newEvTeams").value.trim();
+function autoAssignCourts() {
+  state.courts.forEach(c => {
+    const current = state.matches.find(x => x.id === c.matchId);
+    if (!current || current.status === "SELESAI") {
+      const next = state.matches.find(x => x.court === c.id && x.status === "MENUNGGU GILIRAN");
+      if (next) c.matchId = next.id;
+    }
+  });
+  saveState();
+}
 
-  if (!name || !cat || !teamsRaw) {
-    alert("Sila lengkapkan nama kejohanan, kategori, dan senarai pasukan.");
-    return;
-  }
-
-  const evId = "EV" + String(state.tournaments.length + 1).padStart(2, "0");
-  state.tournaments.push({
-    Event_ID: evId, Nama_Kejohanan: name, Kategori: cat,
-    Format_Pusingan_2: format, Gelanggang_Utama: courtsRaw, Status_Event: "AKTIF"
+// ==================== PENGIRAAN CARTA LIGA AUTOMATIK ====================
+function computeGroupStandings(eventId, grp) {
+  const groupTeams = state.teams.filter(t => t.eventId === eventId && t.grp === grp);
+  const stats = {};
+  groupTeams.forEach(t => {
+    stats[t.code] = { code: t.code, name: t.name, P:0, M:0, S:0, K:0, J:0, B:0, PG:0, Mata:0 };
   });
 
-  const courtList = courtsRaw.split(",").map(c => c.trim()).filter(Boolean);
-  courtList.forEach(cCode => {
-    if (!state.courts.find(c => c.Kod_Gelanggang === cCode)) {
-      state.courts.push({ Kod_Gelanggang: cCode, Nama_Gelanggang: "Gelanggang " + cCode, Kategori_Semasa: cat, Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" });
+  const groupMatches = state.matches.filter(m =>
+    m.eventId === eventId && m.grp === grp && m.approval === "DISAHKAN"
+  );
+
+  groupMatches.forEach(m => {
+    const a = stats[m.p1Code];
+    const b = stats[m.p2Code];
+    if (!a || !b) return;
+    a.P++; b.P++;
+    a.J += m.s1; a.B += m.s2;
+    b.J += m.s2; b.B += m.s1;
+    if (m.s1 > m.s2) { a.M++; a.Mata += 3; b.K++; }
+    else if (m.s1 < m.s2) { b.M++; b.Mata += 3; a.K++; }
+    else { a.S++; b.S++; a.Mata += 1; b.Mata += 1; }
+  });
+
+  return Object.values(stats).map(s => {
+    s.PG = s.J - s.B;
+    return s;
+  }).sort((x, y) => (y.Mata - x.Mata) || (y.PG - x.PG) || (y.J - x.J));
+}
+
+function renderStandings() {
+  const container = document.getElementById("standingsContainer");
+  container.innerHTML = "";
+
+  const groupsToRender = [
+    { eventId: "FUTSAL_SR_2026", label: "Sekolah Rendah - Kumpulan A", grp: "A" },
+    { eventId: "FUTSAL_SR_2026", label: "Sekolah Rendah - Kumpulan B", grp: "B" },
+    { eventId: "FUTSAL_SR_2026", label: "Sekolah Rendah - Kumpulan C", grp: "C" },
+    { eventId: "FUTSAL_SR_2026", label: "Sekolah Rendah - Pusingan Kedua Kumpulan X", grp: "X" },
+    { eventId: "FUTSAL_SR_2026", label: "Sekolah Rendah - Pusingan Kedua Kumpulan Y", grp: "Y" },
+    { eventId: "FUTSAL_SM_2026", label: "Sekolah Menengah - Kumpulan A", grp: "A" },
+    { eventId: "FUTSAL_SM_2026", label: "Sekolah Menengah - Kumpulan B", grp: "B" },
+    { eventId: "FUTSAL_SM_2026", label: "Sekolah Menengah - Kumpulan C", grp: "C" },
+    { eventId: "FUTSAL_SM_2026", label: "Sekolah Menengah - Kumpulan D", grp: "D" }
+  ];
+
+  groupsToRender.forEach(g => {
+    if (state.currentEvent !== "ALL" && g.eventId !== state.currentEvent) return;
+    const rows = computeGroupStandings(g.eventId, g.grp);
+    let trs = "";
+    rows.forEach((r, idx) => {
+      const qualBadge = idx < 2 ? `<span style="color:#34d399; font-weight:700;">#${idx+1}</span>` : `#${idx+1}`;
+      trs += `
+        <tr>
+          <td>${qualBadge}</td>
+          <td><b>${r.code}</b> - ${r.name}</td>
+          <td class="text-center">${r.P}</td>
+          <td class="text-center">${r.M}</td>
+          <td class="text-center">${r.S}</td>
+          <td class="text-center">${r.K}</td>
+          <td class="text-center">${r.J}:${r.B}</td>
+          <td class="text-center">${r.PG > 0 ? '+'+r.PG : r.PG}</td>
+          <td class="text-center"><b>${r.Mata}</b></td>
+        </tr>
+      `;
+    });
+
+    container.innerHTML += `
+      <div class="card-box">
+        <h3>${g.label}</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Ked</th><th>Pasukan</th><th class="text-center">P</th><th class="text-center">M</th>
+              <th class="text-center">S</th><th class="text-center">K</th><th class="text-center">J:B</th>
+              <th class="text-center">PG</th><th class="text-center">Mata</th>
+            </tr>
+          </thead>
+          <tbody>${trs}</tbody>
+        </table>
+      </div>
+    `;
+  });
+}
+
+// ==================== AUTOMASI PUSINGAN KEDUA (X/Y & SUKU AKHIR SILANG) ====================
+function generateSRGroupXY() {
+  const stA = computeGroupStandings("FUTSAL_SR_2026", "A");
+  const stB = computeGroupStandings("FUTSAL_SR_2026", "B");
+  const stC = computeGroupStandings("FUTSAL_SR_2026", "C");
+
+  // Susunan silang / undian 6 pasukan layak (Johan & Naib Johan A, B, C) ke X1..X3 dan Y1..Y3
+  const mapping = {
+    "X1": stA[0], "X2": stB[1], "X3": stC[0],
+    "Y1": stB[0], "Y2": stA[1], "Y3": stC[1]
+  };
+
+  Object.keys(mapping).forEach(code => {
+    const teamObj = state.teams.find(t => t.eventId === "FUTSAL_SR_2026" && t.code === code);
+    if (teamObj && mapping[code]) {
+      teamObj.name = `${mapping[code].name} (${mapping[code].code})`;
     }
   });
 
-  const lines = teamsRaw.split("\n").map
+  state.matches.filter(m => m.eventId === "FUTSAL_SR_2026" && (m.grp === "X" || m.grp === "Y")).forEach(m => {
+    const t1 = state.teams.find(t => t.eventId === "FUTSAL_SR_2026" && t.code === m.p1Code);
+    const t2 = state.teams.find(t => t.eventId === "FUTSAL_SR_2026" && t.code === m.p2Code);
+    if (t1) m.p1Name = t1.name;
+    if (t2) m.p2Name = t2.name;
+  });
+
+  saveState();
+  alert("Kumpulan X dan Kumpulan Y (Sekolah Rendah) berjaya dijana daripada Johan & Naib Johan Kumpulan A, B, C!");
+}
+
+function generateSMKnockout() {
+  // 1. Suku Akhir Sekolah Menengah (Johan A lwn N.Johan D, dll)
+  const smA = computeGroupStandings("FUTSAL_SM_2026", "A");
+  const smB = computeGroupStandings("FUTSAL_SM_2026", "B");
+  const smC = computeGroupStandings("FUTSAL_SM_2026", "C");
+  const smD = computeGroupStandings("FUTSAL_SM_2026", "D");
+
+  const setMatchTeams = (id, t1, t2) => {
+    const m = state.matches.find(x => x.id === id);
+    if (m && t1 && t2) {
+      m.p1Name = `${t1.name} (${t1.code})`;
+      m.p2Name = `${t2.name} (${t2.code})`;
+    }
+  };
+
+  setMatchTeams("SM-33", smA[0], smD[1]);
+  setMatchTeams("SM-34", smB[0], smC[1]);
+  setMatchTeams("SM-35", smC[0], smB[1]);
+  setMatchTeams("SM-36", smD[0], smA[1]);
+
+  // 2. Separuh Akhir Sekolah Rendah (Johan X lwn N.Johan Y, Johan Y lwn N.Johan X)
+  const srX = computeGroupStandings("FUTSAL_SR_2026", "X");
+  const srY = computeGroupStandings("FUTSAL_SR_2026", "Y");
+  setMatchTeams("SR-22", srX[0], srY[1]);
+  setMatchTeams("SR-23", srY[0], srX[1]);
+
+  saveState();
+  alert("Jadual Suku Akhir Silang (Menengah) & Separuh Akhir X/Y (Rendah) telah dikemas kini secara automatik!");
+}
+
+function autoUpdateBracketWinners(m) {
+  const winnerName = m.s1 >= m.s2 ? m.p1Name : m.p2Name;
+  const loserName = m.s1 >= m.s2 ? m.p2Name : m.p1Name;
+
+  // Sekolah Rendah Separuh Akhir -> Tempat 3/4 & Akhir
+  if (m.id === "SR-22") {
+    const m24 = state.matches.find(x => x.id === "SR-24");
+    const m25 = state.matches.find(x => x.id === "SR-25");
+    if (m24) m24.p1Name = loserName;
+    if (m25) m25.p1Name = winnerName;
+  }
+  if (m.id === "SR-23") {
+    const m24 = state.matches.find(x => x.id === "SR-24");
+    const m25 = state.matches.find(x => x.id === "SR-25");
+    if (m24) m24.p2Name = loserName;
+    if (m25) m25.p2Name = winnerName;
+  }
+
+  // Sekolah Menengah Suku Akhir -> Separuh Akhir -> Akhir
+  const mapSM = {
+    "SM-33": { winTarget: "SM-37", side: 1 },
+    "SM-34": { winTarget: "SM-37", side: 2 },
+    "SM-35": { winTarget: "SM-38", side: 1 },
+    "SM-36": { winTarget: "SM-38", side: 2 }
+  };
+  if (mapSM[m.id]) {
+    const target = state.matches.find(x => x.id === mapSM[m.id].winTarget);
+    if (target) {
+      if (mapSM[m.id].side === 1) target.p1Name = winnerName;
+      else target.p2Name = winnerName;
+    }
+  }
+  if (m.id === "SM-37") {
+    const m39 = state.matches.find(x => x.id === "SM-39");
+    const m40 = state.matches.find(x => x.id === "SM-40");
+    if (m39) m39.p1Name = loserName;
+    if (m40) m40.p1Name = winnerName;
+  }
+  if (m.id === "SM-38") {
+    const m39 = state.matches.find(x => x.id === "SM-39");
+    const m40 = state.matches.find(x => x.id === "SM-40");
+    if (m39) m39.p2Name = loserName;
+    if (m40) m40.p2Name = winnerName;
+  }
+}
+
+// ==================== JADUAL & PETI KELULUSAN ====================
+function renderSchedule() {
+  const tbody = document.getElementById("scheduleBody");
+  const stageFilter = document.getElementById("filterStage").value;
+  tbody.innerHTML = "";
+
+  const canControl = state.currentUser && (state.currentUser.role === "MASTER_ADMIN" || state.currentUser.role === "URUSETIA");
+
+  state.matches.forEach(m => {
+    if (state.currentEvent !== "ALL" && m.eventId !== state.currentEvent) return;
+    if (stageFilter !== "ALL" && m.stage !== stageFilter) return;
+
+    let actionBtn = "-";
+    if (canControl) {
+      if (m.status === "MENUNGGU GILIRAN") {
+        actionBtn = `<button class="btn-outline" onclick="assignToCourt('${m.id}')">Hantar Ke ${m.court}</button>`;
+      } else if (m.status === "TAMAT - TUNGGU SAH") {
+        actionBtn = `<button class="btn-success" onclick="approveMatch('${m.id}')">Sahkan</button>`;
+      }
+    }
+
+    tbody.innerHTML += `
+      <tr>
+        <td><b>${m.id}</b></td>
+        <td>${m.cat}</td>
+        <td>${m.stage} (${m.grp})</td>
+        <td><b>${m.p1Code}</b> - ${m.p1Name}</td>
+        <td class="text-center"><b>${m.s1} - ${m.s2}</b></td>
+        <td><b>${m.p2Code}</b> - ${m.p2Name}</td>
+        <td>${m.court}</td>
+        <td>${m.status}</td>
+        <td><span class="badge ${m.approval==='DISAHKAN'?'badge-urusetia':'badge-guest'}">${m.approval}</span></td>
+        <td>${actionBtn}</td>
+      </tr>
+    `;
+  });
+}
+
+function assignToCourt(matchId) {
+  const m = state.matches.find(x => x.id === matchId);
+  if (!m) return;
+  const c = state.courts.find(x => x.id === m.court);
+  if (c) c.matchId = m.id;
+  saveState();
+}
+
+function renderApprovals() {
+  const pending = state.matches.filter(m => m.approval === "MENUNGGU URUSETIA");
+  document.getElementById("pendingCount").innerText = pending.length;
+
+  const canApprove = state.currentUser && (state.currentUser.role === "MASTER_ADMIN" || state.currentUser.role === "URUSETIA");
+  document.getElementById("approvalBanner").style.display = (canApprove && pending.length > 0) ? "flex" : "none";
+
+  const tbody = document.getElementById("approvalBody");
+  tbody.innerHTML = "";
+  if (pending.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:var(--muted);">Tiada keputusan yang menunggu pengesahan buat masa ini.</td></tr>`;
+    return;
+  }
+
+  pending.forEach(m => {
+    tbody.innerHTML += `
+      <tr>
+        <td><b>${m.id}</b></td>
+        <td>${m.court}</td>
+        <td>${m.cat} (${m.grp})</td>
+        <td>${m.p1Name} <b>lwn</b> ${m.p2Name}</td>
+        <td class="text-center" style="font-size:1.1rem; font-weight:800;">${m.s1} - ${m.s2}</td>
+        <td>${m.ref}</td>
+        <td>
+          <button class="btn-success" onclick="approveMatch('${m.id}')">✅ Sahkan & Masuk Carta</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+// ==================== PANEL MASTER ADMIN ====================
+function renderUsers() {
+  const tbody = document.getElementById("userTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  state.users.forEach(u => {
+    const toggleBtn = u.role !== "MASTER_ADMIN"
+      ? `<button class="${u.status==='AKTIF'?'btn-danger':'btn-success'}" onclick="toggleUser('${u.id}')">${u.status==='AKTIF'?'Nyahaktif':'Luluskan'}</button>`
+      : "-";
+    tbody.innerHTML += `
+      <tr>
+        <td><b>${u.name}</b></td>
+        <td>${u.role}</td>
+        <td><code>${u.pin}</code></td>
+        <td>${u.court}</td>
+        <td>${u.status}</td>
+        <td>${toggleBtn}</td>
+      </tr>
+    `;
+  });
+  document.getElementById("gasUrlInput").value = state.gasUrl;
+}
+
+function toggleUser(uid) {
+  const u = state.users.find(x => x.id === uid);
+  if (!u) return;
+  u.status = u.status === "AKTIF" ? " DISEKAT" : "AKTIF";
+  saveState();
+}
+
+function createNewEvent() {
+  const id = document.getElementById("newEventId").value.trim();
+  const name = document.getElementById("newEventName").value.trim();
+  const courts = document.getElementById("newEventCourts").value.trim();
+  if (!id || !name) return alert("Sila isi ID dan Nama Kejohanan.");
+
+  const sel = document.getElementById("eventSelector");
+  const opt = document.createElement("option");
+  opt.value = id;
+  opt.innerText = `${name} (${courts})`;
+  sel.appendChild(opt);
+  alert(`Kejohanan "${name}" berjaya ditambah ke dalam sistem!`);
+}
+
+function saveGasUrl() {
+  state.gasUrl = document.getElementById("gasUrlInput").value.trim();
+  localStorage.setItem("lp_gas_url", state.gasUrl);
+  alert("URL Google Apps Script disimpan!");
+}
+
+async function syncToGoogleSheets() {
+  if (!state.gasUrl) return alert("Sila masukkan URL Web App Google Apps Script terlebih dahulu.");
+  try {
+    await fetch(state.gasUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "SYNC_ALL", matches: state.matches, users: state.users })
+    });
+    alert("Data berjaya dihantar ke Google Sheets!");
+  } catch (e) {
+    alert("Ralat penghantaran: " + e.message);
+  }
+}
+
+function resetFactoryData() {
+  if (!confirm("Adakah anda pasti mahu menetapkan semula semua skor kepada 0-0?")) return;
+  localStorage.clear();
+  location.reload();
+}
+
+// ==================== UTILITI UI ====================
+function switchEvent(val) { state.currentEvent = val; renderAll(); }
+function openTab(tabId, btn) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById(tabId).classList.add("active");
+  btn.classList.add("active");
+}
+function openModal(id) { document.getElementById(id).classList.add("show"); }
+function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+function copyShareLink() {
+  const url = window.location.origin + window.location.pathname + "?view=live";
+  navigator.clipboard.writeText(url);
+  alert("Pautan Live Penonton (View-Only) telah disalin:\n" + url);
+}
+
+function renderAll() {
+  renderCourts();
+  renderStandings();
+  renderSchedule();
+  renderApprovals();
+  renderUsers();
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+updateAuthUI();
+renderAll();
+</script>
+</body>
+</html>
