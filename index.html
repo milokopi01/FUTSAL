@@ -444,6 +444,65 @@
     .stat .stat-val { font-family: var(--font-display); font-size: 1.7rem; font-weight: 800; }
     .stat .stat-lbl { font-size: 0.74rem; color: var(--text-2); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
     .draw-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    /* =========================================================
+       MEJA PENGADIL: PILIH GELANGGANG & SEPAK MULA (FASA 2)
+       ========================================================= */
+    .ref-desk { margin-bottom: 18px; padding: 0; overflow: hidden; border-color: rgba(46,230,166,.35); }
+    .ref-desk-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); }
+    .ref-desk-head h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; }
+    .ref-desk-head p { font-size: .78rem; color: var(--text-2); margin-top: 3px; }
+    .ref-desk-body { padding: 16px 20px 20px; }
+    .ref-step { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); margin-bottom: 10px; }
+    .court-pick-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .court-pick {
+      font: inherit; color: var(--text-0); text-align: left; cursor: pointer;
+      display: flex; flex-direction: column; gap: 9px; padding: 14px; min-width: 0;
+      border-radius: var(--radius); background: rgba(0,0,0,.24); border: 1px solid var(--glass-border);
+      transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+    }
+    .court-pick:hover:not(:disabled) { border-color: var(--glass-border-strong); transform: translateY(-1px); }
+    .court-pick:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--brand-glow); }
+    .court-pick.selected { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-glow); background: rgba(46,230,166,.07); }
+    .court-pick:disabled { cursor: not-allowed; opacity: .6; }
+    .court-pick-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .court-pick .court-letter { width: 38px; height: 38px; font-size: 1.1rem; border-radius: 11px; }
+    .court-pick-match { font-size: .82rem; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+    .court-pick-match small { display: block; margin-top: 3px; color: var(--text-2); font-weight: 600; font-family: var(--font-mono); font-size: .7rem; }
+    .court-pick-reason { font-size: .72rem; color: var(--text-2); line-height: 1.35; }
+    .lock-chip { display: inline-flex; align-items: center; gap: 6px; width: fit-content; max-width: 100%; font-size: .72rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--glass-border); overflow-wrap: anywhere; }
+    .lock-chip.free  { color: #86efac; background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.35); }
+    .lock-chip.mine  { color: var(--brand); background: rgba(46,230,166,.12); border-color: rgba(46,230,166,.45); }
+    .lock-chip.taken { color: #fda4af; background: rgba(244,63,94,.12); border-color: rgba(244,63,94,.4); }
+    .lock-chip.stale { color: #fff0a8; background: rgba(250,204,21,.12); border-color: rgba(250,204,21,.4); }
+    .lock-chip.na    { color: var(--text-2); }
+    .kickoff-bar {
+      margin-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+      padding: 14px 16px; border-radius: var(--radius); background: rgba(46,230,166,.06); border: 1px dashed rgba(46,230,166,.45);
+    }
+    .kickoff-bar.idle { background: rgba(0,0,0,.18); border-color: var(--glass-border); }
+    .ko-info { font-size: .88rem; min-width: 0; flex: 1 1 260px; }
+    .ko-info small { display: block; color: var(--text-2); font-size: .76rem; margin-top: 3px; }
+    .btn-kickoff { padding: 14px 28px; font-size: 1.02rem; font-weight: 800; border-radius: 14px; letter-spacing: .02em; }
+    .btn-kickoff:not(:disabled) { box-shadow: 0 8px 28px var(--brand-glow); }
+    .ref-active { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .ref-active .court-letter { color: var(--brand); border-color: rgba(46,230,166,.6); }
+    .ref-active-info { flex: 1 1 260px; min-width: 0; font-size: .9rem; }
+    .ref-active-info small { display: block; color: var(--text-2); font-size: .76rem; margin-top: 3px; }
+    .ref-active-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    @media (max-width: 980px) { .court-pick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 420px) { .court-pick-grid { grid-template-columns: 1fr; } .btn-kickoff { width: 100%; } }
+
+    /* Pangkalan data pengadil */
+    .card-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--glass-border); }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .ref-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 12px 18px 0; }
+    .ref-toolbar .input { width: auto; min-width: 220px; padding: 9px 12px; font-size: 0.86rem; }
+    .pw-cell { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-weight: 700; letter-spacing: .04em; }
+    .pw-cell .btn-sm { padding: 3px 8px; }
+    .input-group { display: flex; gap: 8px; }
+    .input-group .input { flex: 1; }
+    .field-hint { font-size: 0.74rem; color: var(--text-2); }
+    .empty-row td { text-align: center; color: var(--text-2); padding: 22px 12px; }
 
     /* =========================================================
        10. MODAL
@@ -550,6 +609,37 @@
       .toast-stack { left: 12px; right: 12px; }
       .toast { max-width: none; }
     }
+
+    /* ===== FASA 3: PAPAN LIVE AWAM & TANGGUH ===== */
+    .live-board { margin-bottom: 18px; padding: 16px 18px; }
+    .live-board-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .live-board-head h3 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; }
+    .live-board-head p { margin: 2px 0 0; color: var(--text-2); font-size: .8rem; }
+    .live-count { font-family: var(--font-mono); font-size: .8rem; padding: 4px 10px; border-radius: 999px; background: var(--court-live-bg); color: #ff8a8a; border: 1px solid rgba(239,68,68,.4); }
+    .live-count.zero { background: var(--glass); color: var(--text-2); border-color: var(--glass-border); }
+    .live-board-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+    .lb-card { border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 12px; background: var(--glass); display: flex; flex-direction: column; gap: 6px; position: relative; overflow: hidden; }
+    .lb-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--court-ready); }
+    .lb-card.lb-live { border-color: rgba(239,68,68,.6); background: var(--court-live-bg); }
+    .lb-card.lb-live::before { background: var(--court-live); animation: blink-bar 1s steps(2, start) infinite; }
+    .lb-card.lb-tangguh { border-color: rgba(255,181,71,.55); background: rgba(255,181,71,.08); }
+    .lb-card.lb-tangguh::before { background: var(--accent); }
+    .lb-card.lb-done::before { background: var(--court-done); }
+    .lb-card.lb-flash { animation: lb-flash 1.2s ease-out 3; }
+    @keyframes lb-flash { 0% { box-shadow: 0 0 0 0 var(--court-live-glow); } 100% { box-shadow: 0 0 0 14px rgba(239,68,68,0); } }
+    .lb-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: .78rem; color: var(--text-2); }
+    .lb-top strong { color: var(--text-0); font-family: var(--font-display); font-size: .9rem; }
+    .lb-teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; font-weight: 700; font-size: .85rem; }
+    .lb-teams span:last-child { text-align: right; }
+    .lb-score { font-family: var(--font-mono); font-size: 1.25rem; color: var(--text-0); white-space: nowrap; }
+    .lb-meta { font-size: .76rem; color: var(--text-1); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+    .lb-ref { font-size: .8rem; color: var(--text-0); }
+    .lb-ref.none { color: var(--text-2); }
+    .badge-tangguh { color: var(--accent); background: rgba(255,181,71,.12); border-color: rgba(255,181,71,.45); }
+    .tangguh-opts { display: grid; gap: 8px; margin: 10px 0; }
+    .tangguh-opts label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); cursor: pointer; background: var(--glass); }
+    .tangguh-opts label:has(input:checked) { border-color: var(--accent); background: rgba(255,181,71,.08); }
+    .tangguh-opts small { display: block; color: var(--text-2); }
   </style>
 </head>
 <body>
@@ -582,7 +672,7 @@
           <button type="button" class="btn" id="btnShareLive" title="Salin pautan live untuk dikongsi">
             <span aria-hidden="true">🔗</span><span class="btn-text">Kongsi Link Live</span>
           </button>
-          <button type="button" class="btn hidden" id="btnOpenRegister" title="Daftar Sub-Admin / Pengadil">
+          <button type="button" class="btn hidden" id="btnOpenRegister" title="Daftar Sub-Admin (Urusetia)">
             <span aria-hidden="true">👥</span><span class="btn-text">Daftar Sub-Admin</span>
           </button>
           <button type="button" class="btn btn-primary" id="btnLogin">
@@ -634,6 +724,12 @@
             <span><i class="l-done"></i> Tamat · Menunggu Pengesahan</span>
           </div>
         </div>
+        <!-- PAPAN LIVE AWAM (Fasa 3): dipaparkan kepada semua, termasuk penonton -->
+        <div class="card glass live-board" id="liveBoard" aria-live="polite"></div>
+
+        <!-- MEJA PENGADIL (Fasa 2): dipaparkan hanya selepas pengadil log masuk -->
+        <div class="card glass ref-desk hidden" id="refDesk"></div>
+
         <div class="courts-grid" id="courtsGrid">
           <!-- Kad gelanggang A, B, C, D dijana oleh JavaScript (renderCourts) -->
         </div>
@@ -800,7 +896,7 @@
         <div class="panel-head">
           <div>
             <h2>Tetapan Master Admin</h2>
-            <p>Urus pengguna, undian Kumpulan X &amp; Y, tugasan gelanggang dan data kejohanan.</p>
+            <p>Urus akaun pengadil, pengguna, undian Kumpulan X &amp; Y, tugasan gelanggang dan data kejohanan.</p>
           </div>
         </div>
 
@@ -817,15 +913,55 @@
             <div class="stat glass"><div class="stat-val" id="statLive">0</div><div class="stat-lbl">Sedang Live</div></div>
             <div class="stat glass"><div class="stat-val" id="statPending">0</div><div class="stat-lbl">Menunggu Pengesahan</div></div>
             <div class="stat glass"><div class="stat-val" id="statApproved">0</div><div class="stat-lbl">Disahkan</div></div>
-            <div class="stat glass"><div class="stat-val" id="statUsers">6</div><div class="stat-lbl">Pengguna Aktif</div></div>
+            <div class="stat glass"><div class="stat-val" id="statUsers">2</div><div class="stat-lbl">Admin &amp; Urusetia Aktif</div></div>
+            <div class="stat glass"><div class="stat-val" id="statReferees">0</div><div class="stat-lbl">Pengadil Aktif</div></div>
           </div>
 
           <div class="admin-grid">
-            <!-- Pengurusan pengguna -->
+            <!-- Pangkalan data pengadil -->
+            <div class="card glass" id="refereeCard" style="grid-column: 1 / -1; padding: 0; overflow: hidden;">
+              <div class="card-bar">
+                <div>
+                  <h3 class="card-title" style="margin:0;">🧑‍⚖️ Pangkalan Data Pengadil</h3>
+                  <p class="muted" style="font-size:.8rem;margin-top:4px;">Pengadil log masuk dengan <strong>nama ringkas</strong> &amp; <strong>kata laluan</strong> sendiri, kemudian pilih gelanggang bertugas.</p>
+                </div>
+                <div class="row-actions">
+                  <button type="button" class="btn btn-sm" id="btnToggleRefPw">👁 Tunjuk Semua Kata Laluan</button>
+                  <button type="button" class="btn btn-sm" id="btnPullReferees" title="Muat turun senarai pengadil daripada Google Sheets">⬇ Tarik dari Sheets</button>
+                  <button type="button" class="btn btn-sm" id="btnPushReferees" title="Hantar keseluruhan senarai pengadil ke Google Sheets">⬆ Hantar ke Sheets</button>
+                  <button type="button" class="btn btn-primary btn-sm" id="btnAddReferee">＋ Tambah Pengadil</button>
+                </div>
+              </div>
+              <div class="ref-toolbar">
+                <input type="search" class="input" id="refereeSearch" placeholder="🔍 Cari nama / ID pengadil..." />
+                <span class="badge" id="refereeSummary">0 pengadil</span>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table" id="refereesTable">
+                  <thead>
+                    <tr>
+                      <th class="num">Bil</th>
+                      <th>ID</th>
+                      <th>Nama Ringkas</th>
+                      <th>Kata Laluan</th>
+                      <th>Status</th>
+                      <th>Log Masuk Terakhir</th>
+                      <th>Tindakan</th>
+                    </tr>
+                  </thead>
+                  <tbody id="refereesBody">
+                    <!-- Dijana oleh JavaScript (renderReferees) -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="hint-box" id="refereeSyncInfo" style="margin:12px 18px 16px;">Senarai disimpan dalam peranti ini.</div>
+            </div>
+
+            <!-- Pengurusan Admin & Urusetia -->
             <div class="card glass" style="padding: 0; overflow: hidden;">
               <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--glass-border);">
-                <h3 class="card-title" style="margin:0;">👥 Pengguna &amp; Akses</h3>
-                <button type="button" class="btn btn-sm" id="btnAdminAddUser">＋ Tambah</button>
+                <h3 class="card-title" style="margin:0;">👥 Admin &amp; Urusetia</h3>
+                <button type="button" class="btn btn-sm" id="btnAdminAddUser">＋ Tambah Urusetia</button>
               </div>
               <div class="table-wrap">
                 <table class="data-table" id="usersTable">
@@ -834,7 +970,6 @@
                       <th>ID</th>
                       <th>Nama</th>
                       <th>Peranan</th>
-                      <th>Gel.</th>
                       <th>PIN</th>
                       <th>Status</th>
                       <th></th>
@@ -913,7 +1048,7 @@
       <div class="modal-head">
         <div>
           <h3 id="loginTitle">🔐 Log Masuk Akses</h3>
-          <p>Masukkan PIN yang diberikan oleh Master Admin.</p>
+          <p>Admin &amp; Urusetia guna PIN. Pengadil guna nama ringkas &amp; kata laluan daripada Master Admin, kemudian pilih gelanggang di Meja Pengadil.</p>
         </div>
         <button type="button" class="modal-close" data-close-modal="loginModal" aria-label="Tutup">×</button>
       </div>
@@ -924,54 +1059,52 @@
             <option value="AUTO">Kesan automatik melalui PIN</option>
             <option value="MASTER_ADMIN">Master Admin</option>
             <option value="URUSETIA">Urusetia</option>
-            <option value="PENGADIL">Pengadil Gelanggang</option>
+            <option value="PENGADIL">Pengadil</option>
           </select>
         </div>
-        <div class="field">
-          <label for="loginPin">PIN</label>
-          <input type="password" inputmode="numeric" maxlength="8" class="input input-pin" id="loginPin" placeholder="••••••" required />
+        <div id="loginPinFields">
+          <div class="field">
+            <label for="loginPin">PIN</label>
+            <input type="password" inputmode="numeric" maxlength="8" class="input input-pin" id="loginPin" placeholder="••••••" />
+          </div>
+        </div>
+        <div id="loginRefFields" class="hidden">
+          <div class="field">
+            <label for="loginRefName">Nama Ringkas Pengadil</label>
+            <input type="text" class="input" id="loginRefName" maxlength="30" autocomplete="username" placeholder="cth: Cikgu Ali" />
+          </div>
+          <div class="field">
+            <label for="loginRefPassword">Kata Laluan</label>
+            <input type="password" class="input" id="loginRefPassword" maxlength="20" autocomplete="current-password" placeholder="••••••" />
+          </div>
+          <span class="field-hint">Selepas log masuk, pilih gelanggang dan tekan <strong>⚽ Sepak Mula</strong> untuk mengunci gelanggang.</span>
         </div>
         <div class="form-msg" id="loginMsg"></div>
         <div class="modal-foot">
           <button type="button" class="btn" data-close-modal="loginModal">Batal</button>
-          <button type="submit" class="btn btn-primary">Masuk</button>
+          <button type="submit" class="btn btn-primary" id="btnLoginSubmit">Masuk</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- =========================================================
-       MODAL: PENDAFTARAN SUB-ADMIN / PENGADIL
+       MODAL: PENDAFTARAN SUB-ADMIN (URUSETIA)
+       Akaun pengadil diurus dalam "Pangkalan Data Pengadil".
        ========================================================= -->
   <div class="modal-backdrop" id="registerModal" role="dialog" aria-modal="true" aria-labelledby="registerTitle">
     <div class="modal modal-wide">
       <div class="modal-head">
         <div>
-          <h3 id="registerTitle">👥 Daftar Sub-Admin / Pengadil</h3>
-          <p>Hanya Master Admin boleh mendaftar akaun akses baharu.</p>
+          <h3 id="registerTitle">👥 Daftar Sub-Admin (Urusetia)</h3>
+          <p>Hanya Master Admin boleh mendaftar akaun Urusetia. Akaun pengadil diurus dalam Pangkalan Data Pengadil.</p>
         </div>
         <button type="button" class="modal-close" data-close-modal="registerModal" aria-label="Tutup">×</button>
       </div>
       <form id="registerForm" autocomplete="off">
         <div class="field">
           <label for="regName">Nama Paparan</label>
-          <input type="text" class="input" id="regName" placeholder="cth: Cikgu Ahmad (Pengadil Gel. A)" required />
-        </div>
-        <div class="field">
-          <label for="regRole">Peranan</label>
-          <select class="select" id="regRole">
-            <option value="URUSETIA">Sub-Admin (Urusetia)</option>
-            <option value="PENGADIL">Pengadil Gelanggang</option>
-          </select>
-        </div>
-        <div class="field" id="regCourtField">
-          <label for="regCourt">Gelanggang Bertugas</label>
-          <select class="select" id="regCourt">
-            <option value="A">Gelanggang A (Sekolah Menengah)</option>
-            <option value="B">Gelanggang B (Sekolah Menengah)</option>
-            <option value="C">Gelanggang C (Sekolah Rendah)</option>
-            <option value="D">Gelanggang D (Sekolah Rendah)</option>
-          </select>
+          <input type="text" class="input" id="regName" placeholder="cth: Cikgu Aminah (Urusetia)" required />
         </div>
         <div class="field">
           <label for="regPin">PIN (4-8 digit)</label>
@@ -981,6 +1114,81 @@
         <div class="modal-foot">
           <button type="button" class="btn" data-close-modal="registerModal">Batal</button>
           <button type="submit" class="btn btn-primary">Daftar Akaun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL: TAMBAH / UBAH PENGADIL (MASTER ADMIN SAHAJA)
+       ========================================================= -->
+  <div class="modal-backdrop" id="refereeModal" role="dialog" aria-modal="true" aria-labelledby="refereeModalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h3 id="refereeModalTitle">🧑‍⚖️ Tambah Pengadil</h3>
+          <p>Masukkan nama ringkas dan tetapkan kata laluan pengadil.</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal="refereeModal" aria-label="Tutup">×</button>
+      </div>
+      <form id="refereeForm" autocomplete="off">
+        <input type="hidden" id="refEditId" value="" />
+        <div class="field">
+          <label for="refName">Nama Ringkas</label>
+          <input type="text" class="input" id="refName" maxlength="30" placeholder="cth: Cikgu Ali" />
+          <span class="field-hint">2–30 aksara. Nama ini digunakan semasa log masuk (tidak sensitif huruf besar/kecil).</span>
+        </div>
+        <div class="field">
+          <label for="refPassword">Kata Laluan</label>
+          <div class="input-group">
+            <input type="text" class="input mono" id="refPassword" maxlength="20" autocomplete="new-password" spellcheck="false" placeholder="cth: ali2026" />
+            <button type="button" class="btn btn-sm" id="btnGenRefPw" title="Jana kata laluan rawak">🎲 Jana</button>
+          </div>
+          <span class="field-hint">4–20 aksara tanpa ruang.</span>
+        </div>
+        <div class="form-msg" id="refereeMsg"></div>
+        <div class="modal-foot">
+          <button type="button" class="btn" data-close-modal="refereeModal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnRefereeSubmit">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL: TANGGUH PERLAWANAN (Fasa 3)
+       ========================================================= -->
+  <div class="modal-backdrop" id="tangguhModal" role="dialog" aria-modal="true" aria-labelledby="tangguhTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h3 id="tangguhTitle">⏸ Tangguh Perlawanan</h3>
+          <p id="tangguhInfo">Perlawanan akan dikembalikan kepada status Menunggu Giliran. Skor &amp; masa akan dikosongkan.</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal="tangguhModal" aria-label="Tutup">×</button>
+      </div>
+      <form id="tangguhForm" autocomplete="off">
+        <div class="field">
+          <label for="tangguhSebab">Sebab penangguhan</label>
+          <select class="select" id="tangguhSebab">
+            <option>Tersilap tekan Sepak Mula (terlalu awal)</option>
+            <option>Pasukan belum lengkap / belum bersedia</option>
+            <option>Masalah gelanggang / peralatan</option>
+            <option>Kecemasan / kecederaan</option>
+            <option>Cuaca / bekalan elektrik</option>
+            <option>Lain-lain</option>
+          </select>
+        </div>
+        <div class="tangguh-opts" id="tangguhOpts">
+          <label><input type="radio" name="tangguhPengadil" value="kekal" checked />
+            <span><strong>Kekal sebagai pengadil</strong><small>Gelanggang kekal dikunci untuk anda. Tekan Sepak Mula semula bila sudah bersedia.</small></span></label>
+          <label><input type="radio" name="tangguhPengadil" value="tukar" />
+            <span><strong>Tukar pengadil</strong><small>Kunci dilepaskan. Pengadil lain boleh memilih gelanggang ini dan menekan Sepak Mula.</small></span></label>
+        </div>
+        <div class="form-msg" id="tangguhMsg"></div>
+        <div class="modal-foot">
+          <button type="button" class="btn" data-close-modal="tangguhModal">Batal</button>
+          <button type="submit" class="btn btn-warn" id="btnTangguhSubmit">⏸ Tangguhkan</button>
         </div>
       </form>
     </div>
@@ -997,6 +1205,11 @@
        ========================================================= */
     const STORAGE_KEY = 'FUTSAL_PK_KBB_2026_STATE';
     const STATE_VERSION = 1;
+    // URL Web App Google Apps Script lalai untuk SEMUA peranti (termasuk telefon pengadil).
+    // Isi di sini supaya pengadil boleh log masuk dari mana-mana peranti. URL yang disimpan
+    // dalam Tetapan Master Admin akan mengatasi nilai ini pada peranti tersebut.
+    const DEFAULT_GAS_URL = '';
+    const ADMIN_KEY_STORAGE = 'FUTSAL_PK_KBB_ADMIN_KEY';
 
     const EVENTS = {
       SR: {
@@ -1200,7 +1413,7 @@
             fasa: fasa,
             status: 'BELUM BERMULA',      // BELUM BERMULA | LIVE | TAMAT
             pengesahan: 'MENUNGGU',       // MENUNGGU | DISAHKAN | DITOLAK
-            pengadil: `PENGADIL-${gelanggang}`,
+            pengadil: null,               // nama pengadil yang menghantar keputusan
             masaMula: null,
             masaTamat: null,
             disahkanOleh: null,
@@ -1224,10 +1437,10 @@
        Status: SEDIA (Hijau) | LIVE (Merah berkelip) | TAMAT (Kuning)
        ========================================================= */
     const INITIAL_COURTS = [
-      { id: 'A', nama: 'Gelanggang A', eventId: 'FPK-KBB-2026-SM', kategori: 'SM', kategoriNama: 'SEKOLAH MENENGAH', matchSemasa: 'SM-01', matchSeterusnya: 'SM-02', skorLiveP1: 0, skorLiveP2: 0, status: 'SEDIA', pengadil: 'PENGADIL-A', masaMula: null, kemaskiniTerakhir: null },
-      { id: 'B', nama: 'Gelanggang B', eventId: 'FPK-KBB-2026-SM', kategori: 'SM', kategoriNama: 'SEKOLAH MENENGAH', matchSemasa: 'SM-11', matchSeterusnya: 'SM-12', skorLiveP1: 0, skorLiveP2: 0, status: 'SEDIA', pengadil: 'PENGADIL-B', masaMula: null, kemaskiniTerakhir: null },
-      { id: 'C', nama: 'Gelanggang C', eventId: 'FPK-KBB-2026-SR', kategori: 'SR', kategoriNama: 'SEKOLAH RENDAH', matchSemasa: 'SR-01', matchSeterusnya: 'SR-02', skorLiveP1: 0, skorLiveP2: 0, status: 'SEDIA', pengadil: 'PENGADIL-C', masaMula: null, kemaskiniTerakhir: null },
-      { id: 'D', nama: 'Gelanggang D', eventId: 'FPK-KBB-2026-SR', kategori: 'SR', kategoriNama: 'SEKOLAH RENDAH', matchSemasa: 'SR-07', matchSeterusnya: 'SR-08', skorLiveP1: 0, skorLiveP2: 0, status: 'SEDIA', pengadil: 'PENGADIL-D', masaMula: null, kemaskiniTerakhir: null }
+      { id: 'A', nama: 'Gelanggang A', eventId: 'FPK-KBB-2026-SM', kategori: 'SM', kategoriNama: 'SEKOLAH MENENGAH', matchSemasa: 'SM-01', matchSeterusnya: 'SM-02', skorLiveP1: 0, skorLiveP2: 0, status: 'SEDIA', pengadil: null, pengadilId: null, masaMula: null, kemaskiniTerakhir: null },
+      { id: 'B', nama: 'Gelanggang B', eventId: 'FPK-KBB-2026-SM', kategori: 'SM', kategoriNama: 'SEKOLAH MENENGAH', matchSemasa: 'SM-11', matchSeterusnya: 'SM-12', skorLiveP1: 0, skorLiveP2: 0, status: 'SEDIA', pengadil: null, pengadilId: null, masaMula: null, kemaskiniTerakhir: null },
+      { id: 'C', nama: 'Gelanggang C', eventId: 'FPK-KBB-2026-SR', kategori: 'SR', kategoriNama: 'SEKOLAH RENDAH', matchSemasa: 'SR-01', matchSeterusnya: 'SR-02', skorLiveP1: 0, skorLiveP2: 0, status: 'SEDIA', pengadil: null, pengadilId: null, masaMula: null, kemaskiniTerakhir: null },
+      { id: 'D', nama: 'Gelanggang D', eventId: 'FPK-KBB-2026-SR', kategori: 'SR', kategoriNama: 'SEKOLAH RENDAH', matchSemasa: 'SR-07', matchSeterusnya: 'SR-08', skorLiveP1: 0, skorLiveP2: 0, status: 'SEDIA', pengadil: null, pengadilId: null, masaMula: null, kemaskiniTerakhir: null }
     ];
 
     /* =========================================================
@@ -1235,12 +1448,11 @@
        ========================================================= */
     const INITIAL_USERS = [
       { id: 'ADMIN-01', nama: 'Master Admin', peranan: 'MASTER_ADMIN', pin: '101010', aksesEvent: 'SEMUA', aksesGelanggang: 'SEMUA', kebenaran: 'Akses penuh: urus kejohanan, pasukan, jadual, undian X/Y, pengguna dan tetapan sistem', status: 'AKTIF' },
-      { id: 'URUSETIA-01', nama: 'Urusetia Kejohanan', peranan: 'URUSETIA', pin: '202020', aksesEvent: 'SEMUA', aksesGelanggang: 'SEMUA', kebenaran: 'Sahkan/tolak keputusan pengadil, kemas kini jadual & undian', status: 'AKTIF' },
-      { id: 'PENGADIL-A', nama: 'Pengadil Gelanggang A', peranan: 'PENGADIL', pin: '1111', aksesEvent: 'FPK-KBB-2026-SM', aksesGelanggang: 'A', kebenaran: 'Kemas kini skor live & status perlawanan Gelanggang A sahaja', status: 'AKTIF' },
-      { id: 'PENGADIL-B', nama: 'Pengadil Gelanggang B', peranan: 'PENGADIL', pin: '2222', aksesEvent: 'FPK-KBB-2026-SM', aksesGelanggang: 'B', kebenaran: 'Kemas kini skor live & status perlawanan Gelanggang B sahaja', status: 'AKTIF' },
-      { id: 'PENGADIL-C', nama: 'Pengadil Gelanggang C', peranan: 'PENGADIL', pin: '3333', aksesEvent: 'FPK-KBB-2026-SR', aksesGelanggang: 'C', kebenaran: 'Kemas kini skor live & status perlawanan Gelanggang C sahaja', status: 'AKTIF' },
-      { id: 'PENGADIL-D', nama: 'Pengadil Gelanggang D', peranan: 'PENGADIL', pin: '4444', aksesEvent: 'FPK-KBB-2026-SR', aksesGelanggang: 'D', kebenaran: 'Kemas kini skor live & status perlawanan Gelanggang D sahaja', status: 'AKTIF' }
+      { id: 'URUSETIA-01', nama: 'Urusetia Kejohanan', peranan: 'URUSETIA', pin: '202020', aksesEvent: 'SEMUA', aksesGelanggang: 'SEMUA', kebenaran: 'Sahkan/tolak keputusan pengadil, kemas kini jadual & undian', status: 'AKTIF' }
     ];
+    // Akaun pengadil TIDAK lagi terikat pada gelanggang (sistem PIN setiap gelanggang dibuang).
+    // Dicipta oleh Master Admin: { id: 'REF-001', nama, password, status, dicipta, dikemaskini, loginTerakhir }
+    const INITIAL_REFEREES = [];
 
     /* =========================================================
        OBJEK STATE (DISIMPAN DALAM localStorage)
@@ -1257,6 +1469,7 @@
         matches: buildInitialMatches(),
         courts: deepClone(INITIAL_COURTS),
         users: deepClone(INITIAL_USERS),
+        referees: deepClone(INITIAL_REFEREES),
         approvalLog: [],                 // { masa, matchId, keputusan, tindakan, oleh }
         drawXY: { X1: null, X2: null, X3: null, Y1: null, Y2: null, Y3: null },
         session: null,                   // { userId, nama, peranan, aksesGelanggang, masaLogMasuk }
@@ -1335,6 +1548,17 @@
     const loginGuard = { attempts: 0, lockedUntil: 0 };
     let courtTimerHandle = null;
 
+    // Fasa 2: kunci gelanggang pengadil
+    const LOCK_POLL_MS = 15000;        // semak status kunci daripada Google Sheets
+    const LOCK_HEARTBEAT_MS = 60000;   // isyarat "masih aktif" daripada pengadil pemegang kunci
+    const lockSync = { loaded: false, lastOk: null, error: '', busy: false };
+    let lockEpoch = 0;                 // dinaikkan setiap perubahan kunci tempatan (elak data poll lama)
+    let lockPollHandle = null;
+    let lastHeartbeatAt = 0;
+    let kickoffBusy = false;
+    let refSelectedCourt = null;       // gelanggang dipilih di Meja Pengadil (belum dikunci)
+    const livePushTimers = {};
+
     // Selaraskan data lama (status Bahagian 2 / Excel) kepada status baharu.
     function normalizeState() {
       const legacyMatchStatus = {
@@ -1359,6 +1583,30 @@
       });
       if (!Array.isArray(state.approvalLog)) state.approvalLog = [];
       if (!state.ui) state.ui = { kategori: 'SEMUA', activeTab: 'tab-live' };
+
+      // MIGRASI: buang sepenuhnya akaun PIN setiap gelanggang (PENGADIL-A..D) & rujukannya
+      const legacyRef = v => typeof v === 'string' && /^PENGADIL-[A-D](-\d+)?$/.test(v);
+      if (!Array.isArray(state.users)) state.users = deepClone(INITIAL_USERS);
+      state.users = state.users.filter(u => u && u.peranan !== 'PENGADIL');
+      if (!Array.isArray(state.referees)) state.referees = [];
+      state.referees = state.referees.filter(r => r && r.id && r.nama);
+      state.courts.forEach(c => {
+        if (legacyRef(c.pengadil)) c.pengadil = null;
+        if (!('pengadilId' in c)) c.pengadilId = null;
+        // FASA 2: pengadil/pengadilId kini bermaksud KUNCI gelanggang (selepas "Sepak Mula").
+        // Data versi lama (ditetapkan semasa log masuk) dikosongkan sekali.
+        if (!('dikunciPada' in c)) { c.dikunciPada = null; c.pengadil = null; c.pengadilId = null; }
+        if (!('kunciBasi' in c)) c.kunciBasi = false;
+        if (!('ditangguh' in c)) c.ditangguh = null;   // FASA 3
+      });
+      state.matches.forEach(m => { if (legacyRef(m.pengadil)) m.pengadil = null; });
+      if (state.session && state.session.peranan === 'PENGADIL' &&
+          (!state.referees.some(r => r.id === state.session.userId) || !('token' in state.session))) {
+        // Sesi pengadil versi lama (tiada token Fasa 2) -> perlu log masuk semula
+        const oldId = state.session.userId;
+        state.courts.forEach(c => { if (c.pengadilId === oldId) { c.pengadil = null; c.pengadilId = null; c.dikunciPada = null; c.kunciBasi = false; } });
+        state.session = null;
+      }
     }
     normalizeState();
     saveState();
@@ -1387,6 +1635,10 @@
 
     function getUserById(userId) {
       return state.users.find(u => u.id === userId) || null;
+    }
+
+    function getRefereeById(refId) {
+      return (state.referees || []).find(r => r.id === refId) || null;
     }
 
     function nowIso() {
@@ -1479,6 +1731,8 @@
     function refreshAllViews() {
       const renderers = [
         'resolveKnockoutTeams',
+        'renderLiveBoard',
+        'renderRefDesk',
         'renderCourts',
         'renderStandings',
         'renderKnockout',
@@ -1513,7 +1767,7 @@
       if (isShareView()) return null;
       const s = state.session;
       if (!s) return null;
-      const user = getUserById(s.userId);
+      const user = s.peranan === 'PENGADIL' ? getRefereeById(s.userId) : getUserById(s.userId);
       if (!user || user.status !== 'AKTIF') return null;
       return s;
     }
@@ -1528,11 +1782,15 @@
       return role === 'MASTER_ADMIN' || role === 'URUSETIA';
     }
 
+    // Pemberian markah: HANYA pengadil yang telah mengunci gelanggang (Sepak Mula).
+    // Master Admin boleh mengawal gelanggang yang TIDAK dikunci oleh mana-mana pengadil.
     function canRefereeCourt(courtId) {
       const s = getSession();
       if (!s) return false;
-      if (s.peranan === 'MASTER_ADMIN') return true;
-      return s.peranan === 'PENGADIL' && s.aksesGelanggang === courtId;
+      const court = getCourt(courtId);
+      if (!court) return false;
+      if (s.peranan === 'MASTER_ADMIN') return !court.pengadilId;
+      return s.peranan === 'PENGADIL' && s.aksesGelanggang === courtId && court.pengadilId === s.userId;
     }
 
     function canApprove() {
@@ -1574,7 +1832,121 @@
     /* ---------------------------------------------------------
        3.3 LOG MASUK
        --------------------------------------------------------- */
-    function handleLogin(event) {
+    function loginFailed(msgEl, text, focusEl) {
+      loginGuard.attempts += 1;
+      if (loginGuard.attempts >= LOGIN_MAX_ATTEMPTS) {
+        loginGuard.lockedUntil = Date.now() + LOGIN_LOCK_MS;
+        loginGuard.attempts = 0;
+        setFormMsg(msgEl, `Log masuk gagal ${LOGIN_MAX_ATTEMPTS} kali. Dikunci selama ${LOGIN_LOCK_MS / 1000} saat.`, 'error');
+      } else {
+        const left = LOGIN_MAX_ATTEMPTS - loginGuard.attempts;
+        setFormMsg(msgEl, `${text} Cubaan berbaki: ${left}.`, 'error');
+      }
+      if (focusEl) { focusEl.value = ''; focusEl.focus(); }
+      return false;
+    }
+
+    function toggleLoginFields() {
+      const role = (document.getElementById('loginRole') || {}).value;
+      const isRef = role === 'PENGADIL';
+      const pinBox = document.getElementById('loginPinFields');
+      const refBox = document.getElementById('loginRefFields');
+      if (pinBox) pinBox.classList.toggle('hidden', isRef);
+      if (refBox) refBox.classList.toggle('hidden', !isRef);
+      setFormMsg(document.getElementById('loginMsg'), '', '');
+    }
+
+    // Log masuk pengadil: nama ringkas + kata laluan sahaja (FASA 2).
+    // Gelanggang dipilih SELEPAS log masuk di "Meja Pengadil", kemudian "Sepak Mula" mengunci gelanggang.
+    // Jika URL Google Apps Script tersedia, Google Sheets (Senarai_Pengadil) ialah sumber sah
+    // dan pelayan memulangkan token sesi untuk mengunci gelanggang & menghantar markah.
+    async function handleRefereeLogin(msgEl) {
+      const nameEl = document.getElementById('loginRefName');
+      const pwEl = document.getElementById('loginRefPassword');
+      const submitBtn = document.getElementById('btnLoginSubmit');
+      const nama = normalizeRefName(nameEl ? nameEl.value : '');
+      const password = pwEl ? pwEl.value : '';
+
+      if (nama.length < 2) {
+        setFormMsg(msgEl, 'Sila masukkan nama ringkas pengadil.', 'error');
+        if (nameEl) nameEl.focus();
+        return false;
+      }
+      if (!password) {
+        setFormMsg(msgEl, 'Sila masukkan kata laluan.', 'error');
+        if (pwEl) pwEl.focus();
+        return false;
+      }
+
+      let ref = null;
+      let token = null;
+      let serverKunci = null;
+      const url = getGasUrl();
+      if (url && navigator.onLine) {
+        setFormMsg(msgEl, 'Menyemak akaun pengadil...', '');
+        if (submitBtn) submitBtn.disabled = true;
+        const res = await callGas({ action: 'loginPengadil', nama, password });
+        if (submitBtn) submitBtn.disabled = false;
+        if (res.ok && res.pengadil) {
+          ref = cacheReferee(res.pengadil, password);
+          token = res.token || null;
+          serverKunci = res.kunci || null;
+        } else if (!res.networkError) {
+          return loginFailed(msgEl, res.error || 'Nama ringkas atau kata laluan tidak sah.', pwEl);
+        }
+        // Ralat rangkaian -> semak senarai dalam peranti ini
+      }
+      if (!ref) {
+        ref = state.referees.find(r => refNameKey(r.nama) === refNameKey(nama) && String(r.password) === password) || null;
+        if (!ref) return loginFailed(msgEl, 'Nama ringkas atau kata laluan pengadil tidak sah.', pwEl);
+      }
+      if (ref.status !== 'AKTIF') {
+        return loginFailed(msgEl, 'Akaun pengadil ini telah digantung. Hubungi Master Admin.', pwEl);
+      }
+
+      loginGuard.attempts = 0;
+      loginGuard.lockedUntil = 0;
+      const now = nowIso();
+      ref.loginTerakhir = now;
+      // Pulihkan gelanggang yang masih dikunci oleh pengadil ini (cth: selepas muat semula)
+      const held = state.courts.find(c => c.pengadilId === ref.id) || null;
+      state.session = {
+        userId: ref.id,
+        nama: ref.nama,
+        peranan: 'PENGADIL',
+        aksesEvent: held ? held.eventId : null,
+        aksesGelanggang: held ? held.id : null,   // diisi selepas "Sepak Mula"
+        token: token,                              // token sesi pelayan (null = mod peranti ini)
+        masaLogMasuk: now
+      };
+      lockEpoch += 1;
+      if (serverKunci) applyServerLocks(serverKunci, { silent: true });
+      refSelectedCourt = null;
+      saveState();
+
+      if (pwEl) pwEl.value = '';
+      if (nameEl) nameEl.value = '';
+      setFormMsg(msgEl, '', '');
+      closeModal('loginModal');
+      setActiveTab('tab-live');
+      updateAuthUI();
+      refreshAllViews();
+      startLockSync();
+      if (url && !token) {
+        showToast('Log masuk luar talian: gelanggang tidak boleh dikunci sehingga anda log masuk semula dengan internet.', 'warn', 6000);
+      }
+      const cur = state.session && state.session.aksesGelanggang;
+      showToast(cur
+        ? `Selamat datang, ${ref.nama}. Anda masih mengawal Gelanggang ${cur}.`
+        : `Selamat datang, ${ref.nama}. Pilih gelanggang di Meja Pengadil, kemudian tekan ⚽ Sepak Mula.`, 'success', 4800);
+      setTimeout(() => {
+        const desk = document.getElementById('refDesk');
+        if (desk) desk.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+      return true;
+    }
+
+    async function handleLogin(event) {
       if (event && typeof event.preventDefault === 'function') event.preventDefault();
 
       const msgEl = document.getElementById('loginMsg');
@@ -1595,6 +1967,8 @@
         return false;
       }
 
+      if (role === 'PENGADIL') return handleRefereeLogin(msgEl);
+
       if (!/^\d{4,8}$/.test(pin)) {
         setFormMsg(msgEl, 'PIN mesti 4 hingga 8 digit nombor.', 'error');
         if (pinInput) pinInput.focus();
@@ -1604,25 +1978,15 @@
       const user = state.users.find(u =>
         u.pin === pin &&
         u.status === 'AKTIF' &&
+        u.peranan !== 'PENGADIL' &&
         (role === 'AUTO' || u.peranan === role)
       );
 
       if (!user) {
-        loginGuard.attempts += 1;
-        if (loginGuard.attempts >= LOGIN_MAX_ATTEMPTS) {
-          loginGuard.lockedUntil = now + LOGIN_LOCK_MS;
-          loginGuard.attempts = 0;
-          setFormMsg(msgEl, `PIN salah ${LOGIN_MAX_ATTEMPTS} kali. Log masuk dikunci selama ${LOGIN_LOCK_MS / 1000} saat.`, 'error');
-        } else {
-          const left = LOGIN_MAX_ATTEMPTS - loginGuard.attempts;
-          setFormMsg(msgEl, `PIN tidak sah atau tidak sepadan dengan peranan dipilih. Cubaan berbaki: ${left}.`, 'error');
-        }
-        if (pinInput) {
-          pinInput.value = '';
-          pinInput.focus();
-        }
-        return false;
+        return loginFailed(msgEl, 'PIN tidak sah atau tidak sepadan dengan peranan dipilih.', pinInput);
       }
+      // Kunci Master Admin (sesi pelayar sahaja) untuk mengurus pangkalan data pengadil di Google Sheets
+      if (user.peranan === 'MASTER_ADMIN') setAdminKey(pin);
 
       loginGuard.attempts = 0;
       loginGuard.lockedUntil = 0;
@@ -1638,15 +2002,14 @@
       saveState();
 
       if (pinInput) pinInput.value = '';
-      if (roleSelect) roleSelect.value = 'AUTO';
       setFormMsg(msgEl, '', '');
       closeModal('loginModal');
 
       updateAuthUI();
       refreshAllViews();
+      startLockSync();
 
-      const extra = user.peranan === 'PENGADIL' ? ` Anda mengawal Gelanggang ${user.aksesGelanggang}.` : '';
-      showToast(`Selamat datang, ${user.nama}.${extra}`, 'success');
+      showToast(`Selamat datang, ${user.nama}.`, 'success');
       return true;
     }
 
@@ -1662,26 +2025,43 @@
         return false;
       }
       const nama = s.nama;
+      if (s.peranan === 'PENGADIL') {
+        const held = state.courts.find(c => c.pengadilId === s.userId) || null;
+        if (held && held.status === COURT_STATUS.LIVE &&
+            !window.confirm(`Anda masih mengawal perlawanan LIVE di ${held.nama}.
+
+Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil alih. Teruskan?`)) {
+          return false;
+        }
+        if (s.token && getGasUrl()) {
+          // Hantar skor terakhir (jika ada) & tamatkan sesi di pelayan (lepaskan kunci)
+          const token = s.token;
+          if (held) clearTimeout(livePushTimers[held.id]);
+          const finalPush = held ? buildLivePayload(held.id, token, true) : null;
+          (finalPush ? callGas(finalPush) : Promise.resolve())
+            .then(() => callGas({ action: 'logKeluarPengadil', token }))
+            .catch(err => console.warn('[logout pengadil]', err));
+        }
+        state.courts.forEach(c => { if (c.pengadilId === s.userId) clearCourtLock(c); });
+        lockEpoch += 1;
+        refSelectedCourt = null;
+      }
+      if (s.peranan === 'MASTER_ADMIN') setAdminKey(null);
       state.session = null;
       saveState();
       updateAuthUI();
       refreshAllViews();
+      startLockSync();
       showToast(`${nama} telah log keluar. Kini dalam mod tontonan sahaja.`, 'info');
       return true;
     }
 
     /* ---------------------------------------------------------
-       3.5 PENDAFTARAN SUB-ADMIN / PENGADIL (MASTER ADMIN SAHAJA)
+       3.5 PENDAFTARAN SUB-ADMIN / URUSETIA (MASTER ADMIN SAHAJA)
+       Akaun pengadil diurus dalam 3.7 PANGKALAN DATA PENGADIL.
        --------------------------------------------------------- */
-    function toggleRegisterCourtField() {
-      const roleSel = document.getElementById('regRole');
-      const field = document.getElementById('regCourtField');
-      if (!roleSel || !field) return;
-      field.classList.toggle('hidden', roleSel.value !== 'PENGADIL');
-    }
-
-    function generateUserId(peranan, gelanggang) {
-      const prefix = peranan === 'PENGADIL' ? `PENGADIL-${gelanggang}` : 'URUSETIA';
+    function generateUserId() {
+      const prefix = 'URUSETIA';
       let n = state.users.filter(u => u.id === prefix || u.id.startsWith(prefix + '-')).length + 1;
       let candidate = `${prefix}-${String(n).padStart(2, '0')}`;
       while (state.users.some(u => u.id === candidate)) {
@@ -1696,18 +2076,14 @@
 
       const msgEl = document.getElementById('registerMsg');
       const nameEl = document.getElementById('regName');
-      const roleEl = document.getElementById('regRole');
-      const courtEl = document.getElementById('regCourt');
       const pinEl = document.getElementById('regPin');
 
       if (!canManageSystem()) {
-        setFormMsg(msgEl, 'Hanya Master Admin boleh mendaftar Sub-Admin atau Pengadil.', 'error');
+        setFormMsg(msgEl, 'Hanya Master Admin boleh mendaftar Sub-Admin.', 'error');
         return false;
       }
 
       const nama = (nameEl ? nameEl.value : '').trim().replace(/\s+/g, ' ');
-      const peranan = roleEl ? roleEl.value : 'URUSETIA';
-      const gelanggang = courtEl ? courtEl.value : 'A';
       const pin = (pinEl ? pinEl.value : '').trim();
 
       if (nama.length < 3) {
@@ -1717,14 +2093,6 @@
       }
       if (nama.length > 60) {
         setFormMsg(msgEl, 'Nama paparan terlalu panjang (maksimum 60 aksara).', 'error');
-        return false;
-      }
-      if (!['URUSETIA', 'PENGADIL'].includes(peranan)) {
-        setFormMsg(msgEl, 'Peranan tidak sah.', 'error');
-        return false;
-      }
-      if (peranan === 'PENGADIL' && !getCourt(gelanggang)) {
-        setFormMsg(msgEl, 'Sila pilih gelanggang bertugas yang sah.', 'error');
         return false;
       }
       if (!/^\d{4,8}$/.test(pin)) {
@@ -1738,17 +2106,14 @@
         return false;
       }
 
-      const court = getCourt(gelanggang);
       const newUser = {
-        id: generateUserId(peranan, gelanggang),
+        id: generateUserId(),
         nama: nama,
-        peranan: peranan,
+        peranan: 'URUSETIA',
         pin: pin,
-        aksesEvent: peranan === 'PENGADIL' ? court.eventId : 'SEMUA',
-        aksesGelanggang: peranan === 'PENGADIL' ? gelanggang : 'SEMUA',
-        kebenaran: peranan === 'PENGADIL'
-          ? `Kemas kini skor live & status perlawanan Gelanggang ${gelanggang} sahaja`
-          : 'Sahkan/tolak keputusan pengadil, mulakan perlawanan & kemas kini jadual',
+        aksesEvent: 'SEMUA',
+        aksesGelanggang: 'SEMUA',
+        kebenaran: 'Sahkan/tolak keputusan pengadil, mulakan perlawanan & kemas kini jadual',
         status: 'AKTIF',
         didaftarOleh: getSession().userId,
         didaftarPada: nowIso()
@@ -1760,7 +2125,7 @@
       if (nameEl) nameEl.value = '';
       if (pinEl) pinEl.value = '';
       setFormMsg(msgEl, `Akaun ${newUser.id} berjaya didaftarkan.`, 'success');
-      showToast(`${newUser.nama} didaftarkan sebagai ${ROLE_LABELS[peranan]}${peranan === 'PENGADIL' ? ' Gelanggang ' + gelanggang : ''}.`, 'success');
+      showToast(`${newUser.nama} didaftarkan sebagai ${ROLE_LABELS.URUSETIA}.`, 'success');
       refreshAllViews();
       setTimeout(() => closeModal('registerModal'), 900);
       return true;
@@ -1780,7 +2145,9 @@
       if (badge) badge.dataset.role = role;
       if (badgeText) {
         if (session && role === 'PENGADIL') {
-          badgeText.textContent = `Pengadil Gel. ${session.aksesGelanggang} · ${session.nama}`;
+          badgeText.textContent = session.aksesGelanggang
+            ? `Pengadil Gel. ${session.aksesGelanggang} 🔒 · ${session.nama}`
+            : `Pengadil · ${session.nama} · Pilih gelanggang`;
         } else if (session) {
           badgeText.textContent = `${ROLE_LABELS[role]} · ${session.nama}`;
         } else if (share) {
@@ -1854,11 +2221,13 @@
     function courtStatusBadge(court) {
       if (court.status === COURT_STATUS.LIVE) return '<span class="badge badge-live badge-dot">Live</span>';
       if (court.status === COURT_STATUS.TAMAT) return '<span class="badge badge-done badge-dot">Tamat · Tunggu Sah</span>';
+      if (court.ditangguh) return '<span class="badge badge-tangguh badge-dot">Ditangguhkan</span>';
       return '<span class="badge badge-ready badge-dot">Kosong / Sedia</span>';
     }
 
     function courtOverlayText(court, match) {
       if (!match) return 'Tiada perlawanan dijadualkan';
+      if (court.status === COURT_STATUS.SEDIA && court.ditangguh) return `⏸ Ditangguhkan · ${court.ditangguh.sebab || ''}`;
       if (court.status === COURT_STATUS.SEDIA) {
         return isMatchReady(match) ? 'Sedia · Menunggu wisel mula' : 'Menunggu pasukan ditentukan';
       }
@@ -1869,16 +2238,23 @@
     function renderCourtControls(court, match) {
       const session = getSession();
       if (!session) return ''; // Penonton awam: tiada sebarang butang kawalan
-      if (!match) {
-        return canStartMatch()
-          ? `<div class="court-controls"><span class="muted" style="font-size:.8rem;">Tiada perlawanan menunggu giliran untuk gelanggang ini.</span></div>`
-          : '';
-      }
 
       const id = court.id;
+      const isRef = session.peranan === 'PENGADIL';
+      const lockedByOther = !!court.pengadilId && court.pengadilId !== session.userId;
       const parts = [];
 
-      // Urusetia / Master Admin: Mula Perlawanan
+      // Master Admin: paksa lepaskan kunci pengadil
+      if (court.pengadilId && canManageSystem()) {
+        parts.push(`<button type="button" class="btn btn-warn btn-sm" onclick="adminReleaseLock('${id}')" title="Lepaskan kunci ${escapeHtml(court.pengadil || '')}">🔓 Lepaskan Kunci</button>`);
+      }
+
+      if (!match) {
+        if (canStartMatch()) parts.unshift(`<span class="muted" style="font-size:.8rem;">Tiada perlawanan menunggu giliran untuk gelanggang ini.</span>`);
+        return parts.length ? `<div class="court-controls">${parts.join('')}</div>` : '';
+      }
+
+      // Urusetia / Master Admin: Mula Perlawanan (tanpa kunci pengadil)
       if (court.status === COURT_STATUS.SEDIA && canStartMatch()) {
         const ready = isMatchReady(match);
         parts.push(
@@ -1886,7 +2262,15 @@
         );
       }
 
-      // Pengadil gelanggang (atau Master Admin): skor, fasa, tamat
+      // Pengadil: Sepak Mula terus daripada kad gelanggang
+      if (isRef) {
+        const opt = refCourtOption(court);
+        if (opt.can && (!opt.mine || court.status === COURT_STATUS.SEDIA) && !refHoldsLiveElsewhere(id)) {
+          parts.push(`<button type="button" class="btn btn-primary btn-sm" onclick="refereeKickOff('${id}')" ${kickoffBusy ? 'disabled' : ''}>⚽ ${opt.resume ? 'Sepak Mula · Sambung Kawalan' : 'Sepak Mula'}</button>`);
+        }
+      }
+
+      // Pengadil pemegang kunci (atau Master Admin pada gelanggang tidak dikunci): skor, fasa, tamat
       if (court.status === COURT_STATUS.LIVE && canRefereeCourt(id)) {
         parts.push(`
           <div class="ctrl-group">
@@ -1910,30 +2294,37 @@
         );
       }
 
+      // Fasa 3: Tangguh perlawanan (pengadil pemegang kunci / Urusetia / Master Admin)
+      if (court.status === COURT_STATUS.LIVE && canPostponeCourt(id)) {
+        parts.push(`<button type="button" class="btn btn-warn btn-sm" onclick="openPostpone('${id}')" title="Salah tekan Sepak Mula? Tangguhkan & boleh tukar pengadil">⏸ Tangguh Perlawanan</button>`);
+      }
+
       // Urusetia / Master Admin: Sahkan / Tolak
       if (court.status === COURT_STATUS.TAMAT && canApprove() && match.status === MATCH_STATUS.TUNGGU_SAH) {
         parts.push(`<button type="button" class="btn btn-success btn-sm" onclick="approveMatch('${match.id}')">✔ Sahkan Keputusan</button>`);
         parts.push(`<button type="button" class="btn btn-sm" onclick="rejectMatch('${match.id}')">✖ Tolak &amp; Minta Semak</button>`);
       }
 
-      if (parts.length) {
-        return `<div class="court-controls">${parts.join('')}</div>`;
-      }
-
-      // Nota maklumat bila tiada butang untuk peranan ini
+      // Nota maklumat mengikut peranan & status kunci
       let note = '';
-      if (session.peranan === 'PENGADIL' && session.aksesGelanggang !== id) {
-        note = `Paparan sahaja. Anda bertugas di Gelanggang ${escapeHtml(session.aksesGelanggang)}.`;
-      } else if (session.peranan === 'PENGADIL' && court.status === COURT_STATUS.SEDIA) {
-        note = 'Menunggu Urusetia memulakan perlawanan.';
-      } else if (session.peranan === 'PENGADIL' && court.status === COURT_STATUS.TAMAT) {
+      if (isRef && lockedByOther && court.status !== COURT_STATUS.TAMAT) {
+        note = court.kunciBasi
+          ? `⚠ Kunci ${escapeHtml(court.pengadil || 'pengadil lain')} tidak aktif. Anda boleh mengambil alih dengan Sepak Mula.`
+          : `🔒 Dikunci oleh ${escapeHtml(court.pengadil || 'pengadil lain')}. Pengadil lain tidak boleh memberi markah.`;
+      } else if (isRef && court.status === COURT_STATUS.TAMAT) {
         note = 'Keputusan telah dihantar. Menunggu pengesahan Urusetia.';
-      } else if (court.status === COURT_STATUS.LIVE) {
-        note = 'Perlawanan sedang dikawal oleh pengadil gelanggang.';
+      } else if (isRef && session.aksesGelanggang && session.aksesGelanggang !== id) {
+        note = `Paparan sahaja. Anda sedang mengawal Gelanggang ${escapeHtml(session.aksesGelanggang)}.`;
+      } else if (!isRef && court.status === COURT_STATUS.LIVE && court.pengadilId) {
+        note = `🔒 Markah dikawal oleh ${escapeHtml(court.pengadil || 'pengadil')}${court.kunciBasi ? ' (tidak aktif)' : ''}.`;
+      } else if (!isRef && court.status === COURT_STATUS.LIVE && !canRefereeCourt(id)) {
+        note = 'Perlawanan LIVE · menunggu pengadil menekan Sepak Mula untuk mengunci gelanggang.';
       } else if (court.status === COURT_STATUS.SEDIA && !isMatchReady(match)) {
         note = 'Pasukan belum ditentukan (undian / keputusan peringkat sebelumnya).';
       }
-      return note ? `<div class="court-controls"><span class="muted" style="font-size:.8rem;">${note}</span></div>` : '';
+      if (note) parts.push(`<span class="muted" style="font-size:.8rem;align-self:center;">${note}</span>`);
+
+      return parts.length ? `<div class="court-controls">${parts.join('')}</div>` : '';
     }
 
     function renderCourtCard(court) {
@@ -1969,7 +2360,7 @@
               <div class="court-letter">${escapeHtml(court.id)}</div>
               <div>
                 <h3>${escapeHtml(court.nama)}</h3>
-                <small>${escapeHtml(court.pengadil)} · ${katBadge}</small>
+                <small>${court.pengadilId ? '🔒 ' + escapeHtml(court.pengadil || court.pengadilId) + (court.kunciBasi ? ' (tidak aktif)' : '') : 'Pengadil: belum dikunci'} · ${katBadge}</small>
               </div>
             </div>
             ${courtStatusBadge(court)}
@@ -2043,13 +2434,14 @@
 
     function startCourtTimerLoop() {
       if (courtTimerHandle) clearInterval(courtTimerHandle);
-      courtTimerHandle = setInterval(updateCourtTimers, 1000);
+      courtTimerHandle = setInterval(() => { updateCourtTimers(); updateBoardTimers(); }, 1000);
     }
 
     /* ---------------------------------------------------------
        3.8 KAWALAN PERLAWANAN
        --------------------------------------------------------- */
     function resetCourt(court) {
+      court.ditangguh = null;
       Object.assign(court, {
         matchSemasa: null,
         status: COURT_STATUS.SEDIA,
@@ -2062,48 +2454,37 @@
       });
     }
 
-    // Urusetia / Master Admin memulakan perlawanan di gelanggang
-    function startMatch(courtId) {
-      if (!canStartMatch()) {
-        showToast('Hanya Urusetia atau Master Admin boleh memulakan perlawanan.', 'error');
-        return false;
-      }
-      const court = getCourt(courtId);
-      if (!court) {
-        showToast('Gelanggang tidak dijumpai.', 'error');
-        return false;
-      }
+    // Semak sama ada perlawanan seterusnya boleh dimulakan di gelanggang SEDIA.
+    // Pulangkan { match } atau { error, level, save }.
+    function checkCourtStartable(court) {
       if (court.status !== COURT_STATUS.SEDIA) {
-        showToast(`Gelanggang ${courtId} belum kosong (${court.status}).`, 'warn');
-        return false;
+        return { error: `Gelanggang ${court.id} belum kosong (${court.status}).`, level: 'warn' };
       }
-
       let match = getMatch(court.matchSemasa);
       if (!match || match.status === MATCH_STATUS.SELESAI) {
-        autoAssignCourts(courtId, { silent: true });
+        autoAssignCourts(court.id, { silent: true });
         match = getMatch(court.matchSemasa);
       }
       if (!match) {
-        showToast(`Tiada perlawanan menunggu giliran untuk Gelanggang ${courtId}.`, 'warn');
-        saveState();
-        renderCourts();
-        return false;
+        return { error: `Tiada perlawanan menunggu giliran untuk Gelanggang ${court.id}.`, level: 'warn', save: true };
       }
       if (match.status !== MATCH_STATUS.MENUNGGU) {
-        showToast(`${match.id} berstatus "${match.status}" dan tidak boleh dimulakan.`, 'warn');
-        return false;
+        return { error: `${match.id} berstatus "${match.status}" dan tidak boleh dimulakan.`, level: 'warn' };
       }
       if (!isMatchReady(match)) {
-        showToast(`Pasukan bagi ${match.id} belum ditentukan (undian / keputusan peringkat sebelumnya).`, 'warn');
-        return false;
+        return { error: `Pasukan bagi ${match.id} belum ditentukan (undian / keputusan peringkat sebelumnya).`, level: 'warn' };
       }
-      const clash = state.courts.find(c => c.id !== courtId && c.matchSemasa === match.id);
+      const clash = state.courts.find(c => c.id !== court.id && c.matchSemasa === match.id);
       if (clash) {
-        showToast(`${match.id} sudah ditempatkan di Gelanggang ${clash.id}.`, 'error');
-        return false;
+        return { error: `${match.id} sudah ditempatkan di Gelanggang ${clash.id}.`, level: 'error' };
       }
+      return { match };
+    }
 
+    // Tukar gelanggang & perlawanan kepada LIVE (Separuh 1)
+    function applyMatchStart(court, match) {
       const now = nowIso();
+      court.ditangguh = null;
       Object.assign(court, {
         status: COURT_STATUS.LIVE,
         skorLiveP1: 0,
@@ -2123,6 +2504,27 @@
         pemenangPenalti: null,
         catatan: ''
       });
+    }
+
+    // Urusetia / Master Admin memulakan perlawanan di gelanggang
+    function startMatch(courtId) {
+      if (!canStartMatch()) {
+        showToast('Hanya Urusetia atau Master Admin boleh memulakan perlawanan.', 'error');
+        return false;
+      }
+      const court = getCourt(courtId);
+      if (!court) {
+        showToast('Gelanggang tidak dijumpai.', 'error');
+        return false;
+      }
+      const check = checkCourtStartable(court);
+      if (check.error) {
+        showToast(check.error, check.level || 'warn');
+        if (check.save) { saveState(); renderCourts(); }
+        return false;
+      }
+      const match = check.match;
+      applyMatchStart(court, match);
 
       saveState();
       refreshAllViews();
@@ -2162,6 +2564,8 @@
       saveState();
       renderCourts();
       if (typeof window.renderSchedule === 'function') window.renderSchedule();
+      renderRefDesk();
+      queueLivePush(courtId);
       return true;
     }
 
@@ -2188,6 +2592,8 @@
 
       saveState();
       renderCourts();
+      renderRefDesk();
+      queueLivePush(courtId);
       showToast(`Gelanggang ${courtId}: ${COURT_PHASE_LABELS[phase]}.`, 'info');
       return true;
     }
@@ -2246,7 +2652,8 @@
         pengesahan: 'MENUNGGU',
         masaTamat: now,
         pemenangPenalti: penalti,
-        dihantarOleh: session ? session.userId : null
+        dihantarOleh: session ? session.userId : null,
+        pengadil: session && session.peranan === 'PENGADIL' ? session.nama : (court.pengadil || match.pengadil || null)
       });
       Object.assign(court, {
         status: COURT_STATUS.TAMAT,
@@ -2256,9 +2663,21 @@
       });
       addApprovalLog(match, 'DIHANTAR PENGADIL');
 
+      // Fasa 2: hantar keputusan ke Google Sheets & lepaskan kunci gelanggang
+      let released = false;
+      if (session && session.peranan === 'PENGADIL' && court.pengadilId === session.userId) {
+        queueLivePush(courtId, 0, { lepas: true });
+        clearCourtLock(court);
+        state.session.aksesGelanggang = null;
+        state.session.aksesEvent = null;
+        lockEpoch += 1;
+        released = true;
+      }
+
       saveState();
+      updateAuthUI();
       refreshAllViews();
-      showToast(`Keputusan ${match.id} dihantar. Status: TAMAT - TUNGGU SAH.`, 'warn');
+      showToast(`Keputusan ${match.id} dihantar. Status: TAMAT - TUNGGU SAH.${released ? ` Gelanggang ${courtId} dilepaskan.` : ''}`, 'warn', 4200);
       return true;
     }
 
@@ -2367,6 +2786,886 @@
       refreshAllViews();
       showToast(`${match.id} ditolak dan dikembalikan kepada pengadil untuk semakan.`, 'warn');
       return true;
+    }
+
+    /* ---------------------------------------------------------
+       3.8b MEJA PENGADIL & KUNCI GELANGGANG (FASA 2)
+       Aliran: Log masuk (nama + kata laluan) -> pilih gelanggang ->
+               "⚽ Sepak Mula" -> gelanggang DIKUNCI untuk pengadil ini ->
+               hanya pengadil ini boleh memberi markah -> "Tamat & Hantar"
+               melepaskan kunci.
+       - Dengan URL Google Apps Script: kunci disimpan di tab Kunci_Gelanggang
+         (dikongsi semua peranti; pelayan menolak markah daripada pengadil lain).
+       - Tanpa URL: kunci hanya dalam peranti / pelayar ini.
+       --------------------------------------------------------- */
+    function clearCourtLock(court) {
+      if (!court) return;
+      court.pengadil = null;
+      court.pengadilId = null;
+      court.dikunciPada = null;
+      court.kunciBasi = false;
+    }
+
+    // Pengadil sedang mengawal perlawanan LIVE di gelanggang lain?
+    function refHoldsLiveElsewhere(courtId) {
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL' || !s.aksesGelanggang || s.aksesGelanggang === courtId) return false;
+      const held = getCourt(s.aksesGelanggang);
+      return !!held && held.pengadilId === s.userId && held.status === COURT_STATUS.LIVE;
+    }
+
+    // Status pilihan gelanggang untuk pengadil semasa (tanpa mengubah state)
+    function refCourtOption(court) {
+      const s = getSession();
+      const me = s ? s.userId : null;
+      const match = getMatch(court.matchSemasa);
+      const mine = !!court.pengadilId && court.pengadilId === me;
+      const lockedByOther = !!court.pengadilId && !mine;
+      let lock;
+      if (mine) lock = { cls: 'mine', text: '✅ Dikunci oleh anda' };
+      else if (lockedByOther && court.kunciBasi) lock = { cls: 'stale', text: `⚠ ${court.pengadil || 'Pengadil'} (tidak aktif)` };
+      else if (lockedByOther) lock = { cls: 'taken', text: `🔒 Dikunci: ${court.pengadil || 'pengadil lain'}` };
+      else lock = { cls: 'free', text: '🟢 Tersedia' };
+
+      let can = true;
+      let reason = '';
+      if (lockedByOther && !court.kunciBasi) {
+        can = false;
+        reason = `Sedang diadili oleh ${court.pengadil || 'pengadil lain'}. Pengadil lain tidak boleh masuk campur.`;
+      } else if (court.status === COURT_STATUS.TAMAT) {
+        can = false;
+        reason = 'Keputusan sedang menunggu pengesahan Urusetia.';
+        if (lock.cls === 'free') lock = { cls: 'na', text: '⏳ Tunggu pengesahan' };
+      } else if (!match || match.status === MATCH_STATUS.SELESAI) {
+        can = false;
+        reason = 'Tiada perlawanan menunggu giliran.';
+        if (lock.cls === 'free') lock = { cls: 'na', text: '— Tiada perlawanan' };
+      } else if (court.status === COURT_STATUS.SEDIA && !isMatchReady(match)) {
+        can = false;
+        reason = 'Pasukan belum ditentukan (undian / keputusan sebelumnya).';
+      } else if (court.status === COURT_STATUS.SEDIA && match.status !== MATCH_STATUS.MENUNGGU) {
+        can = false;
+        reason = `${match.id} berstatus "${match.status}".`;
+      }
+      return { court, match, lock, can, reason, mine, resume: court.status === COURT_STATUS.LIVE };
+    }
+
+    function selectRefCourt(courtId) {
+      const court = getCourt(courtId);
+      if (!court || !refCourtOption(court).can) return;
+      refSelectedCourt = refSelectedCourt === courtId ? null : courtId;
+      renderRefDesk();
+      if (refSelectedCourt) {
+        const bar = document.querySelector('#refDesk .kickoff-bar');
+        if (bar && window.innerWidth < 760) bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function scrollToCourt(courtId) {
+      const court = getCourt(courtId);
+      if (court && state.ui.kategori !== 'SEMUA' && state.ui.kategori !== court.kategori) switchEvent('SEMUA');
+      const card = document.querySelector(`.court-card[data-court="${courtId}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Terima status kunci daripada pelayan -> kemas kini state.courts & sesi pengadil
+    function applyServerLocks(kunci, opts = {}) {
+      if (!kunci || typeof kunci !== 'object') return false;
+      let changed = false;
+      state.courts.forEach(c => {
+        if (!(c.id in kunci)) return;
+        const k = kunci[c.id];
+        const next = k && k.pengadilId
+          ? { pengadil: k.nama || null, pengadilId: k.pengadilId, dikunciPada: k.dikunciPada || null, kunciBasi: !!k.basi }
+          : { pengadil: null, pengadilId: null, dikunciPada: null, kunciBasi: false };
+        if (c.pengadilId !== next.pengadilId || c.pengadil !== next.pengadil ||
+            c.kunciBasi !== next.kunciBasi || c.dikunciPada !== next.dikunciPada) {
+          Object.assign(c, next);
+          changed = true;
+        }
+      });
+
+      const s = state.session;
+      let lost = null;
+      let restored = null;
+      if (s && s.peranan === 'PENGADIL') {
+        const held = s.aksesGelanggang ? getCourt(s.aksesGelanggang) : null;
+        if (s.aksesGelanggang && (!held || held.pengadilId !== s.userId)) {
+          lost = held;
+          s.aksesGelanggang = null;
+          s.aksesEvent = null;
+          changed = true;
+        }
+        if (!s.aksesGelanggang) {
+          const mine = state.courts.find(c => c.pengadilId === s.userId);
+          if (mine) {
+            s.aksesGelanggang = mine.id;
+            s.aksesEvent = mine.eventId;
+            restored = mine;
+            changed = true;
+          }
+        }
+      }
+      lockSync.loaded = true;
+      lockSync.lastOk = nowIso();
+      lockSync.error = '';
+      if (changed) saveState();
+      if (!opts.silent) {
+        if (lost) {
+          showToast(lost.pengadilId
+            ? `Kawalan ${lost.nama} kini dipegang oleh ${lost.pengadil}. Anda tidak lagi boleh memberi markah di gelanggang ini.`
+            : `Kunci ${lost.nama} telah dilepaskan (oleh Master Admin / tamat sesi).`, 'warn', 5500);
+        }
+        if (restored) showToast(`Kawalan Gelanggang ${restored.id} dipulihkan.`, 'info');
+      }
+      return changed;
+    }
+
+    // Sesi pelayan tamat / akaun digantung -> log keluar pengadil dalam peranti ini
+    function handleSesiError(res) {
+      if (!res || (res.kod !== 'SESI_TAMAT' && res.kod !== 'DIGANTUNG')) return false;
+      const s = state.session;
+      showToast(res.error || 'Sesi pengadil tamat. Sila log masuk semula.', 'error', 6000);
+      if (s && s.peranan === 'PENGADIL') {
+        state.courts.forEach(c => { if (c.pengadilId === s.userId) clearCourtLock(c); });
+        state.session = null;
+        lockEpoch += 1;
+        refSelectedCourt = null;
+        saveState();
+        updateAuthUI();
+        refreshAllViews();
+        startLockSync();
+        openModal('loginModal');
+      }
+      return true;
+    }
+
+    // Baca status kunci semua gelanggang (GET ?action=kunci, tanpa LockService)
+    async function refreshCourtLocks(opts = {}) {
+      const url = getGasUrl();
+      if (!url || isShareView() || lockSync.busy) return false;
+      if (!navigator.onLine) {
+        lockSync.error = 'Luar talian - status kunci tidak dapat disemak.';
+        renderRefDesk();
+        return false;
+      }
+      lockSync.busy = true;
+      const epoch = lockEpoch;
+      try {
+        const sep = url.includes('?') ? '&' : '?';
+        const res = await fetch(`${url}${sep}action=kunci&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        let data = null;
+        try { data = JSON.parse(await res.text()); } catch (err) { data = null; }
+        if (!data || !data.ok || !data.kunci) {
+          throw new Error((data && data.error) || 'Respons tidak sah. Pastikan Code.gs Fasa 2 telah di-deploy.');
+        }
+        // Abaikan jika kunci tempatan berubah semasa permintaan berjalan
+        if (epoch !== lockEpoch || kickoffBusy) return false;
+        const changed = applyServerLocks(data.kunci, opts);
+        if (changed) { updateAuthUI(); refreshAllViews(); } else { renderRefDesk(); }
+        return true;
+      } catch (err) {
+        lockSync.error = `Gagal menyemak kunci gelanggang: ${(err && err.message) || 'ralat rangkaian'}`;
+        renderRefDesk();
+        return false;
+      } finally {
+        lockSync.busy = false;
+      }
+    }
+
+    // Isyarat "masih aktif" supaya kunci tidak dianggap tidak aktif
+    async function sendHeartbeat() {
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL' || !s.aksesGelanggang || !s.token || !getGasUrl()) return;
+      const court = getCourt(s.aksesGelanggang);
+      if (!court || court.pengadilId !== s.userId) return;
+      lastHeartbeatAt = Date.now();
+      const res = await callGas({ action: 'kunciGelanggang', token: s.token, gelanggang: court.id, matchId: court.matchSemasa, perbaharui: true });
+      if (res.ok) return;
+      if (handleSesiError(res)) return;
+      if (res.kod === 'HILANG' || res.kod === 'DIKUNCI') {
+        lockEpoch += 1;
+        if (res.kunci) applyServerLocks(res.kunci);
+        updateAuthUI();
+        refreshAllViews();
+      }
+    }
+
+    function lockSyncTick(force = false) {
+      const s = getSession();
+      if (!s || !getGasUrl()) return;
+      if (document.hidden && !force) return;
+      refreshCourtLocks();
+      if (s.peranan === 'PENGADIL' && s.aksesGelanggang &&
+          (force || Date.now() - lastHeartbeatAt >= LOCK_HEARTBEAT_MS)) {
+        sendHeartbeat();
+      }
+    }
+
+    // Mula / henti semakan berkala status kunci (hanya bila ada pengguna log masuk)
+    function startLockSync() {
+      if (lockPollHandle) clearInterval(lockPollHandle);
+      lockPollHandle = null;
+      if (!getGasUrl() || isShareView() || !getSession()) return;
+      lockPollHandle = setInterval(() => lockSyncTick(false), LOCK_POLL_MS);
+      lockSyncTick(true);
+    }
+
+    // Data markah live untuk tindakan skorLive (Code.gs)
+    function buildLivePayload(courtId, token, lepas = false) {
+      const court = getCourt(courtId);
+      const match = court ? getMatch(court.matchSemasa) : null;
+      if (!court || !match || !token) return null;
+      return {
+        action: 'skorLive',
+        token,
+        gelanggang: court.id,
+        matchId: match.id,
+        skorP1: match.skorP1,
+        skorP2: match.skorP2,
+        fasaMasa: court.status === COURT_STATUS.LIVE
+          ? (COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa)
+          : (court.status === COURT_STATUS.TAMAT ? 'Tamat' : 'Belum Bermula'),
+        status: match.status,
+        pengesahan: match.pengesahan,
+        pemenangPenalti: match.pemenangPenalti ? (match.pemenangPenalti === 'P1' ? match.namaP1 : match.namaP2) : '',
+        masaMula: match.masaMula,
+        masaTamat: match.masaTamat,
+        lepas: !!lepas
+      };
+    }
+
+    // Hantar markah pengadil ke Google Sheets (debounce supaya klik +1 berturut tidak membebankan)
+    function queueLivePush(courtId, delay = 700, extra = null) {
+      const s = getSession();
+      if (!getGasUrl() || !s || s.peranan !== 'PENGADIL' || !s.token) return;
+      clearTimeout(livePushTimers[courtId]);
+      livePushTimers[courtId] = setTimeout(() => {
+        delete livePushTimers[courtId];
+        pushLiveNow(courtId, extra);
+      }, delay);
+    }
+
+    async function pushLiveNow(courtId, extra = null) {
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL' || !s.token) return null;
+      const payload = buildLivePayload(courtId, s.token, extra && extra.lepas);
+      if (!payload) return null;
+      const res = await callGas(payload);
+      if (res.ok) {
+        lastHeartbeatAt = Date.now();
+        return res;
+      }
+      if (handleSesiError(res)) return res;
+      if (res.networkError) {
+        showToast(payload.lepas
+          ? 'Keputusan disimpan dalam peranti ini tetapi gagal dihantar ke Google Sheets. Maklumkan Urusetia.'
+          : 'Skor disimpan dalam peranti ini. Gagal dihantar ke Google Sheets (semak internet).', 'warn', 4500);
+        return res;
+      }
+      showToast(`Google Sheets menolak markah: ${res.error || 'ralat tidak diketahui'}`, 'error', 5500);
+      if (res.kunci) { lockEpoch += 1; applyServerLocks(res.kunci); updateAuthUI(); refreshAllViews(); }
+      return res;
+    }
+
+    // ⚽ SEPAK MULA: kunci gelanggang untuk pengadil & mulakan / sambung perlawanan
+    async function refereeKickOff(courtId) {
+      const s0 = getSession();
+      if (!s0 || s0.peranan !== 'PENGADIL') {
+        showToast('Hanya pengadil yang telah log masuk boleh menekan Sepak Mula.', 'error');
+        return false;
+      }
+      if (kickoffBusy) return false;
+      let court = getCourt(courtId);
+      if (!court) {
+        showToast('Gelanggang tidak dijumpai.', 'error');
+        return false;
+      }
+      if (refHoldsLiveElsewhere(courtId)) {
+        showToast(`Anda masih mengawal perlawanan LIVE di Gelanggang ${s0.aksesGelanggang}. Tamatkan atau lepaskan dahulu.`, 'warn', 4500);
+        return false;
+      }
+      const opt = refCourtOption(court);
+      if (!opt.can) {
+        showToast(opt.reason || 'Gelanggang ini tidak boleh dipilih.', 'error', 4500);
+        return false;
+      }
+      if (opt.mine && court.status !== COURT_STATUS.SEDIA) {
+        showToast(`Anda sudah mengawal ${court.nama}.`, 'info');
+        return true;
+      }
+      let match = opt.match;
+      if (court.status === COURT_STATUS.SEDIA) {
+        const check = checkCourtStartable(court);
+        if (check.error) {
+          showToast(check.error, check.level || 'warn');
+          if (check.save) { saveState(); refreshAllViews(); }
+          return false;
+        }
+        match = check.match;
+      }
+      const resume = court.status === COURT_STATUS.LIVE;
+      const takeover = court.pengadilId && court.kunciBasi ? `\n\n⚠ Kunci tidak aktif milik ${court.pengadil} akan diambil alih.` : '';
+      const ok = window.confirm(
+        `⚽ ${resume ? 'Sepak Mula · Sambung Kawalan' : 'Sepak Mula'} di ${court.nama}?\n\n` +
+        `${match.id} · ${match.namaP1} lwn ${match.namaP2}\n\n` +
+        `Gelanggang akan DIKUNCI untuk anda. Pengadil lain tidak boleh memberi markah di gelanggang ini sehingga anda menekan "Tamat & Hantar Keputusan" atau melepaskannya.${takeover}`
+      );
+      if (!ok) return false;
+
+      const url = getGasUrl();
+      const matchId = match.id;
+      kickoffBusy = true;
+      lockEpoch += 1;
+      renderRefDesk();
+      try {
+        if (url) {
+          if (!s0.token) {
+            showToast('Sesi anda belum disahkan oleh Google Sheets. Sila log keluar dan log masuk semula ketika ada internet.', 'error', 6000);
+            return false;
+          }
+          const res = await callGas({ action: 'kunciGelanggang', token: s0.token, gelanggang: courtId, matchId });
+          if (!res.ok) {
+            if (handleSesiError(res)) return false;
+            if (res.kunci) applyServerLocks(res.kunci, { silent: true });
+            showToast(res.networkError
+              ? 'Tidak dapat menghubungi Google Sheets untuk mengunci gelanggang. Semak sambungan internet & cuba lagi.'
+              : (res.error || 'Gagal mengunci gelanggang.'), 'error', 5500);
+            refSelectedCourt = null;
+            updateAuthUI();
+            refreshAllViews();
+            return false;
+          }
+          if (res.kunci) applyServerLocks(res.kunci, { silent: true });
+          lastHeartbeatAt = Date.now();
+          if (res.diambilAlihDaripada) showToast(`Kunci tidak aktif milik ${res.diambilAlihDaripada} telah diambil alih.`, 'info', 4500);
+        }
+
+        // State mungkin berubah semasa menunggu pelayan (tab lain) -> ambil semula objek terkini
+        const s = getSession();
+        court = getCourt(courtId);
+        if (!s || s.peranan !== 'PENGADIL' || !court) return false;
+        let liveMatch = getMatch(matchId);
+        let started = false;
+        if (court.status === COURT_STATUS.SEDIA) {
+          const check = checkCourtStartable(court);
+          if (check.error || check.match.id !== matchId) {
+            showToast(check.error || 'Perlawanan di gelanggang ini telah berubah. Sila cuba lagi.', 'warn');
+            if (url && s.token) callGas({ action: 'lepasGelanggang', token: s.token, gelanggang: courtId });
+            clearCourtLock(court);
+            saveState();
+            refreshAllViews();
+            return false;
+          }
+          liveMatch = check.match;
+          applyMatchStart(court, liveMatch);
+          started = true;
+        } else if (court.status !== COURT_STATUS.LIVE || !liveMatch) {
+          showToast('Status gelanggang telah berubah. Sila pilih semula.', 'warn');
+          if (url && s.token) callGas({ action: 'lepasGelanggang', token: s.token, gelanggang: courtId });
+          clearCourtLock(court);
+          saveState();
+          refreshAllViews();
+          return false;
+        }
+
+        const now = nowIso();
+        state.courts.forEach(c => { if (c.id !== courtId && c.pengadilId === s.userId) clearCourtLock(c); });
+        Object.assign(court, { pengadil: s.nama, pengadilId: s.userId, dikunciPada: now, kunciBasi: false, kemaskiniTerakhir: now });
+        liveMatch.pengadil = s.nama;
+        state.session.aksesGelanggang = courtId;
+        state.session.aksesEvent = court.eventId;
+        refSelectedCourt = null;
+        lockEpoch += 1;
+        saveState();
+        updateAuthUI();
+        refreshAllViews();
+        queueLivePush(courtId, 0);
+        showToast(started
+          ? `⚽ Sepak mula! ${liveMatch.id}: ${liveMatch.namaP1} lwn ${liveMatch.namaP2}. ${court.nama} dikunci untuk anda.`
+          : `Anda kini mengawal ${court.nama} (${liveMatch.id}). Gelanggang dikunci untuk anda.`, 'success', 4800);
+        setTimeout(() => scrollToCourt(courtId), 200);
+        return true;
+      } finally {
+        kickoffBusy = false;
+        renderRefDesk();
+      }
+    }
+
+    // Pengadil melepaskan gelanggang secara sukarela
+    async function refereeReleaseCourt() {
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL' || !s.aksesGelanggang) return false;
+      const court = getCourt(s.aksesGelanggang);
+      if (!court) return false;
+      const live = court.status === COURT_STATUS.LIVE;
+      const ok = window.confirm(live
+        ? `Perlawanan di ${court.nama} masih LIVE.\n\nLepaskan kunci? Pengadil lain akan boleh mengambil alih pemberian markah.`
+        : `Lepaskan ${court.nama}?`);
+      if (!ok) return false;
+      const courtId = court.id;
+      if (getGasUrl() && s.token) {
+        if (livePushTimers[courtId]) {
+          clearTimeout(livePushTimers[courtId]);
+          delete livePushTimers[courtId];
+          await pushLiveNow(courtId);
+        }
+        const res = await callGas({ action: 'lepasGelanggang', token: s.token, gelanggang: courtId });
+        if (!res.ok) {
+          if (handleSesiError(res)) return false;
+          showToast(res.networkError
+            ? 'Kunci dilepaskan dalam peranti ini sahaja (tiada sambungan). Ia akan tamat sendiri selepas tidak aktif.'
+            : (res.error || 'Gagal melepaskan kunci di Google Sheets.'), 'warn', 5000);
+        }
+      }
+      const c = getCourt(courtId);
+      if (c && c.pengadilId === s.userId) clearCourtLock(c);
+      if (state.session) { state.session.aksesGelanggang = null; state.session.aksesEvent = null; }
+      lockEpoch += 1;
+      saveState();
+      updateAuthUI();
+      refreshAllViews();
+      showToast(`${court.nama} telah dilepaskan.`, 'info');
+      return true;
+    }
+
+    // Master Admin: paksa lepaskan kunci (cth: telefon pengadil rosak / habis bateri)
+    async function adminReleaseLock(courtId) {
+      if (!canManageSystem()) {
+        showToast('Hanya Master Admin boleh melepaskan kunci gelanggang.', 'error');
+        return false;
+      }
+      const court = getCourt(courtId);
+      if (!court || !court.pengadilId) return false;
+      if (!window.confirm(`Lepaskan kunci ${court.nama} yang dipegang oleh ${court.pengadil || court.pengadilId}?\n\nPengadil tersebut tidak lagi boleh memberi markah sehingga menekan Sepak Mula semula.`)) return false;
+      if (getGasUrl()) {
+        const adminKey = ensureAdminKey();
+        if (!adminKey) return false;
+        const res = await callGas({ action: 'lepasGelanggang', adminKey, gelanggang: courtId });
+        if (!res.ok) {
+          showToast(`Gagal melepaskan kunci: ${res.error || 'ralat tidak diketahui'}`, 'error', 5000);
+          return false;
+        }
+        lockEpoch += 1;
+        if (res.kunci) applyServerLocks(res.kunci, { silent: true });
+      }
+      clearCourtLock(getCourt(courtId));
+      saveState();
+      refreshAllViews();
+      showToast(`Kunci ${court.nama} dilepaskan.`, 'success');
+      return true;
+    }
+
+    // Paparan Meja Pengadil (atas kad gelanggang)
+    function renderRefDesk() {
+      const el = document.getElementById('refDesk');
+      if (!el) return;
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL') {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+        return;
+      }
+      el.classList.remove('hidden');
+
+      const url = getGasUrl();
+      const syncText = !url
+        ? '📴 Mod peranti ini sahaja: kunci tidak dikongsi dengan telefon lain (URL Google Apps Script belum ditetapkan).'
+        : !s.token
+          ? '⚠ Log masuk luar talian: log keluar & masuk semula dengan internet untuk mengunci gelanggang.'
+          : lockSync.error
+            ? `⚠ ${lockSync.error}`
+            : lockSync.lastOk
+              ? `🔄 Status kunci disegerak dengan Google Sheets · ${formatTime(lockSync.lastOk)}`
+              : '🔄 Menyemak status kunci gelanggang...';
+
+      const held = s.aksesGelanggang ? getCourt(s.aksesGelanggang) : null;
+      let body = '';
+      if (held && held.pengadilId === s.userId) {
+        const m = getMatch(held.matchSemasa);
+        const statusText = held.status === COURT_STATUS.LIVE
+          ? `LIVE · ${COURT_PHASE_LABELS[held.fasaMasa] || held.fasaMasa} · Skor ${held.skorLiveP1} - ${held.skorLiveP2}`
+          : (held.ditangguh ? `DITANGGUHKAN · ${held.ditangguh.sebab || ''} · Tekan Sepak Mula Semula bila bersedia` : held.status);
+        body = `
+          <div class="ref-active">
+            <div class="court-letter">${escapeHtml(held.id)}</div>
+            <div class="ref-active-info">
+              <div class="ref-step" style="margin-bottom:4px;">Anda sedang mengawal · 🔒 dikunci</div>
+              <strong>${escapeHtml(held.nama)}</strong>${m ? ` · ${escapeHtml(m.id)} — ${escapeHtml(m.namaP1)} lwn ${escapeHtml(m.namaP2)}` : ''}
+              <small>${escapeHtml(statusText)} · Gunakan butang skor pada kad gelanggang di bawah.</small>
+            </div>
+            <div class="ref-active-actions">
+              ${held.status === COURT_STATUS.SEDIA && m
+                ? `<button type="button" class="btn btn-primary btn-sm" onclick="refereeKickOff('${held.id}')" ${kickoffBusy ? 'disabled' : ''}>⚽ Sepak Mula Semula</button>` : ''}
+              ${held.status === COURT_STATUS.LIVE
+                ? `<button type="button" class="btn btn-warn btn-sm" onclick="openPostpone('${held.id}')">⏸ Tangguh Perlawanan</button>` : ''}
+              <button type="button" class="btn btn-sm" onclick="scrollToCourt('${held.id}')">📍 Ke Kad Gelanggang</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="refereeReleaseCourt()">🔓 ${held.status === COURT_STATUS.SEDIA ? 'Tukar Pengadil / Lepaskan' : 'Lepaskan Gelanggang'}</button>
+            </div>
+          </div>`;
+      } else {
+        const opts = state.courts.map(refCourtOption);
+        if (refSelectedCourt && !opts.some(o => o.court.id === refSelectedCourt && o.can)) refSelectedCourt = null;
+        const cards = opts.map(o => {
+          const selected = o.court.id === refSelectedCourt;
+          const m = o.match;
+          return `
+            <button type="button" class="court-pick ${courtStatusClass(o.court)} ${selected ? 'selected' : ''}"
+              onclick="selectRefCourt('${o.court.id}')" ${o.can ? '' : 'disabled'} aria-pressed="${selected ? 'true' : 'false'}"
+              aria-label="Pilih ${escapeHtml(o.court.nama)}">
+              <span class="court-pick-top"><span class="court-letter">${escapeHtml(o.court.id)}</span>${courtStatusBadge(o.court)}</span>
+              <span class="court-pick-match">${m
+                ? `${escapeHtml(m.namaP1)} <span class="muted">lwn</span> ${escapeHtml(m.namaP2)}<small>${escapeHtml(m.id)} · ${escapeHtml(o.court.kategoriNama || '')}</small>`
+                : `<span class="muted">Tiada perlawanan</span><small>${escapeHtml(o.court.kategoriNama || '')}</small>`}</span>
+              <span class="lock-chip ${o.lock.cls}">${escapeHtml(o.lock.text)}</span>
+              ${!o.can && o.reason ? `<span class="court-pick-reason">${escapeHtml(o.reason)}</span>` : ''}
+            </button>`;
+        }).join('');
+        const sel = opts.find(o => o.court.id === refSelectedCourt && o.can && o.match);
+        const bar = sel
+          ? `<div class="kickoff-bar">
+               <div class="ko-info">
+                 <div class="ref-step" style="margin-bottom:4px;">Langkah 2 · Sudah bersedia?</div>
+                 <strong>${escapeHtml(sel.court.nama)}</strong> · ${escapeHtml(sel.match.id)} — ${escapeHtml(sel.match.namaP1)} lwn ${escapeHtml(sel.match.namaP2)}
+                 <small>${sel.resume
+                   ? 'Perlawanan sedang LIVE tanpa pengadil. Sepak Mula akan mengunci gelanggang & anda mengambil alih kawalan markah.'
+                   : 'Sepak Mula akan memulakan Separuh 1 dan mengunci gelanggang ini untuk anda sahaja.'}</small>
+               </div>
+               <button type="button" class="btn btn-primary btn-kickoff" onclick="refereeKickOff('${sel.court.id}')" ${kickoffBusy ? 'disabled' : ''}>${kickoffBusy ? '⏳ Mengunci...' : '⚽ Sepak Mula'}</button>
+             </div>`
+          : `<div class="kickoff-bar idle">
+               <span class="muted" style="font-size:.86rem;">Pilih satu gelanggang yang tersedia di atas untuk meneruskan.</span>
+               <button type="button" class="btn btn-primary btn-kickoff" disabled>⚽ Sepak Mula</button>
+             </div>`;
+        body = `<div class="ref-step">Langkah 1 · Pilih gelanggang untuk diadili</div>
+                <div class="court-pick-grid">${cards}</div>${bar}`;
+      }
+
+      el.innerHTML = `
+        <div class="ref-desk-head">
+          <div>
+            <h3>🧑‍⚖️ Meja Pengadil · ${escapeHtml(s.nama)}</h3>
+            <p>${escapeHtml(syncText)}</p>
+          </div>
+          <button type="button" class="btn btn-sm" onclick="refreshCourtLocks()" ${url ? '' : 'disabled'}>🔄 Semak Status</button>
+        </div>
+        <div class="ref-desk-body">${body}</div>`;
+    }
+
+
+    /* ---------------------------------------------------------
+       3.8c FASA 3: TANGGUH PERLAWANAN & PAPAN LIVE AWAM
+       - "⏸ Tangguh Perlawanan": jika Sepak Mula ditekan terlalu awal.
+         Perlawanan kembali MENUNGGU GILIRAN (skor & masa dikosongkan).
+         Pilihan: kekal sebagai pengadil ATAU tukar pengadil (kunci dilepaskan).
+       - Papan Live: semua orang (termasuk penonton) nampak perlawanan yang
+         sudah bermula + nama pengadil yang sedang mengadili. Data disegerak
+         daripada Google Sheets (?action=live) setiap 15 saat.
+       --------------------------------------------------------- */
+    const PUBLIC_POLL_MS = 15000;
+    const publicLive = { data: null, lastOk: null, error: '', busy: false };
+    let publicPollHandle = null;
+    let postponeCourtId = null;
+    const boardSeenLive = {};   // gelanggang -> matchId LIVE terakhir (untuk notifikasi "baru bermula")
+    let boardReady = false;
+
+    function canPostponeCourt(courtId) {
+      const s = getSession();
+      const court = getCourt(courtId);
+      if (!s || !court || court.status !== COURT_STATUS.LIVE) return false;
+      if (s.peranan === 'PENGADIL') return court.pengadilId === s.userId;
+      if (canManageSystem()) return true;
+      // Urusetia: hanya jika gelanggang tidak dikunci pengadil
+      return canStartMatch() && !court.pengadilId;
+    }
+
+    function openPostpone(courtId) {
+      if (!canPostponeCourt(courtId)) {
+        showToast('Anda tidak dibenarkan menangguhkan perlawanan di gelanggang ini.', 'error');
+        return;
+      }
+      const court = getCourt(courtId);
+      const match = getMatch(court.matchSemasa);
+      if (!match) return;
+      postponeCourtId = courtId;
+      const s = getSession();
+      const isRef = s && s.peranan === 'PENGADIL';
+      const mins = court.masaMula ? Math.floor((Date.now() - new Date(court.masaMula).getTime()) / 60000) : 0;
+      const info = document.getElementById('tangguhInfo');
+      if (info) {
+        info.innerHTML = `<strong>${escapeHtml(court.nama)}</strong> · ${escapeHtml(match.id)} — ${escapeHtml(match.namaP1)} lwn ${escapeHtml(match.namaP2)}<br>` +
+          `Skor semasa ${court.skorLiveP1} - ${court.skorLiveP2} · bermula ${mins} minit lalu. ` +
+          `Perlawanan akan kembali <strong>Menunggu Giliran</strong>; skor &amp; masa dikosongkan.` +
+          (court.skorLiveP1 || court.skorLiveP2 ? '<br><span style="color:var(--accent);">⚠ Skor bukan 0-0. Pastikan ini memang perlu ditangguhkan.</span>' : '');
+      }
+      const opts = document.getElementById('tangguhOpts');
+      if (opts) {
+        // Bukan pengadil: tiada pilihan "kekal" (urusetia / admin sentiasa melepaskan kunci)
+        opts.classList.toggle('hidden', !isRef);
+        const tukar = opts.querySelector('input[value="tukar"]');
+        const kekal = opts.querySelector('input[value="kekal"]');
+        if (kekal) kekal.checked = true;
+        if (!isRef && tukar) tukar.checked = true;
+      }
+      setFormMsg(document.getElementById('tangguhMsg'), '', '');
+      openModal('tangguhModal');
+    }
+
+    async function submitPostpone(event) {
+      if (event) event.preventDefault();
+      const courtId = postponeCourtId;
+      const btn = document.getElementById('btnTangguhSubmit');
+      const msg = document.getElementById('tangguhMsg');
+      if (!courtId || !canPostponeCourt(courtId)) { closeModal('tangguhModal'); return false; }
+      const sebab = (document.getElementById('tangguhSebab') || {}).value || 'Lain-lain';
+      const s = getSession();
+      const isRef = s.peranan === 'PENGADIL';
+      const pilihan = (document.querySelector('input[name="tangguhPengadil"]:checked') || {}).value || 'kekal';
+      const tukar = !isRef || pilihan === 'tukar';
+      const ok = await postponeMatch(courtId, { sebab, tukar, btn, msg });
+      if (ok) closeModal('tangguhModal');
+      return ok;
+    }
+
+    async function postponeMatch(courtId, { sebab, tukar, btn, msg } = {}) {
+      const s = getSession();
+      let court = getCourt(courtId);
+      const match = court ? getMatch(court.matchSemasa) : null;
+      if (!s || !court || !match) return false;
+      const isRef = s.peranan === 'PENGADIL';
+      const url = getGasUrl();
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Menangguhkan...'; }
+      try {
+        // 1) Kemas kini tempatan
+        clearTimeout(livePushTimers[courtId]);
+        delete livePushTimers[courtId];
+        const now = nowIso();
+        const pengadilLama = court.pengadil;
+        Object.assign(match, {
+          status: MATCH_STATUS.MENUNGGU, skorP1: null, skorP2: null, masaMula: null, masaTamat: null,
+          pengesahan: 'MENUNGGU', pemenangPenalti: null, catatan: `Ditangguhkan: ${sebab}`,
+          pengadil: tukar ? null : match.pengadil
+        });
+        Object.assign(court, {
+          status: COURT_STATUS.SEDIA, skorLiveP1: 0, skorLiveP2: 0, fasaMasa: 'SEDIA',
+          fasaMulaPada: null, masaMula: null, kemaskiniTerakhir: now,
+          ditangguh: { pada: now, oleh: s.nama || ROLE_LABELS[s.peranan], sebab, pengadilLama }
+        });
+
+        // 2) Hantar ke Google Sheets
+        if (url) {
+          let res = { ok: true };
+          if (isRef && s.token) {
+            res = await callGas({
+              action: 'skorLive', token: s.token, gelanggang: courtId, matchId: match.id,
+              tangguh: true, sebab, lepas: !!tukar, pasukan: `${match.namaP1} lwn ${match.namaP2}`
+            });
+          } else if (!isRef && court.pengadilId && canManageSystem()) {
+            const adminKey = typeof ensureAdminKey === 'function' ? ensureAdminKey() : getAdminKey();
+            res = await callGas({ action: 'tangguhAdmin', adminKey, gelanggang: courtId, matchId: match.id, sebab, pasukan: `${match.namaP1} lwn ${match.namaP2}` });
+          } else if (!isRef && typeof syncToGoogleSheets === 'function') {
+            syncToGoogleSheets({ auto: true, silent: true });
+          }
+          if (!res.ok) {
+            if (handleSesiError(res)) return false;
+            showToast(res.networkError
+              ? 'Ditangguhkan dalam peranti ini. Gagal dihantar ke Google Sheets (semak internet).'
+              : `Google Sheets: ${res.error || 'gagal merekod penangguhan.'}`, 'warn', 5500);
+          } else if (res.kunci) {
+            applyServerLocks(res.kunci, { silent: true });
+          }
+        }
+
+        // 3) Kunci: tukar pengadil -> lepaskan
+        court = getCourt(courtId);
+        if (tukar) {
+          clearCourtLock(court);
+          if (isRef && state.session) { state.session.aksesGelanggang = null; state.session.aksesEvent = null; }
+        }
+        lockEpoch += 1;
+        addApprovalLog(match, `DITANGGUHKAN (${sebab})${tukar ? ' · tukar pengadil' : ''}`);
+        saveState();
+        updateAuthUI();
+        refreshAllViews();
+        fetchPublicLive();
+        showToast(tukar
+          ? `⏸ ${match.id} ditangguhkan. ${court.nama} kini terbuka untuk pengadil lain.`
+          : `⏸ ${match.id} ditangguhkan. ${court.nama} kekal dikunci untuk anda — tekan Sepak Mula Semula bila bersedia.`, 'warn', 5500);
+        return true;
+      } catch (err) {
+        console.error('[postponeMatch]', err);
+        setFormMsg(msg, 'Ralat semasa menangguhkan perlawanan.', 'error');
+        return false;
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '⏸ Tangguhkan'; }
+      }
+    }
+
+    // ---------- Papan Live Awam ----------
+    async function fetchPublicLive() {
+      const url = getGasUrl();
+      if (!url || publicLive.busy) return false;
+      if (!navigator.onLine) { publicLive.error = 'Luar talian'; renderLiveBoard(); return false; }
+      publicLive.busy = true;
+      try {
+        const sep = url.includes('?') ? '&' : '?';
+        const res = await fetch(`${url}${sep}action=live&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        let data = null;
+        try { data = JSON.parse(await res.text()); } catch (err) { data = null; }
+        if (!data || !data.ok || !data.gelanggang) throw new Error((data && data.error) || 'Pastikan Code.gs Fasa 3 telah di-deploy.');
+        publicLive.data = data.gelanggang;
+        publicLive.lastOk = nowIso();
+        publicLive.error = '';
+        renderLiveBoard();
+        return true;
+      } catch (err) {
+        publicLive.error = (err && err.message) || 'ralat rangkaian';
+        renderLiveBoard();
+        return false;
+      } finally {
+        publicLive.busy = false;
+      }
+    }
+
+    function startPublicLiveSync() {
+      if (publicPollHandle) clearInterval(publicPollHandle);
+      publicPollHandle = null;
+      if (!getGasUrl()) return;
+      publicPollHandle = setInterval(() => { if (!document.hidden) fetchPublicLive(); }, PUBLIC_POLL_MS);
+      fetchPublicLive();
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchPublicLive(); });
+    }
+
+    function boardStatusUpper(v) { return String(v || '').toUpperCase(); }
+
+    // Gabung data tempatan & Google Sheets: ambil yang paling baru dikemas kini
+    function boardEntry(court) {
+      const m = getMatch(court.matchSemasa);
+      const local = {
+        source: 'local',
+        matchId: m ? m.id : null,
+        namaP1: m ? m.namaP1 : '', namaP2: m ? m.namaP2 : '',
+        skorP1: court.status === COURT_STATUS.SEDIA ? null : court.skorLiveP1,
+        skorP2: court.status === COURT_STATUS.SEDIA ? null : court.skorLiveP2,
+        live: court.status === COURT_STATUS.LIVE,
+        done: court.status === COURT_STATUS.TAMAT,
+        ditangguh: court.status === COURT_STATUS.SEDIA && !!court.ditangguh,
+        sebab: court.ditangguh ? court.ditangguh.sebab : '',
+        fasa: court.status === COURT_STATUS.LIVE ? (COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa) : '',
+        masaMula: court.masaMula || (m && m.masaMula) || null,
+        fasaMulaPada: court.fasaMulaPada || null,
+        pengadil: court.pengadil || (court.status === COURT_STATUS.LIVE && m ? m.pengadil : '') || '',
+        pengadilBasi: !!court.kunciBasi,
+        kemaskini: court.kemaskiniTerakhir || null
+      };
+      const srv = publicLive.data && publicLive.data[court.id];
+      if (!srv || !srv.matchId) return local;
+      const s = getSession();
+      const iControl = s && s.peranan === 'PENGADIL' && court.pengadilId === s.userId;
+      const srvTime = srv.kemaskini ? new Date(srv.kemaskini).getTime() : 0;
+      const locTime = local.kemaskini ? new Date(local.kemaskini).getTime() : 0;
+      if (iControl || (locTime && locTime > srvTime + 2000)) return local;
+      const st = boardStatusUpper(srv.status);
+      return {
+        source: 'server',
+        matchId: srv.matchId,
+        namaP1: srv.namaP1 || '', namaP2: srv.namaP2 || '',
+        skorP1: srv.skorP1 === '' ? null : srv.skorP1,
+        skorP2: srv.skorP2 === '' ? null : srv.skorP2,
+        live: st === 'LIVE',
+        done: st.indexOf('TAMAT') === 0,
+        ditangguh: !!srv.ditangguh,
+        sebab: String(srv.catatan || '').replace(/^Ditangguhkan[^:]*:\s*/, ''),
+        fasa: st === 'LIVE' ? (srv.fasaMasa || '') : '',
+        masaMula: srv.masaMula || null,
+        fasaMulaPada: null,
+        pengadil: srv.pengadil || '',
+        pengadilBasi: srv.pengadil ? !srv.pengadilAktif && st === 'LIVE' : false,
+        kemaskini: srv.kemaskini
+      };
+    }
+
+    function renderLiveBoard() {
+      const el = document.getElementById('liveBoard');
+      if (!el) return;
+      const entries = state.courts.map(c => ({ court: c, e: boardEntry(c) }));
+      const liveCount = entries.filter(x => x.e.live).length;
+      const url = getGasUrl();
+      const syncText = !url
+        ? 'Paparan peranti ini sahaja'
+        : publicLive.error
+          ? `⚠ Gagal segerak: ${publicLive.error}`
+          : publicLive.lastOk ? `🔄 Disegerak automatik · ${formatTime(publicLive.lastOk)}` : '🔄 Menyegerak...';
+
+      const flashes = [];
+      const cards = entries.map(({ court, e }) => {
+        const cls = e.live ? 'lb-live' : e.ditangguh ? 'lb-tangguh' : e.done ? 'lb-done' : '';
+        if (e.live && e.matchId && boardSeenLive[court.id] !== e.matchId) {
+          if (boardReady) flashes.push({ court, e });
+          boardSeenLive[court.id] = e.matchId;
+        } else if (!e.live) {
+          delete boardSeenLive[court.id];
+        }
+        const badge = e.live ? '<span class="badge badge-live badge-dot">Live</span>'
+          : e.ditangguh ? '<span class="badge badge-tangguh badge-dot">Ditangguhkan</span>'
+          : e.done ? '<span class="badge badge-done badge-dot">Tamat</span>'
+          : '<span class="badge badge-ready badge-dot">Sedia</span>';
+        const score = e.skorP1 === null || e.skorP1 === undefined ? 'vs' : `${e.skorP1} - ${e.skorP2}`;
+        const teams = e.matchId
+          ? `<div class="lb-teams"><span>${escapeHtml(e.namaP1)}</span><span class="lb-score">${escapeHtml(score)}</span><span>${escapeHtml(e.namaP2)}</span></div>`
+          : '<div class="muted" style="font-size:.82rem;">Tiada perlawanan</div>';
+        let meta = '';
+        if (e.live) {
+          meta = `<span>⚽ Bermula ${e.masaMula ? formatTime(e.masaMula) : '-'}</span>` +
+            (e.fasa ? `<span>⏱ ${escapeHtml(e.fasa)}</span>` : '') +
+            (e.masaMula ? `<span data-board-timer="${escapeHtml(e.masaMula)}"></span>` : '');
+        } else if (e.ditangguh) {
+          meta = `<span>⏸ ${escapeHtml(e.sebab || 'Ditangguhkan')}</span>`;
+        } else if (e.done) {
+          meta = '<span>Menunggu pengesahan urusetia</span>';
+        } else if (e.matchId) {
+          meta = '<span>Menunggu sepak mula</span>';
+        }
+        const ref = e.pengadil
+          ? `<div class="lb-ref">🧑‍⚖️ Pengadil: <strong>${escapeHtml(e.pengadil)}</strong>${e.pengadilBasi ? ' <span class="muted">(tidak aktif)</span>' : ''}</div>`
+          : `<div class="lb-ref none">🧑‍⚖️ Pengadil: ${e.live ? 'belum ditetapkan' : '—'}</div>`;
+        return `<div class="lb-card ${cls}" data-board-court="${court.id}">
+            <div class="lb-top"><strong>Gelanggang ${escapeHtml(court.id)}</strong>${badge}</div>
+            <div class="lb-top"><span>${e.matchId ? escapeHtml(e.matchId) : ''}</span><span>${escapeHtml(court.kategoriNama || court.kategori || '')}</span></div>
+            ${teams}
+            <div class="lb-meta">${meta}</div>
+            ${ref}
+          </div>`;
+      }).join('');
+
+      el.innerHTML = `
+        <div class="live-board-head">
+          <div>
+            <h3>📺 Papan Live · Perlawanan Sedang Berlangsung</h3>
+            <p>${escapeHtml(syncText)}</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="live-count ${liveCount ? '' : 'zero'}">${liveCount ? `🔴 ${liveCount} LIVE` : 'Tiada perlawanan live'}</span>
+            ${url ? '<button type="button" class="btn btn-sm" onclick="fetchPublicLive()" aria-label="Muat semula papan live">🔄</button>' : ''}
+          </div>
+        </div>
+        <div class="live-board-grid">${cards}</div>`;
+
+      flashes.forEach(({ court, e }) => {
+        const card = el.querySelector(`[data-board-court="${court.id}"]`);
+        if (card) card.classList.add('lb-flash');
+        showToast(`🔴 LIVE: ${e.matchId} di Gelanggang ${court.id} telah bermula${e.pengadil ? ` · Pengadil: ${e.pengadil}` : ''}.`, 'info', 4500);
+      });
+      boardReady = true;
+      updateBoardTimers();
+    }
+
+    function updateBoardTimers() {
+      const now = Date.now();
+      document.querySelectorAll('[data-board-timer]').forEach(el => {
+        const t = new Date(el.dataset.boardTimer).getTime();
+        if (!isNaN(t)) el.textContent = `· ${formatDuration(Math.max(0, now - t))}`;
+      });
     }
 
     /* ---------------------------------------------------------
@@ -2926,7 +4225,6 @@
 
       const oldCourt = match.gelanggang;
       match.gelanggang = court.id;
-      match.pengadil = `PENGADIL-${court.id}`;
 
       if (placeNow) {
         court.matchSemasa = match.id;
@@ -3036,7 +4334,7 @@
       const body = document.getElementById('usersBody');
       if (!body) return;
       const me = getSession();
-      body.innerHTML = state.users.map(u => {
+      body.innerHTML = state.users.filter(u => u.peranan !== 'PENGADIL').map(u => {
         const active = u.status === 'AKTIF';
         const isMe = me && me.userId === u.id;
         return `
@@ -3044,7 +4342,6 @@
             <td class="mono">${escapeHtml(u.id)}</td>
             <td>${escapeHtml(u.nama)}${isMe ? ' <small class="muted">(anda)</small>' : ''}</td>
             <td>${escapeHtml(ROLE_LABELS[u.peranan] || u.peranan)}</td>
-            <td class="num">${escapeHtml(u.aksesGelanggang === 'SEMUA' ? '-' : u.aksesGelanggang)}</td>
             <td class="mono" title="PIN disembunyikan">••${escapeHtml(String(u.pin).slice(-2))}</td>
             <td>${active ? '<span class="badge badge-ok">Aktif</span>' : '<span class="badge badge-reject">Digantung</span>'}</td>
             <td><button type="button" class="btn btn-sm ${active ? 'btn-danger' : 'btn-success'}" onclick="toggleUser('${u.id}')" ${isMe ? 'disabled title="Tidak boleh menggantung akaun sendiri"' : ''}>${active ? 'Gantung' : 'Aktifkan'}</button></td>
@@ -3224,8 +4521,10 @@
       set('statLive', state.matches.filter(m => m.status === MATCH_STATUS.LIVE).length);
       set('statPending', state.matches.filter(m => m.status === MATCH_STATUS.TUNGGU_SAH).length);
       set('statApproved', state.matches.filter(isApproved).length);
-      set('statUsers', state.users.filter(u => u.status === 'AKTIF').length);
+      set('statUsers', state.users.filter(u => u.status === 'AKTIF' && u.peranan !== 'PENGADIL').length);
+      set('statReferees', (state.referees || []).filter(r => r.status === 'AKTIF').length);
       if (!canManageSystem()) return;
+      renderReferees();
       renderUsers();
       renderDrawSlots();
       renderCourtAssign();
@@ -3244,10 +4543,10 @@
         if (input) input.focus();
         return false;
       }
-      if (!window.confirm(`Cipta kejohanan baharu "${nama}"?\n\nSemua keputusan semasa akan dikosongkan. Sandaran JSON akan dimuat turun dahulu. Pengguna & tetapan dikekalkan.`)) return false;
+      if (!window.confirm(`Cipta kejohanan baharu "${nama}"?\n\nSemua keputusan semasa akan dikosongkan. Sandaran JSON akan dimuat turun dahulu. Pengguna, pengadil & tetapan dikekalkan.`)) return false;
 
       exportData(true);
-      const keep = { users: state.users, settings: state.settings, session: state.session };
+      const keep = { users: state.users, referees: state.referees, settings: state.settings, session: state.session };
       const year = (nama.match(/20\d{2}/) || [new Date().getFullYear()])[0];
       state = createDefaultState();
       Object.keys(state.events).forEach(k => {
@@ -3282,16 +4581,16 @@
       state.settings.gasUrl = url;
       saveState();
       renderAdminExtras();
+      startLockSync();
       showToast(url ? 'URL Google Apps Script disimpan.' : 'URL Google Apps Script dikosongkan.', 'success');
       return true;
     }
 
-    // Nama pengadil daripada ID (cth: PENGADIL-A -> "Pengadil Gelanggang A")
+    // Nama pengadil bagi perlawanan (dihantar ke lajur "Nama Pengadil" dalam Google Sheets)
     function refereeName(match) {
+      if (match.pengadil) return match.pengadil;
       const court = getCourt(match.gelanggang);
-      const id = match.pengadil || (court && court.pengadil) || '';
-      const u = getUserById(id);
-      return u ? u.nama : id;
+      return court && court.matchSemasa === match.id && court.pengadil ? court.pengadil : '';
     }
 
     // Medan 'matches' sepadan dengan lajur tab Jadual_Perlawanan (lihat Code.gs)
@@ -3334,7 +4633,7 @@
         showToast('Hanya Master Admin boleh sync ke Google Sheets.', 'error');
         return false;
       }
-      const url = state.settings.gasUrl;
+      const url = getGasUrl();
       if (!url) {
         if (!options.auto) showToast('Sila simpan URL Google Apps Script dahulu.', 'warn');
         return false;
@@ -3376,7 +4675,7 @@
     }
 
     function maybeAutoSync() {
-      if (!state.settings || !state.settings.autoSync || !state.settings.gasUrl || !canApprove()) return;
+      if (!state.settings || !state.settings.autoSync || !getGasUrl() || !canApprove()) return;
       const sig = syncSignature();
       if (lastSyncSignature === null) { lastSyncSignature = sig; return; }
       if (sig === lastSyncSignature) return;
@@ -3439,7 +4738,7 @@
         showToast('Hanya Master Admin boleh menetap semula kejohanan.', 'error');
         return false;
       }
-      if (!window.confirm('Tetap semula SEMUA data kepada tetapan kilang?\n\nSemua skor, log, undian, pengguna baharu dan tetapan akan dipadam.')) return false;
+      if (!window.confirm('Tetap semula SEMUA data kepada tetapan kilang?\n\nSemua skor, log, undian, pengguna baharu, senarai pengadil (dalam peranti ini) dan tetapan akan dipadam.')) return false;
       const typed = window.prompt('Taip RESET untuk mengesahkan:');
       if (typed === null || typed.trim().toUpperCase() !== 'RESET') {
         showToast('Tetapan semula dibatalkan.', 'info');
@@ -3455,6 +4754,372 @@
       setActiveTab('tab-live');
       showToast('Kejohanan ditetapkan semula kepada data asal. Sila log masuk semula.', 'warn', 4500);
       return true;
+    }
+
+    /* ---------------------------------------------------------
+       4.5b PANGKALAN DATA PENGADIL (MASTER ADMIN SAHAJA)
+       - Data tempatan: state.referees (localStorage peranti ini)
+       - Pangkalan data utama: tab "Senarai_Pengadil" dalam Google Sheets (Code.gs)
+       --------------------------------------------------------- */
+    const REF_NAME_MIN = 2;
+    const REF_NAME_MAX = 30;
+    const REF_PW_REGEX = /^\S{4,20}$/;
+    const refPwVisible = new Set();
+    let refPwShowAll = false;
+
+    function getGasUrl() {
+      return (state.settings && state.settings.gasUrl) || DEFAULT_GAS_URL || '';
+    }
+
+    function getAdminKey() {
+      try { return sessionStorage.getItem(ADMIN_KEY_STORAGE) || ''; } catch (err) { return ''; }
+    }
+
+    function setAdminKey(pin) {
+      try {
+        if (pin) sessionStorage.setItem(ADMIN_KEY_STORAGE, pin);
+        else sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+      } catch (err) { /* abaikan */ }
+    }
+
+    // Jika sesi Master Admin dipulihkan selepas pelayar ditutup, minta PIN semula sekali.
+    function ensureAdminKey() {
+      const existing = getAdminKey();
+      if (existing) return existing;
+      const pin = window.prompt('Masukkan semula PIN Master Admin untuk menyegerak dengan Google Sheets:');
+      if (pin === null) return '';
+      const ok = state.users.some(u => u.peranan === 'MASTER_ADMIN' && u.status === 'AKTIF' && u.pin === pin.trim());
+      if (!ok) {
+        showToast('PIN Master Admin tidak sah.', 'error');
+        return '';
+      }
+      setAdminKey(pin.trim());
+      return pin.trim();
+    }
+
+    // POST text/plain ke Apps Script (tanpa preflight CORS) & baca respons JSON.
+    async function callGas(payload) {
+      const url = getGasUrl();
+      if (!url) return { ok: false, networkError: true, error: 'URL Google Apps Script belum ditetapkan.' };
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+          redirect: 'follow'
+        });
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (err) {
+          return { ok: false, networkError: true, error: 'Respons Google Sheets tidak sah. Pastikan Code.gs terkini telah di-deploy.' };
+        }
+      } catch (err) {
+        console.warn('[callGas]', err);
+        return { ok: false, networkError: true, error: 'Tiada sambungan ke Google Sheets.' };
+      }
+    }
+
+    function normalizeRefName(name) {
+      return String(name || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function refNameKey(name) {
+      return normalizeRefName(name).toLowerCase();
+    }
+
+    function generateRefereeId() {
+      const max = state.referees.reduce((acc, r) => {
+        const m = /^REF-(\d+)$/.exec(r.id || '');
+        return m ? Math.max(acc, Number(m[1])) : acc;
+      }, 0);
+      return `REF-${String(max + 1).padStart(3, '0')}`;
+    }
+
+    function generateRefPassword(length = 6) {
+      const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+      const buf = new Uint32Array(length);
+      if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(buf);
+      else for (let i = 0; i < length; i++) buf[i] = Math.floor(Math.random() * 1e9);
+      return Array.from(buf, n => chars[n % chars.length]).join('');
+    }
+
+    // Pulangkan mesej ralat, atau '' jika sah.
+    function validateReferee(nama, password, editId) {
+      if (nama.length < REF_NAME_MIN || nama.length > REF_NAME_MAX) {
+        return `Nama ringkas mesti ${REF_NAME_MIN} hingga ${REF_NAME_MAX} aksara.`;
+      }
+      if (!REF_PW_REGEX.test(password)) return 'Kata laluan mesti 4 hingga 20 aksara tanpa ruang.';
+      if (state.referees.some(r => r.id !== editId && refNameKey(r.nama) === refNameKey(nama))) {
+        return `Nama "${nama}" telah digunakan oleh pengadil lain.`;
+      }
+      return '';
+    }
+
+    // Simpan maklumat pengadil daripada pelayan ke dalam peranti ini
+    function cacheReferee(data, password) {
+      let ref = getRefereeById(data.id) ||
+        state.referees.find(r => refNameKey(r.nama) === refNameKey(data.nama));
+      if (!ref) {
+        ref = { id: data.id, nama: data.nama, password: password, status: 'AKTIF', dicipta: nowIso(), dikemaskini: nowIso(), loginTerakhir: null };
+        state.referees.push(ref);
+      }
+      Object.assign(ref, {
+        id: data.id || ref.id,
+        nama: data.nama || ref.nama,
+        status: data.status || ref.status,
+        password: password !== undefined ? password : (data.password !== undefined ? data.password : ref.password)
+      });
+      return ref;
+    }
+
+    function setRefSyncInfo(text) {
+      state.settings.refSyncStatus = `${new Date().toLocaleString('ms-MY')} · ${text}`;
+      saveState();
+      const info = document.getElementById('refereeSyncInfo');
+      if (info) info.textContent = state.settings.refSyncStatus;
+    }
+
+    // Hantar perubahan satu rekod ke Google Sheets (jika URL tersedia)
+    async function pushRefereeChange(op, ref) {
+      if (!getGasUrl()) {
+        setRefSyncInfo('Disimpan dalam peranti ini sahaja (URL Google Apps Script belum ditetapkan).');
+        return;
+      }
+      const adminKey = ensureAdminKey();
+      if (!adminKey) {
+        setRefSyncInfo('Belum disegerak ke Google Sheets (PIN Master Admin diperlukan).');
+        return;
+      }
+      const payload = op === 'padam'
+        ? { action: 'padamPengadil', adminKey, id: ref.id }
+        : { action: 'simpanPengadil', adminKey, pengadil: ref };
+      const res = await callGas(payload);
+      if (res.ok) {
+        if (res.pengadil && res.pengadil.id && res.pengadil.id !== ref.id) {
+          // Pelayan menetapkan ID baharu (elak pertindihan)
+          const local = getRefereeById(ref.id);
+          if (local) local.id = res.pengadil.id;
+        }
+        setRefSyncInfo(`✅ ${op === 'padam' ? 'Padam' : 'Simpan'} ${ref.nama} disegerak ke Google Sheets.`);
+        refreshAllViews();
+      } else {
+        setRefSyncInfo(`⚠ Gagal segerak ${ref.nama}: ${res.error || 'ralat tidak diketahui'}. Guna "Hantar ke Sheets" untuk cuba semula.`);
+        showToast(`Google Sheets: ${res.error || 'gagal disegerak'}`, 'warn', 4500);
+      }
+    }
+
+    function openRefereeModal(refId) {
+      if (!canManageSystem()) {
+        showToast('Hanya Master Admin boleh mengurus akaun pengadil.', 'error');
+        return false;
+      }
+      const ref = refId ? getRefereeById(refId) : null;
+      document.getElementById('refEditId').value = ref ? ref.id : '';
+      document.getElementById('refName').value = ref ? ref.nama : '';
+      document.getElementById('refPassword').value = ref ? ref.password : generateRefPassword();
+      document.getElementById('refereeModalTitle').textContent = ref ? `✏️ Ubah Pengadil (${ref.id})` : '🧑‍⚖️ Tambah Pengadil';
+      document.getElementById('btnRefereeSubmit').textContent = ref ? 'Simpan Perubahan' : 'Tambah Pengadil';
+      openModal('refereeModal');
+      return true;
+    }
+
+    function handleRefereeSubmit(event) {
+      if (event && typeof event.preventDefault === 'function') event.preventDefault();
+      const msgEl = document.getElementById('refereeMsg');
+      if (!canManageSystem()) {
+        setFormMsg(msgEl, 'Hanya Master Admin boleh mengurus akaun pengadil.', 'error');
+        return false;
+      }
+      const editId = document.getElementById('refEditId').value;
+      const nama = normalizeRefName(document.getElementById('refName').value);
+      const password = document.getElementById('refPassword').value.trim();
+      const err = validateReferee(nama, password, editId || null);
+      if (err) {
+        setFormMsg(msgEl, err, 'error');
+        return false;
+      }
+
+      const now = nowIso();
+      let ref;
+      if (editId) {
+        ref = getRefereeById(editId);
+        if (!ref) {
+          setFormMsg(msgEl, 'Pengadil tidak dijumpai.', 'error');
+          return false;
+        }
+        const oldName = ref.nama;
+        Object.assign(ref, { nama, password, dikemaskini: now });
+        // Kemas kini nama pada gelanggang yang sedang dipegang
+        state.courts.forEach(c => { if (c.pengadilId === ref.id) c.pengadil = nama; });
+        if (state.session && state.session.userId === ref.id) state.session.nama = nama;
+        showToast(oldName !== nama ? `${oldName} kini dikenali sebagai ${nama}.` : `Maklumat ${nama} dikemas kini.`, 'success');
+      } else {
+        ref = { id: generateRefereeId(), nama, password, status: 'AKTIF', dicipta: now, dikemaskini: now, loginTerakhir: null, diciptaOleh: getSession().userId };
+        state.referees.push(ref);
+        showToast(`Pengadil ${nama} (${ref.id}) berjaya dicipta.`, 'success');
+      }
+      saveState();
+      closeModal('refereeModal');
+      refreshAllViews();
+      pushRefereeChange('simpan', ref);
+      return true;
+    }
+
+    function toggleRefereeStatus(refId) {
+      if (!canManageSystem()) return false;
+      const ref = getRefereeById(refId);
+      if (!ref) return false;
+      ref.status = ref.status === 'AKTIF' ? 'DIGANTUNG' : 'AKTIF';
+      ref.dikemaskini = nowIso();
+      if (ref.status !== 'AKTIF') {
+        state.courts.forEach(c => { if (c.pengadilId === ref.id) clearCourtLock(c); });
+      }
+      saveState();
+      refreshAllViews();
+      showToast(`${ref.nama} kini ${ref.status}.`, ref.status === 'AKTIF' ? 'success' : 'warn');
+      pushRefereeChange('simpan', ref);
+      return true;
+    }
+
+    function deleteReferee(refId) {
+      if (!canManageSystem()) return false;
+      const ref = getRefereeById(refId);
+      if (!ref) return false;
+      if (!window.confirm(`Padam akaun pengadil "${ref.nama}" (${ref.id})?\n\nPengadil ini tidak lagi boleh log masuk.`)) return false;
+      state.referees = state.referees.filter(r => r.id !== refId);
+      state.courts.forEach(c => { if (c.pengadilId === refId) clearCourtLock(c); });
+      refPwVisible.delete(refId);
+      saveState();
+      refreshAllViews();
+      showToast(`Akaun ${ref.nama} dipadam.`, 'warn');
+      pushRefereeChange('padam', ref);
+      return true;
+    }
+
+    function toggleRefPw(refId) {
+      if (refPwVisible.has(refId)) refPwVisible.delete(refId);
+      else refPwVisible.add(refId);
+      renderReferees();
+    }
+
+    function toggleAllRefPw() {
+      refPwShowAll = !refPwShowAll;
+      refPwVisible.clear();
+      renderReferees();
+    }
+
+    async function copyRefPw(refId) {
+      const ref = getRefereeById(refId);
+      if (!ref) return;
+      const text = `Nama: ${ref.nama}\nKata laluan: ${ref.password}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(`Maklumat log masuk ${ref.nama} disalin.`, 'success');
+      } catch (err) {
+        window.prompt('Salin maklumat log masuk ini:', `${ref.nama} / ${ref.password}`);
+      }
+    }
+
+    async function pullReferees() {
+      if (!canManageSystem()) return false;
+      if (!getGasUrl()) {
+        showToast('Sila simpan URL Google Apps Script dahulu.', 'warn');
+        return false;
+      }
+      const adminKey = ensureAdminKey();
+      if (!adminKey) return false;
+      const res = await callGas({ action: 'senaraiPengadil', adminKey });
+      if (!res.ok || !Array.isArray(res.pengadil)) {
+        showToast(`Gagal menarik senarai: ${res.error || 'ralat tidak diketahui'}`, 'error', 4500);
+        return false;
+      }
+      if (!window.confirm(`Gantikan senarai pengadil dalam peranti ini (${state.referees.length}) dengan ${res.pengadil.length} pengadil daripada Google Sheets?`)) return false;
+      state.referees = res.pengadil.map(p => ({
+        id: p.id, nama: p.nama, password: String(p.password), status: p.status || 'AKTIF',
+        dicipta: p.dicipta || null, dikemaskini: p.dikemaskini || null, loginTerakhir: p.loginTerakhir || null
+      }));
+      normalizeState();
+      saveState();
+      refreshAllViews();
+      setRefSyncInfo(`✅ ${state.referees.length} pengadil ditarik daripada Google Sheets.`);
+      showToast('Senarai pengadil dikemas kini daripada Google Sheets.', 'success');
+      return true;
+    }
+
+    async function pushAllReferees() {
+      if (!canManageSystem()) return false;
+      if (!getGasUrl()) {
+        showToast('Sila simpan URL Google Apps Script dahulu.', 'warn');
+        return false;
+      }
+      if (!window.confirm(`Hantar ${state.referees.length} pengadil ke Google Sheets?\n\nSenarai dalam tab Senarai_Pengadil akan DIGANTIKAN dengan senarai dalam peranti ini.`)) return false;
+      const adminKey = ensureAdminKey();
+      if (!adminKey) return false;
+      const res = await callGas({ action: 'syncPengadil', adminKey, pengadil: state.referees });
+      if (!res.ok) {
+        showToast(`Gagal menghantar: ${res.error || 'ralat tidak diketahui'}`, 'error', 4500);
+        setRefSyncInfo(`⚠ Gagal hantar senarai: ${res.error || 'ralat'}`);
+        return false;
+      }
+      setRefSyncInfo(`✅ ${res.jumlah} pengadil dihantar ke Google Sheets.`);
+      showToast('Senarai pengadil dihantar ke Google Sheets.', 'success');
+      return true;
+    }
+
+    function renderReferees() {
+      const body = document.getElementById('refereesBody');
+      if (!body) return;
+      const q = refNameKey((document.getElementById('refereeSearch') || {}).value || '');
+      const list = state.referees
+        .filter(r => !q || refNameKey(r.nama).includes(q) || String(r.id).toLowerCase().includes(q))
+        .slice()
+        .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+
+      const summary = document.getElementById('refereeSummary');
+      if (summary) {
+        const aktif = state.referees.filter(r => r.status === 'AKTIF').length;
+        summary.textContent = `${state.referees.length} pengadil · ${aktif} aktif`;
+      }
+      const btnAll = document.getElementById('btnToggleRefPw');
+      if (btnAll) btnAll.textContent = refPwShowAll ? '🙈 Sembunyi Kata Laluan' : '👁 Tunjuk Semua Kata Laluan';
+      const info = document.getElementById('refereeSyncInfo');
+      if (info) {
+        info.textContent = state.settings.refSyncStatus ||
+          (getGasUrl() ? 'Perubahan akan disegerak ke tab Senarai_Pengadil dalam Google Sheets.' : 'Senarai disimpan dalam peranti ini. Simpan URL Google Apps Script untuk menyimpan ke Google Sheets.');
+      }
+
+      if (!list.length) {
+        body.innerHTML = `<tr class="empty-row"><td colspan="7">${state.referees.length ? 'Tiada pengadil sepadan dengan carian.' : 'Belum ada akaun pengadil. Tekan "＋ Tambah Pengadil" untuk mula.'}</td></tr>`;
+        return;
+      }
+      body.innerHTML = list.map((r, i) => {
+        const active = r.status === 'AKTIF';
+        const show = refPwShowAll || refPwVisible.has(r.id);
+        const court = state.courts.find(c => c.pengadilId === r.id);
+        return `
+          <tr>
+            <td class="num">${i + 1}</td>
+            <td class="mono">${escapeHtml(r.id)}</td>
+            <td><strong>${escapeHtml(r.nama)}</strong>${court ? ` <small class="muted">· Gel. ${escapeHtml(court.id)}</small>` : ''}</td>
+            <td>
+              <span class="pw-cell">
+                <span>${show ? escapeHtml(r.password) : '••••••'}</span>
+                <button type="button" class="btn btn-sm" onclick="toggleRefPw('${r.id}')" title="${show ? 'Sembunyi' : 'Tunjuk'} kata laluan" aria-label="${show ? 'Sembunyi' : 'Tunjuk'} kata laluan ${escapeHtml(r.nama)}">${show ? '🙈' : '👁'}</button>
+                <button type="button" class="btn btn-sm" onclick="copyRefPw('${r.id}')" title="Salin nama & kata laluan" aria-label="Salin maklumat log masuk ${escapeHtml(r.nama)}">📋</button>
+              </span>
+            </td>
+            <td>${active ? '<span class="badge badge-ok">Aktif</span>' : '<span class="badge badge-reject">Digantung</span>'}</td>
+            <td class="mono" style="font-size:.78rem;">${r.loginTerakhir ? escapeHtml(new Date(r.loginTerakhir).toLocaleString('ms-MY')) : '-'}</td>
+            <td>
+              <div class="row-actions">
+                <button type="button" class="btn btn-sm" onclick="openRefereeModal('${r.id}')">✏️ Ubah</button>
+                <button type="button" class="btn btn-sm ${active ? 'btn-warn' : 'btn-success'}" onclick="toggleRefereeStatus('${r.id}')">${active ? 'Gantung' : 'Aktifkan'}</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="deleteReferee('${r.id}')">🗑 Padam</button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
     }
 
     /* ---------------------------------------------------------
@@ -3558,11 +5223,21 @@
       on('btnShareLive', 'click', copyShareLink);
       on('btnLogin', 'click', () => openModal('loginModal'));
       on('btnLogout', 'click', logout);
-      on('btnOpenRegister', 'click', () => { toggleRegisterCourtField(); openModal('registerModal'); });
-      on('btnAdminAddUser', 'click', () => { toggleRegisterCourtField(); openModal('registerModal'); });
+      on('btnOpenRegister', 'click', () => openModal('registerModal'));
+      on('btnAdminAddUser', 'click', () => openModal('registerModal'));
       on('loginForm', 'submit', handleLogin);
+      on('loginRole', 'change', toggleLoginFields);
       on('registerForm', 'submit', handleRegister);
-      on('regRole', 'change', toggleRegisterCourtField);
+      on('btnAddReferee', 'click', () => openRefereeModal(null));
+      on('refereeForm', 'submit', handleRefereeSubmit);
+      on('btnGenRefPw', 'click', () => {
+        const el = document.getElementById('refPassword');
+        if (el) { el.value = generateRefPassword(); el.focus(); }
+      });
+      on('btnToggleRefPw', 'click', toggleAllRefPw);
+      on('btnPullReferees', 'click', pullReferees);
+      on('btnPushReferees', 'click', pushAllReferees);
+      on('refereeSearch', 'input', renderReferees);
       on('btnApproveAll', 'click', approveAllPending);
       on('btnAutoDraw', 'click', autoDrawXY);
       on('btnSaveDraw', 'click', saveDrawXY);
@@ -3600,6 +5275,10 @@
         }
       });
 
+      // Kembali ke aplikasi (skrin telefon dihidupkan) -> semak kunci & hantar isyarat aktif segera
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) lockSyncTick(true); });
+      window.addEventListener('online', () => lockSyncTick(true));
+
       window.addEventListener('hashchange', () => {
         const id = location.hash.replace('#', '');
         if (id && document.getElementById(id)) openTab(id);
@@ -3618,6 +5297,10 @@
       renderAll();
       bracketToastReady = true;
       startCourtTimerLoop();
+      startLockSync();
+      startPublicLiveSync();
+      const tf = document.getElementById('tangguhForm');
+      if (tf) tf.addEventListener('submit', submitPostpone);
       if (isShareView()) showToast('Mod tontonan langsung. Paparan dikemas kini automatik.', 'info', 4000);
     }
 
