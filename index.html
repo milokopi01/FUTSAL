@@ -1,882 +1,1090 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Futsal Pendidikan Khas</title>
-  <link rel="manifest" href="manifest.json">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LigaPro KBB - Sistem Pengurusan Kejohanan & Simulasi Gelanggang</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
   <style>
-    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    .tab-content { display: none; padding-bottom: 90px; }
-    .tab-content.active { display: block; }
-    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-    .nav-item.active { color: #2563eb; font-weight: 600; }
-    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --purple: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 60px; }
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 20px;
+      position: sticky; top: 0; z-index: 100;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-badge {
+      background: var(--primary); color: #fff; font-weight: 800;
+      padding: 6px 10px; border-radius: 8px; font-size: 14px;
+    }
+    .brand h1 { font-size: 18px; font-weight: 700; }
+    .brand p { font-size: 12px; color: var(--muted); }
+    .top-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    select, input, button {
+      background: var(--card); color: var(--text); border: 1px solid var(--card-border);
+      padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none;
+    }
+    button { cursor: pointer; font-weight: 600; transition: 0.2s; }
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .btn-warning { background: var(--warning); border-color: var(--warning); color: #000; }
+    .btn-purple { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .container { max-width: 1280px; margin: 18px auto; padding: 0 16px; }
+    
+    /* Role Banner */
+    .role-banner {
+      background: rgba(59, 130, 246, 0.12); border: 1px solid var(--primary);
+      padding: 10px 16px; border-radius: 10px; margin-bottom: 16px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;
+      font-size: 13px;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--card-border); padding-bottom: 10px; }
+    .tab-btn { background: var(--card); color: var(--muted); border: 1px solid var(--card-border); padding: 9px 16px; border-radius: 8px; }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .badge-count { background: var(--danger); color: #fff; padding: 2px 7px; border-radius: 99px; font-size: 11px; margin-left: 5px; }
+
+    /* Live Court Grid */
+    .courts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .court-card {
+      background: var(--card); border-radius: 12px; padding: 16px;
+      border: 2px solid var(--card-border); position: relative; overflow: hidden;
+    }
+    .court-KOSONG { border-color: var(--success); }
+    .court-SEDANG_BERLANGSUNG { border-color: var(--danger); animation: pulseRed 2s infinite; }
+    .court-MENUNGGU_PENGESAHAN { border-color: var(--warning); animation: pulseAmber 1.8s infinite; }
+
+    @keyframes pulseRed {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+    @keyframes pulseAmber {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+      50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    }
+
+    .court-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .court-title { font-size: 16px; font-weight: 800; }
+    .status-pill { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 99px; text-transform: uppercase; }
+    .pill-KOSONG { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .pill-SEDANG_BERLANGSUNG { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+    .pill-MENUNGGU_PENGESAHAN { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
+
+    .score-board {
+      background: #0f172a; border-radius: 10px; padding: 14px; margin: 10px 0;
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; gap: 8px;
+    }
+    .team-box .code { font-size: 11px; color: var(--muted); font-weight: 700; }
+    .team-box .name { font-size: 13px; font-weight: 700; margin-top: 2px; line-height: 1.25; }
+    .score-num { font-size: 30px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+    .phase-tag { text-align: center; font-size: 12px; color: #38bdf8; font-weight: 700; margin-bottom: 10px; }
+
+    /* Cards & Tables */
+    .section-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 10px; border-bottom: 1px solid var(--card-border); text-align: left; }
+    th { background: #0f172a; color: var(--muted); font-size: 11px; text-transform: uppercase; }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    .text-center { text-align: center; }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      display: none; justify-content: center; align-items: center; z-index: 200; padding: 16px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 12px; max-width: 480px; width: 100%; padding: 20px;
+    }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .form-group input, .form-group select { width: 100%; }
+    .ref-controls { display: flex; justify-content: center; gap: 6px; margin-top: 6px; }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 h-screen overflow-x-hidden">
+<body>
 
-  <!-- Header -->
-  <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Futsal PK</h1>
-    <span id="network-status" class="text-xs bg-green-500 px-3 py-1 rounded-full font-bold shadow">Online</span>
-  </header>
-
-  <main id="tab-utama" class="tab-content active p-4">
-    <div id="unauth-view" class="space-y-6 max-w-md mx-auto">
-      
-      <!-- Borang Log Masuk -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h2 class="text-xl font-bold mb-4 text-center text-gray-700">Log Masuk Sistem</h2>
-        <input type="email" id="login-email" placeholder="Emel (Kosongkan jika Admin)" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 focus:bg-white transition outline-none focus:ring-2 focus:ring-blue-500">
-        <input type="password" id="login-pwd" placeholder="Kata Laluan" class="w-full p-3 border rounded-lg mb-4 bg-gray-50 focus:bg-white transition outline-none focus:ring-2 focus:ring-blue-500">
-        <button onclick="login()" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg shadow active:bg-blue-700 transition">Log Masuk</button>
-      </div>
-
-      <!-- Pilihan Pendaftaran -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h2 class="text-lg font-bold mb-4 text-center text-gray-700">Pendaftaran Baharu</h2>
-        <div class="flex gap-2 mb-4">
-          <button onclick="toggleRegMode('guru')" id="btn-mode-guru" class="flex-1 py-2 rounded-lg font-bold bg-blue-100 text-blue-700 border-2 border-blue-600 transition">Guru</button>
-          <button onclick="toggleRegMode('pengadil')" id="btn-mode-pengadil" class="flex-1 py-2 rounded-lg font-bold bg-gray-100 text-gray-600 border-2 border-transparent transition">Pengadil</button>
-        </div>
-
-        <!-- Borang Daftar Guru -->
-        <div id="form-reg-guru" class="space-y-3">
-          <input type="text" id="reg-nama" placeholder="Nama Penuh" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="email" id="reg-email" placeholder="Alamat Emel" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="password" id="reg-pwd" placeholder="Kata Laluan" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="text" id="reg-sekolah" placeholder="Nama Sekolah" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="text" id="reg-kod" placeholder="Kod Sekolah" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="tel" id="reg-tel" placeholder="No. Telefon" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <button onclick="registerGuru()" class="w-full bg-green-500 text-white font-bold p-3 rounded-lg shadow active:bg-green-600 transition mt-2">Daftar Guru</button>
-        </div>
-
-        <!-- Borang Daftar Pengadil -->
-        <div id="form-reg-pengadil" class="space-y-3 hidden">
-          <input type="text" id="reg-ref-nama" placeholder="Nama Penuh Pengadil" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="email" id="reg-ref-email" placeholder="Alamat Emel" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="tel" id="reg-ref-tel" placeholder="No. Telefon" class="w-full p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <p class="text-xs text-gray-500 mb-2">Pendaftaran anda perlu diluluskan oleh Admin. Admin akan memberikan PIN khas untuk log masuk.</p>
-          <button onclick="registerPengadil()" class="w-full bg-purple-600 text-white font-bold p-3 rounded-lg shadow active:bg-purple-700 transition mt-2">Daftar Sebagai Pengadil</button>
-        </div>
-      </div>
+<header>
+  <div class="brand">
+    <span class="brand-badge">LIGAPRO</span>
+    <div>
+      <h1 id="headerTitle">Sistem Pengurusan Kejohanan & Simulasi Gelanggang</h1>
+      <p id="headerSub">Automasi Liga, Kawalan Urusetia & Skor Masa Nyata</p>
     </div>
+  </div>
+  <div class="top-controls">
+    <select id="eventSelector" onchange="switchEvent(this.value)"></select>
+    <button onclick="copyShareLink()" title="Salin Pautan Penonton (View-Only)">🔗 Kongsi Link</button>
+    <button onclick="openModal('cloudModal')">☁️ Google Sheet</button>
+    <button id="btnAuth" class="btn-primary" onclick="openModal('loginModal')">🔐 Log Masuk / Daftar</button>
+    <button id="btnLogout" class="btn-danger" style="display:none;" onclick="logout()">Keluar</button>
+  </div>
+</header>
 
-    <div id="auth-view" class="hidden space-y-4 max-w-md mx-auto">
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center">
-        <div class="text-5xl mb-3">👤</div>
-        <h2 id="profil-nama" class="text-xl font-bold text-gray-800"></h2>
-        <p id="profil-sekolah" class="text-gray-500 mb-4 font-medium"></p>
-        <button onclick="logout()" class="px-4 py-3 bg-red-50 text-red-600 font-bold rounded-lg w-full border border-red-100 hover:bg-red-100 transition">Log Keluar dari Sistem</button>
-      </div>
-      
-      <!-- Panel Master Admin -->
-      <div id="admin-panel" class="hidden space-y-4">
-        
-        <!-- Tetapan & Jadual -->
-        <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 shadow-sm">
-          <h2 class="font-bold text-yellow-800 mb-2 flex items-center gap-2">👑 Panel Master Admin</h2>
-          <p class="text-sm text-yellow-700 mb-4">Pastikan semua pasukan telah didaftarkan sebelum menjana jadual perlawanan liga.</p>
-          
-          <div class="mb-4">
-            <label class="block text-sm text-yellow-700 mb-1 font-semibold">Format Pertandingan</label>
-            <div class="flex gap-2">
-              <select id="admin-jenis-liga" class="flex-1 p-3 border border-yellow-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-yellow-500 text-sm font-medium text-gray-700">
-                <option value="Round Robin">Round Robin (Liga)</option>
-                <option value="Kalah Mati">Kalah Mati (Knockout)</option>
-              </select>
-              <button onclick="simpanTetapanSistem()" class="bg-gray-900 text-white font-bold px-4 rounded-lg shadow hover:bg-gray-800 active:bg-black transition text-sm">Simpan</button>
-            </div>
-          </div>
-          <button onclick="generateSchedule()" class="w-full bg-yellow-500 text-white font-bold p-3 rounded-lg shadow active:bg-yellow-600 transition">Jana Jadual Kejohanan</button>
-        </div>
-
-        <!-- Kelulusan Pengadil -->
-        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <div class="flex justify-between items-center mb-4">
-             <h3 class="font-bold text-gray-800">Pengurusan Pengadil</h3>
-             <button onclick="fetchPendingReferees()" class="text-blue-600 text-sm font-semibold hover:underline flex items-center gap-1">
-               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh
-             </button>
-          </div>
-          <p class="text-xs text-gray-500 mb-3">Senarai pengadil yang belum diluluskan. Sila tetapkan PIN untuk mereka.</p>
-          <div id="list-pengadil-menunggu" class="space-y-3">
-             <div class="text-center text-gray-400 text-sm p-4 border border-dashed rounded-lg">Tiada permohonan baharu.</div>
-          </div>
-        </div>
-
-      </div>
+<div class="container">
+  <div class="role-banner">
+    <div>
+      <strong>Status Akses Semasa:</strong> <span id="currentRoleText">PENONTON AWAM (MOD LIHAT SAHAJA)</span>
     </div>
-  </main>
+    <div id="syncStatusText" style="color: var(--muted);">Mod Storan: Tempatan (Sedia Disambung ke Google Sheets)</div>
+  </div>
 
-  <main id="tab-pasukan" class="tab-content p-4">
-    <div class="max-w-md mx-auto space-y-6">
-      
-      <!-- Penghalang (Auth Guard) -->
-      <div id="pasukan-auth-guard" class="bg-blue-50 text-blue-800 p-6 rounded-xl text-center shadow-sm border border-blue-100 flex flex-col items-center">
-        <svg class="w-12 h-12 text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-        <p class="font-medium">Sila log masuk sebagai Guru untuk mengakses modul pendaftaran pasukan.</p>
-        <button onclick="switchTab('utama')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">Log Masuk</button>
-      </div>
-      
-      <!-- Borang Daftar / Kemaskini Pasukan -->
-      <div id="pasukan-form" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800" id="team-form-title">Daftar Pasukan Baru</h2>
-          <button id="btn-batal-edit" onclick="resetTeamForm()" class="hidden text-sm text-red-500 font-bold bg-red-50 px-3 py-1 rounded-lg">Batal Edit</button>
-        </div>
-        
-        <input type="hidden" id="team-id">
-        <input type="text" id="team-nama" placeholder="Nama Pasukan (cth: Harimau PK)" class="w-full p-3 border rounded-lg mb-3 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-        <select id="team-kategori" class="w-full p-3 border rounded-lg mb-5 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="BP">Masalah Pembelajaran (BP)</option>
-          <option value="BD">Kurang Upaya Pendengaran (BD)</option>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('tabLive', this)">🏟️ Simulasi Gelanggang (Live)</button>
+    <button class="tab-btn" onclick="showTab('tabStandings', this)">📊 Carta Liga & Kumpulan</button>
+    <button class="tab-btn" onclick="showTab('tabMatches', this)">📅 Jadual & Keputusan Penuh</button>
+    <button class="tab-btn" id="tabBtnReferee" style="display:none;" onclick="showTab('tabReferee', this)"> whistle Panel Pengadil</button>
+    <button class="tab-btn" id="tabBtnUrusetia" style="display:none;" onclick="showTab('tabUrusetia', this)">
+      ✅ Kawalan Urusetia <span id="pendingApproveBadge" class="badge-count">0</span>
+    </button>
+    <button class="tab-btn" id="tabBtnMaster" style="display:none;" onclick="showTab('tabMaster', this)">
+      👑 Master Admin <span id="pendingUserBadge" class="badge-count">0</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: LIVE COURT SIMULATION -->
+  <div id="tabLive" class="tab-pane">
+    <div class="section-title">
+      <span>Status Gelanggang Masa Nyata (Semua Gelanggang)</span>
+      <span style="font-size:12px; color:var(--muted);">🟢 Kosong/Sedia &nbsp;|&nbsp; 🔴 Sedang Berlangsung &nbsp;|&nbsp; 🟡 Menunggu Pengesahan Urusetia</span>
+    </div>
+    <div class="courts-grid" id="courtsContainer"></div>
+  </div>
+
+  <!-- TAB 2: CARTA LIGA -->
+  <div id="tabStandings" class="tab-pane" style="display:none;">
+    <div class="section-title">
+      <span>Kedudukan Terkini Kumpulan (Dikira Automatik Selepas Pengesahan Urusetia)</span>
+      <button id="btnDrawXY" class="btn-purple" style="display:none;" onclick="autoDrawGroupXY()">🎲 Auto-Undi Kumpulan X & Y (Sekolah Rendah)</button>
+    </div>
+    <div id="standingsContainer"></div>
+  </div>
+
+  <!-- TAB 3: JADUAL PENUH -->
+  <div id="tabMatches" class="tab-pane" style="display:none;">
+    <div class="section-card">
+      <div class="section-title">
+        <span>Senarai Keseluruhan Perlawanan</span>
+        <select id="filterStage" onchange="renderMatchesTable()">
+          <option value="ALL">Semua Peringkat</option>
+          <option value="KUMPULAN">Peringkat Kumpulan</option>
+          <option value="PUSINGAN_2_XY">Pusingan Kedua (Kumpulan X & Y)</option>
+          <option value="SUKU_AKHIR">Suku Akhir</option>
+          <option value="SEPARUH_AKHIR">Separuh Akhir</option>
+          <option value="TEMPAT_3_4">Tempat 3/4</option>
+          <option value="AKHIR">Perlawanan Akhir</option>
         </select>
-
-        <!-- Senarai Pemain -->
-        <div id="pemain-section" class="hidden mb-5 border-t pt-4 border-gray-100">
-          <h3 class="font-bold text-gray-700 mb-2">Senarai Pemain (Murid)</h3>
-          <div class="flex gap-2 mb-3">
-            <input type="text" id="input-pemain" placeholder="Nama Penuh Murid" class="flex-1 p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-            <button onclick="tambahPemain()" class="bg-green-500 text-white px-5 rounded-lg font-bold hover:bg-green-600 active:bg-green-700 transition">+</button>
-          </div>
-          <ul id="senarai-pemain-ul" class="space-y-2 text-sm"></ul>
-        </div>
-
-        <button id="btn-submit-team" onclick="submitTeam()" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg shadow active:bg-blue-700 transition">Hantar Pendaftaran</button>
       </div>
-
-      <!-- Senarai Pasukan Didaftarkan -->
-      <div id="senarai-pasukan-container" class="hidden space-y-3">
-        <h3 class="font-bold text-gray-800 text-lg border-b pb-2">Pasukan Sekolah Anda</h3>
-        <div id="list-my-teams" class="space-y-3"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Peringkat</th>
+              <th>Gelanggang</th>
+              <th>Pasukan 1</th>
+              <th class="text-center">Skor</th>
+              <th>Pasukan 2</th>
+              <th>Fasa</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="matchesTableBody"></tbody>
+        </table>
       </div>
     </div>
-  </main>
+  </div>
 
-  <main id="tab-jadual" class="tab-content p-4">
-    <div class="max-w-xl mx-auto space-y-6">
-      <div class="flex justify-between items-center mb-2">
-        <h2 class="text-2xl font-bold text-gray-800">Carta Kedudukan</h2>
-        <button onclick="fetchData()" class="px-4 py-2 bg-white border border-gray-200 shadow-sm rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-gray-50 transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Segarkan
-        </button>
+  <!-- TAB 4: PANEL PENGADIL -->
+  <div id="tabReferee" class="tab-pane" style="display:none;">
+    <div class="section-card">
+      <div class="section-title">
+        <span>Panel Kawalan Skor Pengadil (Masa Nyata)</span>
+        <span id="refCourtInfo" style="font-size:12px; color:var(--muted);"></span>
       </div>
-      
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-sm">
-        <div class="overflow-x-auto">
-          <table class="w-full text-center whitespace-nowrap">
-            <thead class="bg-gray-50 font-bold text-gray-600 border-b">
+      <div id="refereeActiveContainer"></div>
+    </div>
+  </div>
+
+  <!-- TAB 5: PANEL URUSETIA -->
+  <div id="tabUrusetia" class="tab-pane" style="display:none;">
+    <div class="section-card">
+      <div class="section-title">
+        <span>1. Peti Masuk Pengesahan Keputusan Pengadil (Waiting Approval)</span>
+      </div>
+      <div id="approvalQueueContainer"></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">
+        <span>2. Susunan Automatik Perlawanan Seterusnya Mengikut Gelanggang</span>
+      </div>
+      <div id="nextMatchQueueContainer"></div>
+    </div>
+  </div>
+
+  <!-- TAB 6: PANEL MASTER ADMIN -->
+  <div id="tabMaster" class="tab-pane" style="display:none;">
+    <div class="section-card">
+      <div class="section-title">
+        <span>Luluskan / Urus Sub-Admin (Urusetia & Pengadil)</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Nama Penuh</th>
+              <th>Peranan</th>
+              <th>Gelanggang</th>
+              <th>Status</th>
+              <th>Tindakan</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">
+        <span>Cipta Kejohanan / Event Baharu (Multi-Event)</span>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+        <div class="form-group">
+          <label>Nama Kejohanan</label>
+          <input type="text" id="newEvName" placeholder="Cth: Kejohanan Bola Jaring KBB 2026" />
+        </div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <input type="text" id="newEvCat" placeholder="Cth: Bawah 12 Tahun" />
+        </div>
+        <div class="form-group">
+          <label>Format Pusingan Kedua</label>
+          <select id="newEvFormat">
+            <option value="SUKU_AKHIR_SILANG">Liga Kumpulan -> Suku Akhir Silang</option>
+            <option value="KUMPULAN_XY">Liga Kumpulan -> Undian Kumpulan X & Y</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Senarai Gelanggang (Pisahkan koma)</label>
+          <input type="text" id="newEvCourts" value="A, B" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Senarai Pasukan (Satu baris satu pasukan: Kumpulan,Kod,Nama Pasukan)</label>
+        <textarea id="newEvTeams" rows="4" style="width:100%; background:#0f172a; color:#fff; border:1px solid var(--card-border); padding:8px; border-radius:8px; font-size:12px;" placeholder="A,A1,SK CONTOH 1&#10;A,A2,SK CONTOH 2&#10;B,B1,SK CONTOH 3&#10;B,B2,SK CONTOH 4"></textarea>
+      </div>
+      <button class="btn-success" onclick="createNewTournament()">➕ Jana Kejohanan & Jadual Automatik</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LOG MASUK & DAFTAR -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <h3 style="margin-bottom:12px;">Log Masuk atau Daftar Sub-Admin</h3>
+    <div class="form-group">
+      <label>Username (Untuk Master Admin: masukkan <strong>master</strong>)</label>
+      <input type="text" id="loginUser" placeholder="master / urusetia1 / refA" />
+    </div>
+    <div class="form-group">
+      <label>Kata Laluan (Master Admin Default: <strong>101010</strong>)</label>
+      <input type="password" id="loginPass" placeholder="Masukkan kata laluan" />
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+      <button class="btn-primary" style="flex:1;" onclick="handleLogin()">Log Masuk</button>
+      <button onclick="closeModal('loginModal')">Tutup</button>
+    </div>
+    <hr style="border:0; border-top:1px solid var(--card-border); margin:14px 0;" />
+    <h4 style="margin-bottom:10px; font-size:14px;">Belum Ada Akaun? Daftar Sebagai Sub-Admin</h4>
+    <div class="form-group">
+      <label>Nama Penuh</label>
+      <input type="text" id="regName" placeholder="Cth: Cikgu Ahmad (Pengadil)" />
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <div class="form-group">
+        <label>Username Pilihan</label>
+        <input type="text" id="regUser" placeholder="ahmad88" />
+      </div>
+      <div class="form-group">
+        <label>Kata Laluan</label>
+        <input type="password" id="regPass" placeholder="******" />
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <div class="form-group">
+        <label>Peranan Dipohon</label>
+        <select id="regRole">
+          <option value="PENGADIL">Pengadil</option>
+          <option value="URUSETIA">Urusetia</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Gelanggang Tugasan</label>
+        <select id="regCourt">
+          <option value="A">Gelanggang A</option>
+          <option value="B">Gelanggang B</option>
+          <option value="C">Gelanggang C</option>
+          <option value="D">Gelanggang D</option>
+          <option value="SEMUA">Semua Gelanggang</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-warning" style="width:100%;" onclick="handleRegister()">📝 Hantar Permohonan Pendaftaran</button>
+  </div>
+</div>
+
+<!-- MODAL GOOGLE SHEETS SYNC -->
+<div class="modal-overlay" id="cloudModal">
+  <div class="modal-box">
+    <h3 style="margin-bottom:10px;">Sambungan Pangkalan Data Google Sheets</h3>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+      Tampal URL Web App daripada Google Apps Script (<code>Code.gs</code>) untuk menyelaraskan data secara langsung dengan Google Sheets.
+    </p>
+    <div class="form-group">
+      <label>Google Apps Script Web App URL</label>
+      <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" />
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      <button class="btn-primary" onclick="saveGasUrl()">Simpan URL</button>
+      <button class="btn-success" onclick="pullFromCloud()">⬇️ Tarik Data Sheet</button>
+      <button class="btn-warning" onclick="pushToCloud()">⬆️ Hantar Data ke Sheet</button>
+      <button onclick="resetDefaultData()">🔄 Reset Data Asal</button>
+      <button onclick="closeModal('cloudModal')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "LIGAPRO_KBB_STATE_2026";
+let state = null;
+let currentUser = null; // null = Penonton (View-Only)
+let currentEventId = "EV01";
+
+function getInitialData() {
+  const tournaments = [
+    { Event_ID: "EV01", Nama_Kejohanan: "Pertandingan Futsal Pendidikan Khas KBB 2026", Kategori: "Sekolah Rendah", Format_Pusingan_2: "KUMPULAN_XY", Gelanggang_Utama: "C, D", Status_Event: "AKTIF" },
+    { Event_ID: "EV02", Nama_Kejohanan: "Pertandingan Futsal Pendidikan Khas KBB 2026", Kategori: "Sekolah Menengah", Format_Pusingan_2: "SUKU_AKHIR_SILANG", Gelanggang_Utama: "A, B", Status_Event: "AKTIF" }
+  ];
+
+  const users = [
+    { User_ID: "U01", Username: "master", Password: "101010", Nama_Penuh: "Master Admin Utama", Peranan: "MASTER_ADMIN", Gelanggang_Tugasan: "SEMUA", Status_Akaun: "AKTIF" },
+    { User_ID: "U02", Username: "urusetia1", Password: "123456", Nama_Penuh: "Urusetia Teknikal KBB", Peranan: "URUSETIA", Gelanggang_Tugasan: "SEMUA", Status_Akaun: "AKTIF" },
+    { User_ID: "U03", Username: "refA", Password: "111111", Nama_Penuh: "Pengadil Gelanggang A", Peranan: "PENGADIL", Gelanggang_Tugasan: "A", Status_Akaun: "AKTIF" },
+    { User_ID: "U04", Username: "refB", Password: "222222", Nama_Penuh: "Pengadil Gelanggang B", Peranan: "PENGADIL", Gelanggang_Tugasan: "B", Status_Akaun: "AKTIF" },
+    { User_ID: "U05", Username: "refC", Password: "333333", Nama_Penuh: "Pengadil Gelanggang C", Peranan: "PENGADIL", Gelanggang_Tugasan: "C", Status_Akaun: "AKTIF" },
+    { User_ID: "U06", Username: "refD", Password: "444444", Nama_Penuh: "Pengadil Gelanggang D", Peranan: "PENGADIL", Gelanggang_Tugasan: "D", Status_Akaun: "AKTIF" }
+  ];
+
+  const courts = [
+    { Kod_Gelanggang: "A", Nama_Gelanggang: "Gelanggang A", Kategori_Semasa: "Sekolah Menengah", Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" },
+    { Kod_Gelanggang: "B", Nama_Gelanggang: "Gelanggang B", Kategori_Semasa: "Sekolah Menengah", Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" },
+    { Kod_Gelanggang: "C", Nama_Gelanggang: "Gelanggang C", Kategori_Semasa: "Sekolah Rendah", Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" },
+    { Kod_Gelanggang: "D", Nama_Gelanggang: "Gelanggang D", Kategori_Semasa: "Sekolah Rendah", Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" }
+  ];
+
+  const srRawTeams = [
+    ["A","A1","SK SELAMA"],["A","A2","SK TAMAN KENARI"],["A","A3","SK SG KARANGAN"],["A","A4","SK PERMATANG TIONG"],
+    ["B","B1","SK SRI LIMAU"],["B","B2","SK SG KOB"],["B","B3","SK DATO HJ ZAINUDDIN"],["B","B4","SK LINDUNGAN RAJA"],
+    ["C","C1","SK LUNAS JAYA"],["C","C2","SK PERMATANG TOK DIK"],["C","C3","SK TUNKU ABDUL MALIK"],
+    ["X","X1","MENUNGGU UNDIAN X1"],["X","X2","MENUNGGU UNDIAN X2"],["X","X3","MENUNGGU UNDIAN X3"],
+    ["Y","Y1","MENUNGGU UNDIAN Y1"],["Y","Y2","MENUNGGU UNDIAN Y2"],["Y","Y3","MENUNGGU UNDIAN Y3"]
+  ];
+
+  const smRawTeams = [
+    ["A","A1","SMK LABU BESAR (A)"],["A","A2","SMK JUNJUNG"],["A","A3","SMK TAMAN KENARI"],["A","A4","SMK TAMAN MUTIARA"],["A","A5","SMK LUNAS (A)"],
+    ["B","B1","SMK SG KOB (A)"],["B","B2","SMK SELAMA"],["B","B3","SMK TAMAN SELASIH"],["B","B4","SMK SERDANG BARU"],["B","B5","SMK PADANG SERAI (A)"],
+    ["C","C1","SMK SG KARANGAN"],["C","C2","SMK PAYA BESAR"],["C","C3","SMK SG KOB (B)"],["C","C4","SMK LABU BESAR (B)"],
+    ["D","D1","SMK LUNAS (B)"],["D","D2","SMK AYER MERAH"],["D","D3","SMK PADANG SERAI (B)"],["D","D4","SMK AHMAD TAJUDIN"]
+  ];
+
+  const teams = [];
+  const srMap = {};
+  srRawTeams.forEach(([grp, code, name]) => {
+    srMap[code] = name;
+    teams.push({
+      Team_ID: "SR-" + code, Event_ID: "EV01", Kategori: "Sekolah Rendah",
+      Peringkat: ["A","B","C"].includes(grp) ? "PUSINGAN_1" : "PUSINGAN_2_XY",
+      Kumpulan: grp, Kod_Pasukan: code, Nama_Pasukan: name,
+      Main: 0, Menang: 0, Seri: 0, Kalah: 0, Jaringan: 0, Bolos: 0, Beza_Gol: 0, Mata: 0
+    });
+  });
+
+  const smMap = {};
+  smRawTeams.forEach(([grp, code, name]) => {
+    smMap[code] = name;
+    teams.push({
+      Team_ID: "SM-" + code, Event_ID: "EV02", Kategori: "Sekolah Menengah",
+      Peringkat: "PUSINGAN_1", Kumpulan: grp, Kod_Pasukan: code, Nama_Pasukan: name,
+      Main: 0, Menang: 0, Seri: 0, Kalah: 0, Jaringan: 0, Bolos: 0, Beza_Gol: 0, Mata: 0
+    });
+  });
+
+  const srMatchesSpec = [
+    [1,"KUMPULAN","A","C","A1","A2"],[2,"KUMPULAN","A","C","A3","A4"],[3,"KUMPULAN","A","C","A1","A4"],
+    [4,"KUMPULAN","A","C","A2","A3"],[5,"KUMPULAN","A","C","A1","A3"],[6,"KUMPULAN","A","C","A4","A2"],
+    [7,"KUMPULAN","B","D","B1","B2"],[8,"KUMPULAN","B","D","B3","B4"],[9,"KUMPULAN","B","D","B1","B4"],
+    [10,"KUMPULAN","B","D","B2","B3"],[11,"KUMPULAN","B","D","B1","B3"],[12,"KUMPULAN","B","D","B4","B2"],
+    [13,"KUMPULAN","C","C","C1","C2"],[14,"KUMPULAN","C","C","C2","C3"],[15,"KUMPULAN","C","C","C3","C1"],
+    [16,"PUSINGAN_2_XY","X","C","X1","X2"],[17,"PUSINGAN_2_XY","X","C","X2","X3"],[18,"PUSINGAN_2_XY","X","C","X3","X1"],
+    [19,"PUSINGAN_2_XY","Y","D","Y1","Y2"],[20,"PUSINGAN_2_XY","Y","D","Y2","Y3"],[21,"PUSINGAN_2_XY","Y","D","Y3","Y1"],
+    [22,"SEPARUH_AKHIR","SA1","C","JOHAN X","N. JOHAN Y"],[23,"SEPARUH_AKHIR","SA2","D","JOHAN Y","N. JOHAN X"],
+    [24,"TEMPAT_3_4","T34","D","KALAH 22","KALAH 23"],[25,"AKHIR","FINAL","C","MENANG 22","MENANG 23"]
+  ];
+
+  const smMatchesSpec = [
+    [1,"KUMPULAN","A","A","A1","A2"],[2,"KUMPULAN","A","A","A3","A4"],[3,"KUMPULAN","A","A","A1","A3"],
+    [4,"KUMPULAN","A","A","A2","A5"],[5,"KUMPULAN","A","A","A4","A5"],[6,"KUMPULAN","A","A","A1","A4"],
+    [7,"KUMPULAN","A","A","A2","A3"],[8,"KUMPULAN","A","A","A1","A5"],[9,"KUMPULAN","A","A","A3","A5"],[10,"KUMPULAN","A","A","A2","A4"],
+    [11,"KUMPULAN","B","B","B1","B2"],[12,"KUMPULAN","B","B","B3","B4"],[13,"KUMPULAN","B","B","B1","B3"],
+    [14,"KUMPULAN","B","B","B2","B5"],[15,"KUMPULAN","B","B","B4","B5"],[16,"KUMPULAN","B","B","B1","B4"],
+    [17,"KUMPULAN","B","B","B2","B3"],[18,"KUMPULAN","B","B","B1","B5"],[19,"KUMPULAN","B","B","B3","B5"],[20,"KUMPULAN","B","B","B2","B4"],
+    [21,"KUMPULAN","C","A","C1","C2"],[22,"KUMPULAN","C","A","C3","C4"],[23,"KUMPULAN","C","A","C1","C4"],
+    [24,"KUMPULAN","C","A","C2","C3"],[25,"KUMPULAN","C","A","C1","C3"],[26,"KUMPULAN","C","A","C4","C2"],
+    [27,"KUMPULAN","D","B","D1","D2"],[28,"KUMPULAN","D","B","D3","D4"],[29,"KUMPULAN","D","B","D1","D4"],
+    [30,"KUMPULAN","D","B","D2","D3"],[31,"KUMPULAN","D","B","D1","D3"],[32,"KUMPULAN","D","B","D4","D2"],
+    [33,"SUKU_AKHIR","QF1","A","JOHAN A","N. JOHAN D"],[34,"SUKU_AKHIR","QF2","B","JOHAN B","N. JOHAN C"],
+    [35,"SUKU_AKHIR","QF3","A","JOHAN C","N. JOHAN B"],[36,"SUKU_AKHIR","QF4","B","JOHAN D","N. JOHAN A"],
+    [37,"SEPARUH_AKHIR","SF1","A","MENANG 33","MENANG 34"],[38,"SEPARUH_AKHIR","SF2","B","MENANG 35","MENANG 36"],
+    [39,"TEMPAT_3_4","T34","B","KALAH 37","KALAH 38"],[40,"AKHIR","FINAL","A","MENANG 37","MENANG 38"]
+  ];
+
+  const matches = [];
+  srMatchesSpec.forEach(([no, stage, grp, court, t1, t2]) => {
+    matches.push({
+      Match_ID: `SR-M${String(no).padStart(2,'0')}`, Event_ID: "EV01", Kategori: "Sekolah Rendah",
+      No_Perlawanan: no, Peringkat: stage, Kumpulan: grp, Gelanggang: court,
+      Kod_Pasukan_1: t1, Nama_Pasukan_1: srMap[t1] || `MENUNGGU (${t1})`,
+      Skor_1: 0, Skor_2: 0,
+      Kod_Pasukan_2: t2, Nama_Pasukan_2: srMap[t2] || `MENUNGGU (${t2})`,
+      Fasa_Semasa: "BELUM MULA", Status_Perlawanan: "MENUNGGU",
+      Pengadil_Kemaskini: "-", Disahkan_Oleh: "-"
+    });
+  });
+
+  smMatchesSpec.forEach(([no, stage, grp, court, t1, t2]) => {
+    matches.push({
+      Match_ID: `SM-M${String(no).padStart(2,'0')}`, Event_ID: "EV02", Kategori: "Sekolah Menengah",
+      No_Perlawanan: no, Peringkat: stage, Kumpulan: grp, Gelanggang: court,
+      Kod_Pasukan_1: t1, Nama_Pasukan_1: smMap[t1] || `MENUNGGU (${t1})`,
+      Skor_1: 0, Skor_2: 0,
+      Kod_Pasukan_2: t2, Nama_Pasukan_2: smMap[t2] || `MENUNGGU (${t2})`,
+      Fasa_Semasa: "BELUM MULA", Status_Perlawanan: "MENUNGGU",
+      Pengadil_Kemaskini: "-", Disahkan_Oleh: "-"
+    });
+  });
+
+  return { tournaments, users, courts, teams, matches };
+}
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) { state = getInitialData(); }
+  } else {
+    state = getInitialData();
+  }
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("event")) {
+    currentEventId = urlParams.get("event");
+  }
+  const savedGas = localStorage.getItem("LIGAPRO_GAS_URL");
+  if (savedGas) {
+    document.getElementById("gasUrlInput").value = savedGas;
+    document.getElementById("syncStatusText").innerText = "Mod Storan: Tersambung Google Sheets";
+  }
+  renderAll();
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const savedGas = localStorage.getItem("LIGAPRO_GAS_URL");
+  if (savedGas) {
+    fetch(savedGas, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "syncState", ...state })
+    }).catch(() => {});
+  }
+  renderAll();
+}
+
+function renderAll() {
+  renderEventSelector();
+  renderRoleUI();
+  renderLiveCourts();
+  renderStandings();
+  renderMatchesTable();
+  renderRefereePanel();
+  renderUrusetiaPanel();
+  renderMasterPanel();
+}
+
+function renderEventSelector() {
+  const sel = document.getElementById("eventSelector");
+  sel.innerHTML = state.tournaments.map(t =>
+    `<option value="${t.Event_ID}" ${t.Event_ID === currentEventId ? 'selected' : ''}>${t.Nama_Kejohanan} (${t.Kategori})</option>`
+  ).join("");
+  const curEv = state.tournaments.find(t => t.Event_ID === currentEventId);
+  if (curEv) {
+    document.getElementById("btnDrawXY").style.display =
+      (curEv.Format_Pusingan_2 === "KUMPULAN_XY" && canApprove()) ? "inline-block" : "none";
+  }
+}
+
+function switchEvent(evId) {
+  currentEventId = evId;
+  renderAll();
+}
+
+function canApprove() {
+  return currentUser && (currentUser.Peranan === "MASTER_ADMIN" || currentUser.Peranan === "URUSETIA");
+}
+
+function renderRoleUI() {
+  const roleTxt = document.getElementById("currentRoleText");
+  const btnAuth = document.getElementById("btnAuth");
+  const btnLogout = document.getElementById("btnLogout");
+  const tabRef = document.getElementById("tabBtnReferee");
+  const tabUru = document.getElementById("tabBtnUrusetia");
+  const tabMas = document.getElementById("tabBtnMaster");
+
+  if (!currentUser) {
+    roleTxt.innerHTML = `<span style="color:#38bdf8;">PENONTON AWAM (MOD LIHAT SAHAJA)</span>`;
+    btnAuth.style.display = "inline-block";
+    btnLogout.style.display = "none";
+    tabRef.style.display = "none";
+    tabUru.style.display = "none";
+    tabMas.style.display = "none";
+  } else {
+    roleTxt.innerHTML = `<span style="color:#34d399;">${currentUser.Nama_Penuh} (${currentUser.Peranan} - Gelanggang: ${currentUser.Gelanggang_Tugasan})</span>`;
+    btnAuth.style.display = "none";
+    btnLogout.style.display = "inline-block";
+    tabRef.style.display = ["PENGADIL","URUSETIA","MASTER_ADMIN"].includes(currentUser.Peranan) ? "inline-block" : "none";
+    tabUru.style.display = ["URUSETIA","MASTER_ADMIN"].includes(currentUser.Peranan) ? "inline-block" : "none";
+    tabMas.style.display = currentUser.Peranan === "MASTER_ADMIN" ? "inline-block" : "none";
+  }
+
+  const pendingApprovals = state.matches.filter(m => m.Status_Perlawanan === "MENUNGGU_PENGESAHAN").length;
+  document.getElementById("pendingApproveBadge").innerText = pendingApprovals;
+
+  const pendingUsers = state.users.filter(u => u.Status_Akaun === "MENUNGGU_KELULUSAN").length;
+  document.getElementById("pendingUserBadge").innerText = pendingUsers;
+}
+
+/* SIMULASI GELANGGANG MASA NYATA */
+function renderLiveCourts() {
+  const container = document.getElementById("courtsContainer");
+  container.innerHTML = state.courts.map(court => {
+    const activeMatch = state.matches.find(m =>
+      m.Gelanggang === court.Kod_Gelanggang &&
+      (m.Status_Perlawanan === "SEDANG_BERLANGSUNG" || m.Status_Perlawanan === "MENUNGGU_PENGESAHAN")
+    );
+    const nextMatch = state.matches.find(m =>
+      m.Gelanggang === court.Kod_Gelanggang &&
+      m.Status_Perlawanan === "MENUNGGU" &&
+      !m.Nama_Pasukan_1.startsWith("MENUNGGU") &&
+      !m.Nama_Pasukan_2.startsWith("MENUNGGU")
+    );
+
+    const status = activeMatch ? activeMatch.Status_Perlawanan : "KOSONG";
+    const statusLabel = status === "SEDANG_BERLANGSUNG"
+      ? "🔴 SEDANG BERLANGSUNG"
+      : status === "MENUNGGU_PENGESAHAN"
+      ? "🟡 TAMAT (MENUNGGU PENGESAHAN)"
+      : "🟢 GELANGGANG KOSONG / SEDIA";
+
+    let bodyHtml = "";
+    if (activeMatch) {
+      bodyHtml = `
+        <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">
+          ${activeMatch.Kategori} • Perlawanan #${activeMatch.No_Perlawanan} (${activeMatch.Peringkat} ${activeMatch.Kumpulan})
+        </div>
+        <div class="phase-tag">⏱️ Fasa: ${activeMatch.Fasa_Semasa}</div>
+        <div class="score-board">
+          <div class="team-box">
+            <div class="code">${activeMatch.Kod_Pasukan_1}</div>
+            <div class="name">${activeMatch.Nama_Pasukan_1}</div>
+          </div>
+          <div class="score-num">${activeMatch.Skor_1} - ${activeMatch.Skor_2}</div>
+          <div class="team-box">
+            <div class="code">${activeMatch.Kod_Pasukan_2}</div>
+            <div class="name">${activeMatch.Nama_Pasukan_2}</div>
+          </div>
+        </div>
+        ${status === "MENUNGGU_PENGESAHAN" && canApprove() ? `
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button class="btn-success" style="flex:1;" onclick="approveMatch('${activeMatch.Match_ID}')">✅ Sahkan Keputusan</button>
+            <button class="btn-danger" onclick="reopenMatch('${activeMatch.Match_ID}')">↩️ Semak Semula</button>
+          </div>
+        ` : ""}
+      `;
+    } else if (nextMatch) {
+      bodyHtml = `
+        <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">
+          Susunan Auto Seterusnya: <strong>Perlawanan #${nextMatch.No_Perlawanan} (${nextMatch.Kategori})</strong>
+        </div>
+        <div class="score-board" style="opacity:0.85;">
+          <div class="team-box">
+            <div class="code">${nextMatch.Kod_Pasukan_1}</div>
+            <div class="name">${nextMatch.Nama_Pasukan_1}</div>
+          </div>
+          <div style="font-weight:800; color:var(--muted);">LWN</div>
+          <div class="team-box">
+            <div class="code">${nextMatch.Kod_Pasukan_2}</div>
+            <div class="name">${nextMatch.Nama_Pasukan_2}</div>
+          </div>
+        </div>
+        ${canApprove() ? `
+          <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="startMatch('${nextMatch.Match_ID}')">
+            ▶️ Sahkan & Mula Perlawanan #${nextMatch.No_Perlawanan}
+          </button>
+        ` : `<div style="text-align:center; font-size:12px; color:var(--muted);">Menunggu Urusetia memulakan perlawanan...</div>`}
+      `;
+    } else {
+      bodyHtml = `<div style="padding:26px 0; text-align:center; color:var(--muted); font-size:13px;">Tiada perlawanan menunggu di gelanggang ini.</div>`;
+    }
+
+    return `
+      <div class="court-card court-${status}">
+        <div class="court-header">
+          <span class="court-title">🏟️ ${court.Nama_Gelanggang}</span>
+          <span class="status-pill pill-${status}">${statusLabel}</span>
+        </div>
+        ${bodyHtml}
+      </div>
+    `;
+  }).join("");
+}
+
+/* KIRAAN CARTA LIGA AUTOMATIK */
+function recalculateStandings(eventId) {
+  const evTeams = state.teams.filter(t => t.Event_ID === eventId);
+  evTeams.forEach(t => {
+    t.Main = 0; t.Menang = 0; t.Seri = 0; t.Kalah = 0;
+    t.Jaringan = 0; t.Bolos = 0; t.Beza_Gol = 0; t.Mata = 0;
+  });
+
+  const approvedMatches = state.matches.filter(m =>
+    m.Event_ID === eventId &&
+    m.Status_Perlawanan === "DISAHKAN" &&
+    (m.Peringkat === "KUMPULAN" || m.Peringkat === "PUSINGAN_2_XY")
+  );
+
+  approvedMatches.forEach(m => {
+    const team1 = evTeams.find(t => t.Kod_Pasukan === m.Kod_Pasukan_1);
+    const team2 = evTeams.find(t => t.Kod_Pasukan === m.Kod_Pasukan_2);
+    if (!team1 || !team2) return;
+
+    const s1 = Number(m.Skor_1);
+    const s2 = Number(m.Skor_2);
+    team1.Main++; team2.Main++;
+    team1.Jaringan += s1; team1.Bolos += s2;
+    team2.Jaringan += s2; team2.Bolos += s1;
+
+    if (s1 > s2) {
+      team1.Menang++; team1.Mata += 3;
+      team2.Kalah++;
+    } else if (s2 > s1) {
+      team2.Menang++; team2.Mata += 3;
+      team1.Kalah++;
+    } else {
+      team1.Seri++; team1.Mata += 1;
+      team2.Seri++; team2.Mata += 1;
+    }
+    team1.Beza_Gol = team1.Jaringan - team1.Bolos;
+    team2.Beza_Gol = team2.Jaringan - team2.Bolos;
+  });
+
+  autoAdvanceKnockout(eventId);
+}
+
+function getSortedGroup(eventId, groupCode) {
+  return state.teams
+    .filter(t => t.Event_ID === eventId && t.Kumpulan === groupCode)
+    .sort((a, b) => (b.Mata - a.Mata) || (b.Beza_Gol - a.Beza_Gol) || (b.Jaringan - a.Jaringan));
+}
+
+/* AUTOMASI KEMARAAN SUKU AKHIR / SEPARUH AKHIR / AKHIR */
+function autoAdvanceKnockout(eventId) {
+  const ev = state.tournaments.find(t => t.Event_ID === eventId);
+  if (!ev) return;
+
+  if (ev.Format_Pusingan_2 === "SUKU_AKHIR_SILANG") {
+    ["A","B","C","D"].forEach(grp => {
+      const grpMatches = state.matches.filter(m => m.Event_ID === eventId && m.Peringkat === "KUMPULAN" && m.Kumpulan === grp);
+      const allDone = grpMatches.length > 0 && grpMatches.every(m => m.Status_Perlawanan === "DISAHKAN");
+      if (allDone) {
+        const sorted = getSortedGroup(eventId, grp);
+        if (sorted[0]) replacePlaceholderTeam(eventId, `JOHAN ${grp}`, sorted[0].Nama_Pasukan);
+        if (sorted[1]) replacePlaceholderTeam(eventId, `N. JOHAN ${grp}`, sorted[1].Nama_Pasukan);
+      }
+    });
+  }
+
+  if (ev.Format_Pusingan_2 === "KUMPULAN_XY") {
+    ["X","Y"].forEach(grp => {
+      const grpMatches = state.matches.filter(m => m.Event_ID === eventId && m.Peringkat === "PUSINGAN_2_XY" && m.Kumpulan === grp);
+      const allDone = grpMatches.length > 0 && grpMatches.every(m => m.Status_Perlawanan === "DISAHKAN");
+      if (allDone) {
+        const sorted = getSortedGroup(eventId, grp);
+        if (sorted[0]) replacePlaceholderTeam(eventId, `JOHAN ${grp}`, sorted[0].Nama_Pasukan);
+        if (sorted[1]) replacePlaceholderTeam(eventId, `N. JOHAN ${grp}`, sorted[1].Nama_Pasukan);
+      }
+    });
+  }
+
+  // Kemaraan berdasarkan Nombor Perlawanan (MENANG XX / KALAH XX)
+  state.matches
+    .filter(m => m.Event_ID === eventId && m.Status_Perlawanan === "DISAHKAN")
+    .forEach(m => {
+      const s1 = Number(m.Skor_1);
+      const s2 = Number(m.Skor_2);
+      if (s1 === s2) return;
+      const winner = s1 > s2 ? m.Nama_Pasukan_1 : m.Nama_Pasukan_2;
+      const loser = s1 > s2 ? m.Nama_Pasukan_2 : m.Nama_Pasukan_1;
+      replacePlaceholderTeam(eventId, `MENANG ${m.No_Perlawanan}`, winner);
+      replacePlaceholderTeam(eventId, `KALAH ${m.No_Perlawanan}`, loser);
+    });
+}
+
+function replacePlaceholderTeam(eventId, placeholderCode, actualTeamName) {
+  state.matches.filter(m => m.Event_ID === eventId).forEach(m => {
+    if (m.Kod_Pasukan_1 === placeholderCode) m.Nama_Pasukan_1 = actualTeamName;
+    if (m.Kod_Pasukan_2 === placeholderCode) m.Nama_Pasukan_2 = actualTeamName;
+  });
+}
+
+/* UNDIAN AUTOMATIK KUMPULAN X DAN Y (SEKOLAH RENDAH) */
+function autoDrawGroupXY() {
+  const groups = ["A","B","C"];
+  const qualified = [];
+  groups.forEach(g => {
+    const sorted = getSortedGroup("EV01", g);
+    if (sorted[0]) qualified.push(sorted[0].Nama_Pasukan);
+    if (sorted[1]) qualified.push(sorted[1].Nama_Pasukan);
+  });
+
+  if (qualified.length < 6) {
+    alert("Sila pastikan kumpulan A, B, dan C mempunyai pasukan yang mencukupi.");
+    return;
+  }
+
+  // Kocok (shuffle) 6 pasukan layak untuk undian X1-X3 & Y1-Y3
+  const shuffled = [...qualified].sort(() => Math.random() - 0.5);
+  const xyCodes = ["X1","X2","X3","Y1","Y2","Y3"];
+
+  xyCodes.forEach((code, idx) => {
+    const tObj = state.teams.find(t => t.Event_ID === "EV01" && t.Kod_Pasukan === code);
+    if (tObj) tObj.Nama_Pasukan = shuffled[idx];
+    replacePlaceholderTeam("EV01", code, shuffled[idx]);
+  });
+
+  saveState();
+  alert("Undian Kumpulan X & Y selesai! Jadual Perlawanan #16 hingga #21 telah dikemas kini secara automatik.");
+}
+
+function renderStandings() {
+  const container = document.getElementById("standingsContainer");
+  const evTeams = state.teams.filter(t => t.Event_ID === currentEventId);
+  const groups = [...new Set(evTeams.map(t => t.Kumpulan))];
+
+  container.innerHTML = groups.map(grp => {
+    const rows = getSortedGroup(currentEventId, grp);
+    return `
+      <div class="section-card">
+        <div class="section-title"><span>Kumpulan ${grp}</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <th class="p-4 text-left">Pasukan</th>
-                <th class="p-4">P</th><th class="p-4">W</th><th class="p-4">D</th><th class="p-4">L</th>
-                <th class="p-4">GD</th><th class="p-4 text-blue-600">Pts</th>
+                <th>Ked</th>
+                <th>Kod</th>
+                <th>Nama Pasukan</th>
+                <th class="text-center">P</th>
+                <th class="text-center">M</th>
+                <th class="text-center">S</th>
+                <th class="text-center">K</th>
+                <th class="text-center">J</th>
+                <th class="text-center">B</th>
+                <th class="text-center">BG</th>
+                <th class="text-center">Mata</th>
               </tr>
             </thead>
-            <tbody id="table-kedudukan" class="divide-y divide-gray-100">
-              <tr><td colspan="7" class="p-8 text-center text-gray-400">Tiada data kedudukan dikesan.</td></tr>
+            <tbody>
+              ${rows.map((r, i) => `
+                <tr>
+                  <td><strong>${i + 1}</strong></td>
+                  <td>${r.Kod_Pasukan}</td>
+                  <td><strong>${r.Nama_Pasukan}</strong></td>
+                  <td class="text-center">${r.Main}</td>
+                  <td class="text-center">${r.Menang}</td>
+                  <td class="text-center">${r.Seri}</td>
+                  <td class="text-center">${r.Kalah}</td>
+                  <td class="text-center">${r.Jaringan}</td>
+                  <td class="text-center">${r.Bolos}</td>
+                  <td class="text-center">${r.Beza_Gol}</td>
+                  <td class="text-center"><strong style="color:#38bdf8;">${r.Mata}</strong></td>
+                </tr>
+              `).join("")}
             </tbody>
           </table>
         </div>
       </div>
+    `;
+  }).join("");
+}
 
-      <h2 class="text-2xl font-bold pt-4 text-gray-800">Jadual Perlawanan</h2>
-      <div id="list-perlawanan" class="space-y-3">
-        <div class="text-center p-8 text-gray-400 bg-white rounded-xl border border-dashed">Tiada perlawanan dikesan.</div>
+function renderMatchesTable() {
+  const stageFilter = document.getElementById("filterStage").value;
+  const tbody = document.getElementById("matchesTableBody");
+  const list = state.matches.filter(m =>
+    m.Event_ID === currentEventId &&
+    (stageFilter === "ALL" || m.Peringkat === stageFilter)
+  );
+
+  tbody.innerHTML = list.map(m => `
+    <tr>
+      <td><strong>#${m.No_Perlawanan}</strong></td>
+      <td>${m.Peringkat} (${m.Kumpulan})</td>
+      <td><span class="brand-badge" style="background:#334155;">Gel. ${m.Gelanggang}</span></td>
+      <td><strong>${m.Nama_Pasukan_1}</strong> <small style="color:var(--muted);">(${m.Kod_Pasukan_1})</small></td>
+      <td class="text-center"><strong style="font-size:15px;">${m.Skor_1} - ${m.Skor_2}</strong></td>
+      <td><strong>${m.Nama_Pasukan_2}</strong> <small style="color:var(--muted);">(${m.Kod_Pasukan_2})</small></td>
+      <td>${m.Fasa_Semasa}</td>
+      <td><span class="status-pill pill-${m.Status_Perlawanan === 'DISAHKAN' ? 'KOSONG' : m.Status_Perlawanan}">${m.Status_Perlawanan}</span></td>
+    </tr>
+  `).join("");
+}
+
+/* PANEL PENGADIL */
+function renderRefereePanel() {
+  const container = document.getElementById("refereeActiveContainer");
+  if (!currentUser) return;
+  document.getElementById("refCourtInfo").innerText = `Tugasan Gelanggang: ${currentUser.Gelanggang_Tugasan}`;
+
+  const activeMatches = state.matches.filter(m =>
+    m.Status_Perlawanan === "SEDANG_BERLANGSUNG" &&
+    (currentUser.Gelanggang_Tugasan === "SEMUA" || m.Gelanggang === currentUser.Gelanggang_Tugasan)
+  );
+
+  if (activeMatches.length === 0) {
+    container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--muted);">Tiada perlawanan yang sedang berlangsung di gelanggang anda. Tunggu Urusetia memulakan perlawanan.</div>`;
+    return;
+  }
+
+  container.innerHTML = activeMatches.map(m => `
+    <div class="court-card court-SEDANG_BERLANGSUNG" style="margin-bottom:14px;">
+      <div class="court-header">
+        <span class="court-title">Gelanggang ${m.Gelanggang} • Perlawanan #${m.No_Perlawanan} (${m.Kategori})</span>
+        <select onchange="updatePhase('${m.Match_ID}', this.value)">
+          <option value="SEPARUH MASA 1" ${m.Fasa_Semasa === 'SEPARUH MASA 1' ? 'selected' : ''}>Separuh Masa 1</option>
+          <option value="REHAT" ${m.Fasa_Semasa === 'REHAT' ? 'selected' : ''}>Waktu Rehat</option>
+          <option value="SEPARUH MASA 2" ${m.Fasa_Semasa === 'SEPARUH MASA 2' ? 'selected' : ''}>Separuh Masa 2</option>
+        </select>
       </div>
-    </div>
-  </main>
-
-  <main id="tab-pengadil" class="tab-content p-4">
-    
-    <!-- Halangan PIN Pengadil -->
-    <div id="pengadil-pin" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center">
-      <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-      <h2 class="text-xl font-bold mb-2 text-center text-gray-800">Akses Khas Pengadil</h2>
-      <p class="text-sm text-gray-500 mb-6 text-center">Sila masukkan PIN unik yang diberikan oleh Admin untuk mengakses ruangan ini.</p>
-      <input type="password" id="ref-pin" placeholder="PIN" class="w-full p-4 border rounded-xl mb-4 text-center text-3xl tracking-[0.5em] font-bold bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500">
-      <button onclick="verifyRef()" class="w-full bg-gray-900 text-white font-bold p-4 rounded-xl shadow active:bg-black transition">Buka Akses</button>
-    </div>
-
-    <!-- Panel Keputusan Perlawanan -->
-    <div id="pengadil-panel" class="hidden max-w-md mx-auto space-y-4">
-      <div class="bg-purple-50 text-purple-800 p-4 rounded-xl flex justify-between items-center border border-purple-100 shadow-sm">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wider text-purple-600 mb-1">Pengadil Bertugas</p>
-          <p class="font-bold" id="nama-pengadil-bertugas">Nama Pengadil</p>
+      <div class="score-board">
+        <div class="team-box">
+          <div class="code">${m.Kod_Pasukan_1}</div>
+          <div class="name">${m.Nama_Pasukan_1}</div>
+          <div class="ref-controls">
+            <button class="btn-success" onclick="adjustScore('${m.Match_ID}', 1, 1)">+1 Gol</button>
+            <button class="btn-danger" onclick="adjustScore('${m.Match_ID}', 1, -1)">-1</button>
+          </div>
         </div>
-        <button onclick="logoutPengadil()" class="text-sm bg-white px-3 py-1 rounded shadow-sm font-bold text-purple-600 hover:bg-purple-100">Log Keluar</button>
+        <div class="score-num">${m.Skor_1} - ${m.Skor_2}</div>
+        <div class="team-box">
+          <div class="code">${m.Kod_Pasukan_2}</div>
+          <div class="name">${m.Nama_Pasukan_2}</div>
+          <div class="ref-controls">
+            <button class="btn-success" onclick="adjustScore('${m.Match_ID}', 2, 1)">+1 Gol</button>
+            <button class="btn-danger" onclick="adjustScore('${m.Match_ID}', 2, -1)">-1</button>
+          </div>
+        </div>
       </div>
-
-      <button onclick="syncOfflineScores()" class="w-full bg-green-500 text-white font-bold p-3 rounded-xl shadow-md text-sm hidden flex items-center justify-center gap-2" id="btn-sync">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg> Data Luar Talian Ditemui - Klik untuk Selaras
+      <button class="btn-warning" style="width:100%; margin-top:10px;" onclick="finishMatchByReferee('${m.Match_ID}')">
+        🏁 Tamatkan Perlawanan & Hantar Keputusan Kepada Urusetia
       </button>
-      
-      <select id="select-perlawanan" class="w-full p-4 border rounded-xl bg-white shadow-sm font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500" onchange="loadMatchPanel()">
-        <option value="">-- Sila Pilih Perlawanan --</option>
-      </select>
-
-      <div id="match-panel" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <div class="flex justify-between items-center mb-8">
-          <div class="text-center w-5/12">
-            <p id="ref-p1" class="font-bold text-lg mb-3 truncate bg-gray-100 p-2 rounded-lg text-gray-700"></p>
-            <div class="flex items-center justify-center space-x-3">
-              <button onclick="adjScore(1, -1)" class="w-12 h-12 bg-red-100 text-red-600 font-bold rounded-full text-2xl active:bg-red-200 transition">-</button>
-              <span id="score-p1" class="text-5xl font-black text-gray-800 w-12">0</span>
-              <button onclick="adjScore(1, 1)" class="w-12 h-12 bg-green-100 text-green-600 font-bold rounded-full text-2xl active:bg-green-200 transition">+</button>
-            </div>
-          </div>
-          <div class="text-2xl font-black text-gray-300">VS</div>
-          <div class="text-center w-5/12">
-            <p id="ref-p2" class="font-bold text-lg mb-3 truncate bg-gray-100 p-2 rounded-lg text-gray-700"></p>
-            <div class="flex items-center justify-center space-x-3">
-              <button onclick="adjScore(2, -1)" class="w-12 h-12 bg-red-100 text-red-600 font-bold rounded-full text-2xl active:bg-red-200 transition">-</button>
-              <span id="score-p2" class="text-5xl font-black text-gray-800 w-12">0</span>
-              <button onclick="adjScore(2, 1)" class="w-12 h-12 bg-green-100 text-green-600 font-bold rounded-full text-2xl active:bg-green-200 transition">+</button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="border-t pt-5 mb-6 bg-gray-50 -mx-6 px-6 pb-2">
-          <p class="text-center text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Sepakan Penalti (Jika Seri)</p>
-          <div class="flex justify-between max-w-[200px] mx-auto pb-4">
-            <input type="number" id="pen-p1" value="0" min="0" class="w-16 p-2 border rounded-lg text-center font-bold text-xl outline-none focus:ring-2 focus:ring-blue-500">
-            <span class="text-gray-400 font-bold text-xl pt-2">-</span>
-            <input type="number" id="pen-p2" value="0" min="0" class="w-16 p-2 border rounded-lg text-center font-bold text-xl outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-        </div>
-
-        <button onclick="submitScore()" class="w-full bg-blue-600 text-white font-bold p-4 rounded-xl shadow active:bg-blue-700 transition text-lg flex items-center justify-center gap-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Sahkan Keputusan Perlawanan
-        </button>
-      </div>
     </div>
-  </main>
+  `).join("");
+}
 
-  <nav class="bottom-nav fixed bottom-0 w-full border-t border-gray-200 flex justify-around text-gray-400 text-xs pb-safe z-40">
-    <button onclick="switchTab('utama', this)" class="nav-item active flex-1 py-3 flex flex-col items-center gap-1 transition-colors">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg> Utama
-    </button>
-    <button onclick="switchTab('pasukan', this)" class="nav-item flex-1 py-3 flex flex-col items-center gap-1 transition-colors">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> Pasukan
-    </button>
-    <button onclick="switchTab('jadual', this)" class="nav-item flex-1 py-3 flex flex-col items-center gap-1 transition-colors">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Jadual
-    </button>
-    <button onclick="switchTab('pengadil', this)" class="nav-item flex-1 py-3 flex flex-col items-center gap-1 transition-colors">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Pengadil
-    </button>
-  </nav>
+function adjustScore(matchId, teamNum, delta) {
+  const m = state.matches.find(x => x.Match_ID === matchId);
+  if (!m) return;
+  if (teamNum === 1) m.Skor_1 = Math.max(0, Number(m.Skor_1) + delta);
+  if (teamNum === 2) m.Skor_2 = Math.max(0, Number(m.Skor_2) + delta);
+  m.Pengadil_Kemaskini = currentUser ? currentUser.Username : "ref";
+  saveState();
+}
 
-  <!-- Modal -->
-  <div id="modal" style="display: none;" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
-      <div class="mb-4 text-blue-500 flex justify-center">
-        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+function updatePhase(matchId, newPhase) {
+  const m = state.matches.find(x => x.Match_ID === matchId);
+  if (!m) return;
+  m.Fasa_Semasa = newPhase;
+  saveState();
+}
+
+function finishMatchByReferee(matchId) {
+  const m = state.matches.find(x => x.Match_ID === matchId);
+  if (!m) return;
+  m.Fasa_Semasa = "TAMAT MASA PENUH";
+  m.Status_Perlawanan = "MENUNGGU_PENGESAHAN";
+  m.Pengadil_Kemaskini = currentUser ? currentUser.Username : "ref";
+  saveState();
+}
+
+/* PANEL KAWALAN URUSETIA */
+function startMatch(matchId) {
+  const m = state.matches.find(x => x.Match_ID === matchId);
+  if (!m) return;
+  const busy = state.matches.find(x =>
+    x.Gelanggang === m.Gelanggang &&
+    (x.Status_Perlawanan === "SEDANG_BERLANGSUNG" || x.Status_Perlawanan === "MENUNGGU_PENGESAHAN")
+  );
+  if (busy) {
+    alert(`Gelanggang ${m.Gelanggang} masih digunakan oleh Perlawanan #${busy.No_Perlawanan}! Sila selesaikan dan sahkan dahulu.`);
+    return;
+  }
+  m.Status_Perlawanan = "SEDANG_BERLANGSUNG";
+  m.Fasa_Semasa = "SEPARUH MASA 1";
+  saveState();
+}
+
+function approveMatch(matchId) {
+  const m = state.matches.find(x => x.Match_ID === matchId);
+  if (!m) return;
+  m.Status_Perlawanan = "DISAHKAN";
+  m.Disahkan_Oleh = currentUser ? currentUser.Username : "urusetia";
+  recalculateStandings(m.Event_ID);
+  saveState();
+}
+
+function reopenMatch(matchId) {
+  const m = state.matches.find(x => x.Match_ID === matchId);
+  if (!m) return;
+  m.Status_Perlawanan = "SEDANG_BERLANGSUNG";
+  m.Fasa_Semasa = "SEPARUH MASA 2";
+  saveState();
+}
+
+function renderUrusetiaPanel() {
+  const qContainer = document.getElementById("approvalQueueContainer");
+  const waiting = state.matches.filter(m => m.Status_Perlawanan === "MENUNGGU_PENGESAHAN");
+
+  if (waiting.length === 0) {
+    qContainer.innerHTML = `<div style="color:var(--muted); font-size:13px;">Tiada keputusan perlawanan yang sedang menunggu pengesahan.</div>`;
+  } else {
+    qContainer.innerHTML = waiting.map(m => `
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#0f172a; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid var(--warning);">
+        <div>
+          <strong>Gelanggang ${m.Gelanggang} • #${m.No_Perlawanan} (${m.Kategori})</strong><br/>
+          <span>${m.Nama_Pasukan_1} <strong>(${m.Skor_1} - ${m.Skor_2})</strong> ${m.Nama_Pasukan_2}</span>
+          <small style="color:var(--muted); display:block;">Dihantar oleh: ${m.Pengadil_Kemaskini}</small>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-success" onclick="approveMatch('${m.Match_ID}')">✅ Sahkan & Kemas Kini Liga</button>
+          <button class="btn-danger" onclick="reopenMatch('${m.Match_ID}')">↩️ Minta Semak Semula</button>
+        </div>
       </div>
-      <p id="modal-msg" class="text-lg font-medium mb-6 text-gray-800"></p>
-      <button onclick="closeModal()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow hover:bg-blue-700 transition">Tutup</button>
+    `).join("");
+  }
+
+  const nextContainer = document.getElementById("nextMatchQueueContainer");
+  const pendingMatches = state.matches.filter(m =>
+    m.Status_Perlawanan === "MENUNGGU" &&
+    !m.Nama_Pasukan_1.startsWith("MENUNGGU") &&
+    !m.Nama_Pasukan_2.startsWith("MENUNGGU")
+  ).slice(0, 8);
+
+  nextContainer.innerHTML = pendingMatches.map(m => `
+    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#0f172a; padding:10px 12px; border-radius:8px; margin-bottom:8px;">
+      <div>
+        <span class="brand-badge" style="background:#334155;">Gelanggang ${m.Gelanggang}</span>
+        <strong style="margin-left:8px;">#${m.No_Perlawanan} (${m.Kategori})</strong>:
+        ${m.Nama_Pasukan_1} lwn ${m.Nama_Pasukan_2}
+      </div>
+      <button class="btn-primary" onclick="startMatch('${m.Match_ID}')">▶️ Mula Perlawanan</button>
     </div>
-  </div>
-  
-  <!-- Loading -->
-  <div id="loading" style="display: none;" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex-col items-center justify-center backdrop-blur-sm">
-    <div class="loader mb-4"></div>
-    <p class="font-bold text-gray-600">Memproses Data...</p>
-    <p class="text-xs text-gray-400 mt-2">Sila tunggu sebentar.</p>
-  </div>
+  `).join("");
+}
 
-  <script>
-    // ** PENTING: GANTIKAN URL INI DENGAN WEB APP URL DARI GOOGLE APPS SCRIPT ANDA **
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxkfIot5ot4x_UUIyWe2-8vI8PEaosD9U-qxx7ilq7iK1uhdSgV9T7yLMf5NVGZSRMaqA/exec"; 
-    
-    // Inisialisasi State
-    let state = {
-      user: null,
-      matches: [],
-      standings: [],
-      myTeams: [],
-      referee: null
-    };
-    
-    let activeTeamPlayers = [];
+/* PANEL MASTER ADMIN */
+function renderMasterPanel() {
+  const tbody = document.getElementById("usersTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = state.users.map(u => `
+    <tr>
+      <td><strong>${u.Username}</strong></td>
+      <td>${u.Nama_Penuh}</td>
+      <td>${u.Peranan}</td>
+      <td>${u.Gelanggang_Tugasan}</td>
+      <td><span class="status-pill ${u.Status_Akaun === 'AKTIF' ? 'pill-KOSONG' : 'pill-MENUNGGU_PENGESAHAN'}">${u.Status_Akaun}</span></td>
+      <td>
+        ${u.Status_Akaun !== "AKTIF" ? `<button class="btn-success" onclick="approveUser('${u.Username}')">Luluskan</button>` : ""}
+        ${u.Peranan !== "MASTER_ADMIN" ? `<button class="btn-danger" onclick="deleteUser('${u.Username}')">Padam</button>` : "-"}
+      </td>
+    </tr>
+  `).join("");
+}
 
-    // Cuba dapatkan sesi jika ada (Fail-safe JSON parse)
-    try {
-      const saved = localStorage.getItem('futsal_user');
-      if(saved) state.user = JSON.parse(saved);
-      const savedRef = localStorage.getItem('futsal_referee');
-      if(savedRef) state.referee = JSON.parse(savedRef);
-    } catch(err) {
-      localStorage.removeItem('futsal_user');
-      localStorage.removeItem('futsal_referee');
+function approveUser(username) {
+  const u = state.users.find(x => x.Username === username);
+  if (u) { u.Status_Akaun = "AKTIF"; saveState(); }
+}
+
+function deleteUser(username) {
+  state.users = state.users.filter(x => x.Username !== username);
+  saveState();
+}
+
+function createNewTournament() {
+  const name = document.getElementById("newEvName").value.trim();
+  const cat = document.getElementById("newEvCat").value.trim();
+  const format = document.getElementById("newEvFormat").value;
+  const courtsRaw = document.getElementById("newEvCourts").value.trim();
+  const teamsRaw = document.getElementById("newEvTeams").value.trim();
+
+  if (!name || !cat || !teamsRaw) {
+    alert("Sila lengkapkan nama kejohanan, kategori, dan senarai pasukan.");
+    return;
+  }
+
+  const evId = "EV" + String(state.tournaments.length + 1).padStart(2, "0");
+  state.tournaments.push({
+    Event_ID: evId, Nama_Kejohanan: name, Kategori: cat,
+    Format_Pusingan_2: format, Gelanggang_Utama: courtsRaw, Status_Event: "AKTIF"
+  });
+
+  const courtList = courtsRaw.split(",").map(c => c.trim()).filter(Boolean);
+  courtList.forEach(cCode => {
+    if (!state.courts.find(c => c.Kod_Gelanggang === cCode)) {
+      state.courts.push({ Kod_Gelanggang: cCode, Nama_Gelanggang: "Gelanggang " + cCode, Kategori_Semasa: cat, Status_Gelanggang: "KOSONG", Match_ID_Semasa: "-" });
     }
+  });
 
-    // UI Helpers 
-    const showLoad = () => { document.getElementById('loading').style.display = 'flex'; };
-    const hideLoad = () => { document.getElementById('loading').style.display = 'none'; };
-    const showModal = (msg) => { 
-      document.getElementById('modal-msg').innerText = msg; 
-      document.getElementById('modal').style.display = 'flex';
-    };
-    const closeModal = () => { document.getElementById('modal').style.display = 'none'; };
-
-    function switchTab(tabId, el) {
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.getElementById('tab-' + tabId).classList.add('active');
-      
-      if(el) { el.classList.add('active'); } 
-      else {
-        const targetNav = Array.from(document.querySelectorAll('.nav-item')).find(n => n.getAttribute('onclick').includes(tabId));
-        if(targetNav) targetNav.classList.add('active');
-      }
-      
-      if(tabId === 'jadual') fetchData();
-      if(tabId === 'pengadil') renderRefereeUI();
-      updateAuthUI();
-    }
-
-    async function apiRequest(action, data = {}) {
-      if(!navigator.onLine && action !== 'dapatkanData') {
-        if(action === 'kemaskiniSkor') {
-          saveScoreOffline(data);
-          return { success: true, message: 'Disimpan luar talian. Sistem akan selaras secara automatik bila internet kembali.' };
-        }
-        return { success: false, message: 'Tiada sambungan internet. Operasi ini ditangguhkan.' };
-      }
-
-      if (!GAS_URL || GAS_URL === "" || GAS_URL.includes("GANTIKAN-URL-INI")) {
-        return { success: false, message: 'Sila masukkan URL Web App yang sah ke dalam pembolehubah GAS_URL pada baris skrip.' };
-      }
-
-      try {
-        const payload = JSON.stringify({ action, data });
-        const res = await fetch(GAS_URL, {
-          method: 'POST',
-          body: payload,
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
-        });
-        const result = await res.json();
-        return result;
-      } catch (err) {
-        console.error(err);
-        return { success: false, message: 'Ralat menyambung ke pangkalan data. Sila periksa internet anda.' };
-      }
-    }
-
-    function updateAuthUI() {
-      const uView = document.getElementById('unauth-view');
-      const aView = document.getElementById('auth-view');
-      const aPanel = document.getElementById('admin-panel');
-      const tGuard = document.getElementById('pasukan-auth-guard');
-      const tForm = document.getElementById('pasukan-form');
-
-      if (state.user) {
-        uView.classList.add('hidden');
-        aView.classList.remove('hidden');
-        document.getElementById('profil-nama').innerText = state.user.nama;
-        document.getElementById('profil-sekolah').innerText = state.user.sekolah || 'Akses Sistem Induk';
-        
-        if(state.user.role === 'admin') {
-          aPanel.classList.remove('hidden');
-          tGuard.classList.remove('hidden');
-          tForm.classList.add('hidden');
-          document.getElementById('senarai-pasukan-container').classList.add('hidden');
-          muatTurunTetapan();
-          fetchPendingReferees();
-        } else {
-          aPanel.classList.add('hidden');
-          tGuard.classList.add('hidden');
-          tForm.classList.remove('hidden');
-          fetchMyTeams();
-        }
-      } else {
-        uView.classList.remove('hidden');
-        aView.classList.add('hidden');
-        tGuard.classList.remove('hidden');
-        tForm.classList.add('hidden');
-      }
-    }
-
-    function toggleRegMode(mode) {
-      if (mode === 'guru') {
-        document.getElementById('btn-mode-guru').className = "flex-1 py-2 rounded-lg font-bold bg-blue-100 text-blue-700 border-2 border-blue-600 transition";
-        document.getElementById('btn-mode-pengadil').className = "flex-1 py-2 rounded-lg font-bold bg-gray-100 text-gray-600 border-2 border-transparent transition";
-        document.getElementById('form-reg-guru').classList.remove('hidden');
-        document.getElementById('form-reg-pengadil').classList.add('hidden');
-      } else {
-        document.getElementById('btn-mode-pengadil').className = "flex-1 py-2 rounded-lg font-bold bg-blue-100 text-blue-700 border-2 border-blue-600 transition";
-        document.getElementById('btn-mode-guru').className = "flex-1 py-2 rounded-lg font-bold bg-gray-100 text-gray-600 border-2 border-transparent transition";
-        document.getElementById('form-reg-pengadil').classList.remove('hidden');
-        document.getElementById('form-reg-guru').classList.add('hidden');
-      }
-    }
-
-    async function login() {
-      const emel = document.getElementById('login-email').value;
-      const pwd = document.getElementById('login-pwd').value;
-      
-      if(!pwd) return showModal("Sila masukkan kata laluan untuk log masuk.");
-      if (pwd === '101010' && (emel === '' || emel.toLowerCase() === 'admin')) {
-        state.user = { role: 'admin', nama: 'PENGURUS KEJOHANAN' };
-        localStorage.setItem('futsal_user', JSON.stringify(state.user));
-        updateAuthUI();
-        return;
-      }
-      showLoad();
-      const res = await apiRequest('logMasukGuru', {emel, password: pwd});
-      hideLoad();
-      
-      if(res.success) {
-        state.user = { role: 'guru', ...res.data };
-        localStorage.setItem('futsal_user', JSON.stringify(state.user));
-        updateAuthUI();
-      } else {
-        showModal(res.message);
-      }
-    }
-
-    function logout() {
-      state.user = null;
-      localStorage.removeItem('futsal_user');
-      updateAuthUI();
-    }
-
-    async function registerGuru() {
-      const data = {
-        nama: document.getElementById('reg-nama').value,
-        emel: document.getElementById('reg-email').value,
-        password: document.getElementById('reg-pwd').value,
-        sekolah: document.getElementById('reg-sekolah').value,
-        kodSekolah: document.getElementById('reg-kod').value,
-        telefon: document.getElementById('reg-tel').value
-      };
-      if(Object.values(data).includes('')) return showModal("Sila lengkapkan semua ruangan pendaftaran guru.");
-      
-      showLoad();
-      const res = await apiRequest('daftarGuru', data);
-      hideLoad();
-      showModal(res.message);
-      if(res.success) document.querySelectorAll('#form-reg-guru input').forEach(i => i.value = '');
-    }
-
-    async function registerPengadil() {
-      const data = {
-        nama: document.getElementById('reg-ref-nama').value,
-        emel: document.getElementById('reg-ref-email').value,
-        telefon: document.getElementById('reg-ref-tel').value
-      };
-      if(!data.nama || !data.emel) return showModal("Sila masukkan sekurang-kurangnya Nama dan Emel.");
-      
-      showLoad();
-      const res = await apiRequest('daftarPengadil', data);
-      hideLoad();
-      showModal(res.message);
-      if(res.success) document.querySelectorAll('#form-reg-pengadil input').forEach(i => i.value = '');
-    }
-
-    async function muatTurunTetapan() {
-      const res = await apiRequest('dapatkanTetapan');
-      if (res.success && res.data) document.getElementById('admin-jenis-liga').value = res.data.jenisLiga || 'Round Robin';
-    }
-
-    async function simpanTetapanSistem() {
-      const jenisLiga = document.getElementById('admin-jenis-liga').value;
-      showLoad();
-      const res = await apiRequest('simpanTetapan', { jenisLiga });
-      hideLoad();
-      showModal(res.message);
-    }
-
-    async function fetchPendingReferees() {
-      const container = document.getElementById('list-pengadil-menunggu');
-      container.innerHTML = '<div class="text-center text-gray-400 text-sm p-4">Memuat turun data...</div>';
-      
-      const res = await apiRequest('dapatkanPengadilMenunggu');
-      if(res.success && res.data.length > 0) {
-        container.innerHTML = '';
-        res.data.forEach(ref => {
-          container.innerHTML += `
-            <div class="border rounded-lg p-3 bg-gray-50 flex flex-col gap-2 shadow-sm">
-              <div>
-                <p class="font-bold text-sm text-gray-800">${ref.nama}</p>
-                <p class="text-xs text-gray-500">${ref.emel} | ${ref.telefon}</p>
-              </div>
-              <div class="flex gap-2 items-center">
-                <input type="text" id="pin-${ref.emel}" placeholder="Tetapkan PIN (cth: 8888)" class="flex-1 p-2 text-sm border rounded outline-none focus:border-blue-500">
-                <button onclick="approveReferee('${ref.emel}')" class="bg-green-500 text-white font-bold text-sm px-4 py-2 rounded hover:bg-green-600 transition">Luluskan</button>
-              </div>
-            </div>`;
-        });
-      } else {
-        container.innerHTML = '<div class="text-center text-gray-400 text-sm p-4 border border-dashed rounded-lg">Tiada permohonan baharu.</div>';
-      }
-    }
-
-    async function approveReferee(emel) {
-      const pin = document.getElementById(`pin-${emel}`).value;
-      if(!pin) return showModal("Sila tetapkan PIN untuk pengadil ini terlebih dahulu.");
-      
-      showLoad();
-      const res = await apiRequest('luluskanPengadil', { emel, pin });
-      hideLoad();
-      showModal(res.message);
-      if(res.success) fetchPendingReferees(); // Segarkan senarai
-    }
-
-    async function generateSchedule() {
-      showLoad();
-      const res = await apiRequest('janaJadual');
-      hideLoad();
-      showModal(res.message);
-      if(res.success) switchTab('jadual');
-    }
-
-    async function fetchMyTeams() {
-      if(!state.user || state.user.role !== 'guru') return;
-      const res = await apiRequest('dapatkanPasukanGuru', { kodSekolah: state.user.kodSekolah });
-      if(res.success) {
-        state.myTeams = res.data || [];
-        renderMyTeams();
-      }
-    }
-
-    function renderMyTeams() {
-      const container = document.getElementById('senarai-pasukan-container');
-      const list = document.getElementById('list-my-teams');
-      list.innerHTML = '';
-
-      if(state.myTeams.length > 0) {
-        container.classList.remove('hidden');
-        state.myTeams.forEach(t => {
-          list.innerHTML += `
-            <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 flex justify-between items-center shadow-sm">
-              <div>
-                <h4 class="font-bold text-blue-900 text-lg">${t.namaPasukan}</h4>
-                <p class="text-xs text-blue-700 mt-1 font-medium bg-blue-100 inline-block px-2 py-1 rounded">Kategori: ${t.kategori}</p>
-                <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                  ${t.pemain ? t.pemain.length : 0} Pemain Didaftarkan
-                </p>
-              </div>
-              <button onclick="editTeam('${t.id}')" class="bg-white border border-blue-300 text-blue-600 text-sm px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-blue-50 transition">Urus</button>
-            </div>`;
-        });
-      } else {
-        container.classList.add('hidden');
-      }
-    }
-
-    function editTeam(id) {
-      const team = state.myTeams.find(t => t.id === id);
-      if(!team) return;
-
-      document.getElementById('team-id').value = team.id;
-      document.getElementById('team-nama').value = team.namaPasukan;
-      document.getElementById('team-kategori').value = team.kategori;
-      
-      activeTeamPlayers = team.pemain || [];
-      renderPemain();
-
-      document.getElementById('team-form-title').innerText = "Urus Pasukan & Pemain";
-      document.getElementById('btn-submit-team').innerText = "Simpan Perubahan";
-      document.getElementById('btn-submit-team').classList.replace('bg-blue-600', 'bg-green-600');
-      document.getElementById('btn-submit-team').classList.replace('active:bg-blue-700', 'active:bg-green-700');
-      
-      document.getElementById('btn-batal-edit').classList.remove('hidden');
-      document.getElementById('pemain-section').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' }); 
-    }
-
-    function resetTeamForm() {
-      document.getElementById('team-id').value = '';
-      document.getElementById('team-nama').value = '';
-      document.getElementById('team-kategori').value = 'BP';
-      activeTeamPlayers = [];
-      
-      document.getElementById('team-form-title').innerText = "Daftar Pasukan Baru";
-      document.getElementById('btn-submit-team').innerText = "Hantar Pendaftaran";
-      document.getElementById('btn-submit-team').classList.replace('bg-green-600', 'bg-blue-600');
-      document.getElementById('btn-submit-team').classList.replace('active:bg-green-700', 'active:bg-blue-700');
-      
-      document.getElementById('btn-batal-edit').classList.add('hidden');
-      document.getElementById('pemain-section').classList.add('hidden');
-    }
-
-    function tambahPemain() {
-      const input = document.getElementById('input-pemain');
-      const nama = input.value.trim();
-      if(nama) {
-        activeTeamPlayers.push(nama);
-        input.value = '';
-        renderPemain();
-      }
-    }
-    
-    function padamPemain(idx) {
-      activeTeamPlayers.splice(idx, 1);
-      renderPemain();
-    }
-
-    function renderPemain() {
-      const ul = document.getElementById('senarai-pemain-ul');
-      ul.innerHTML = '';
-      if(activeTeamPlayers.length === 0) {
-        ul.innerHTML = '<li class="text-gray-400 italic text-center p-3 border border-dashed rounded-lg">Tiada nama pemain didaftarkan lagi. Sila tambah di atas.</li>';
-      } else {
-        activeTeamPlayers.forEach((p, idx) => {
-          ul.innerHTML += `
-            <li class="flex justify-between items-center bg-white p-3 rounded-lg border shadow-sm">
-              <span class="font-bold text-gray-700"><span class="text-gray-400 mr-2">${idx+1}.</span> ${p}</span>
-              <button onclick="padamPemain(${idx})" class="text-red-500 font-bold bg-red-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-100 transition">X</button>
-            </li>`;
-        });
-      }
-    }
-
-    async function submitTeam() {
-      const id = document.getElementById('team-id').value;
-      const namaPasukan = document.getElementById('team-nama').value;
-      const kategori = document.getElementById('team-kategori').value;
-      if(!namaPasukan) return showModal("Sila masukkan nama pasukan anda.");
-      
-      showLoad();
-      let res;
-      if (id) {
-        res = await apiRequest('kemaskiniPasukan', { idPasukan: id, namaPasukan, kategori, pemain: activeTeamPlayers });
-      } else {
-        res = await apiRequest('daftarPasukan', { namaPasukan, kategori, kodSekolah: state.user.kodSekolah, pemain: activeTeamPlayers });
-      }
-      
-      hideLoad();
-      showModal(res.message);
-      
-      if(res.success) {
-        resetTeamForm();
-        fetchMyTeams(); 
-      }
-    }
-
-    async function fetchData() {
-      showLoad();
-      const res = await apiRequest('dapatkanData');
-      hideLoad();
-      
-      if(res.success) {
-        state.matches = res.perlawanan || [];
-        state.standings = res.kedudukan || [];
-        
-        // Carta Kedudukan
-        const kBody = document.getElementById('table-kedudukan');
-        kBody.innerHTML = '';
-        if(state.standings.length === 0) {
-           kBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">Jadual liga belum dijana.</td></tr>`;
-        } else {
-          state.standings.forEach((k, idx) => {
-            kBody.innerHTML += `
-              <tr class="${idx < 2 ? 'bg-blue-50/50' : 'hover:bg-gray-50'} transition">
-                <td class="p-4 text-left font-semibold"><span class="text-gray-400 mr-2 w-4 inline-block">${idx+1}.</span> ${k.pasukan}</td>
-                <td class="p-4">${k.p}</td>
-                <td class="p-4 text-green-600 font-medium">${k.w}</td>
-                <td class="p-4 text-gray-500">${k.d}</td>
-                <td class="p-4 text-red-500">${k.l}</td>
-                <td class="p-4">${k.gd > 0 ? '+'+k.gd : k.gd}</td>
-                <td class="p-4 font-bold text-blue-600 text-base">${k.mata}</td>
-              </tr>`;
-          });
-        }
-
-        // Senarai Perlawanan
-        const mBody = document.getElementById('list-perlawanan');
-        mBody.innerHTML = '';
-        if(state.matches.length === 0) {
-           mBody.innerHTML = `<div class="text-center p-8 text-gray-400 bg-white rounded-xl border border-dashed">Tiada perlawanan dikesan.</div>`;
-        } else {
-          state.matches.forEach(m => {
-            let scoreHTML = m.status === 'Tamat' 
-              ? `<div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-black text-lg shadow-inner">${m.s1} - ${m.s2}</div>`
-              : `<div class="bg-yellow-50 text-yellow-700 text-xs px-3 py-1.5 rounded-full border border-yellow-200 font-bold shadow-sm">B. Mula</div>`;
-            
-            let penHTML = (m.status === 'Tamat' && (m.pen1 > 0 || m.pen2 > 0)) 
-              ? `<div class="w-full text-center mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 font-medium">Keputusan Penalti: <span class="font-bold">${m.pen1} - ${m.pen2}</span></div>` : '';
-
-            mBody.innerHTML += `
-              <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-wrap items-center justify-between mb-3 hover:border-blue-300 transition">
-                <div class="w-2/5 text-right font-semibold truncate pr-2 text-gray-700">${m.p1}</div>
-                <div class="w-1/5 flex justify-center">${scoreHTML}</div>
-                <div class="w-2/5 text-left font-semibold truncate pl-2 text-gray-700">${m.p2}</div>
-                ${penHTML}
-              </div>`;
-          });
-        }
-      }
-    }
-
-    function renderRefereeUI() {
-      if(state.referee) {
-        document.getElementById('pengadil-pin').classList.add('hidden');
-        document.getElementById('pengadil-panel').classList.remove('hidden');
-        document.getElementById('nama-pengadil-bertugas').innerText = state.referee.nama;
-        renderRefereeMatches();
-      } else {
-        document.getElementById('pengadil-pin').classList.remove('hidden');
-        document.getElementById('pengadil-panel').classList.add('hidden');
-      }
-    }
-
-    async function verifyRef() {
-      const pin = document.getElementById('ref-pin').value;
-      if(!pin) return showModal("Sila masukkan PIN anda.");
-      
-      showLoad();
-      const res = await apiRequest('sahkanPengadil', { pin });
-      hideLoad();
-      
-      if(res.success) {
-        state.referee = res.data; // Simpan sesi pengadil
-        localStorage.setItem('futsal_referee', JSON.stringify(state.referee));
-        document.getElementById('ref-pin').value = '';
-        renderRefereeUI();
-      } else {
-        showModal(res.message);
-      }
-    }
-
-    function logoutPengadil() {
-      state.referee = null;
-      localStorage.removeItem('futsal_referee');
-      renderRefereeUI();
-    }
-
-    function renderRefereeMatches() {
-      const select = document.getElementById('select-perlawanan');
-      select.innerHTML = '<option value="">-- Pilih Perlawanan --</option>';
-      const availableMatches = state.matches.filter(m => m.status !== 'Tamat');
-      
-      availableMatches.forEach(m => {
-        select.innerHTML += `<option value="${m.id}">[${m.id}] ${m.p1} lwn ${m.p2}</option>`;
-      });
-      checkOfflineQueueUI();
-    }
-
-    let activeMatch = null;
-    function loadMatchPanel() {
-      const mid = document.getElementById('select-perlawanan').value;
-      const panel = document.getElementById('match-panel');
-      if(!mid) { panel.classList.add('hidden'); return; }
-      
-      activeMatch = state.matches.find(m => m.id === mid);
-      document.getElementById('ref-p1').innerText = activeMatch.p1;
-      document.getElementById('ref-p2').innerText = activeMatch.p2;
-      document.getElementById('score-p1').innerText = '0';
-      document.getElementById('score-p2').innerText = '0';
-      document.getElementById('pen-p1').value = '0';
-      document.getElementById('pen-p2').value = '0';
-      panel.classList.remove('hidden');
-    }
-
-    function adjScore(team, val) {
-      const el = document.getElementById('score-p' + team);
-      let curr = parseInt(el.innerText) + val;
-      if(curr < 0) curr = 0;
-      el.innerText = curr;
-    }
-
-    async function submitScore() {
-      if(!activeMatch) return;
-      const s1 = parseInt(document.getElementById('score-p1').innerText);
-      const s2 = parseInt(document.getElementById('score-p2').innerText);
-      const pen1 = parseInt(document.getElementById('pen-p1').value) || 0;
-      const pen2 = parseInt(document.getElementById('pen-p2').value) || 0;
-
-      const data = { idPerlawanan: activeMatch.id, s1, s2, pen1, pen2 };
-      
-      showLoad();
-      const res = await apiRequest('kemaskiniSkor', data);
-      hideLoad();
-      showModal(res.message);
-      
-      if(res.success || !navigator.onLine) {
-        document.getElementById('match-panel').classList.add('hidden');
-        document.getElementById('select-perlawanan').value = '';
-        if(navigator.onLine) fetchData(); 
-      }
-    }
-
-    function saveScoreOffline(data) {
-      let queue = [];
-      try { queue = JSON.parse(localStorage.getItem('offline_scores') || '[]'); } catch(e) {}
-      queue.push(data);
-      localStorage.setItem('offline_scores', JSON.stringify(queue));
-      checkOfflineQueueUI();
-    }
-
-    function checkOfflineQueueUI() {
-      let queue = [];
-      try { queue = JSON.parse(localStorage.getItem('offline_scores') || '[]'); } catch(e) {}
-      if(queue.length > 0) document.getElementById('btn-sync').classList.remove('hidden');
-      else document.getElementById('btn-sync').classList.add('hidden');
-    }
-
-    async function syncOfflineScores() {
-      if(!navigator.onLine) return showModal("Tiada internet. Sila cuba lagi nanti.");
-      let queue = [];
-      try { queue = JSON.parse(localStorage.getItem('offline_scores') || '[]'); } catch(e) { return; }
-      if(queue.length === 0) return;
-
-      showLoad();
-      let allSuccess = true;
-      for(let data of queue) {
-        const res = await apiRequest('kemaskiniSkor', data);
-        if(!res.success) allSuccess = false;
-      }
-      hideLoad();
-      
-      if(allSuccess) {
-        localStorage.removeItem('offline_scores');
-        checkOfflineQueueUI();
-        showModal("Semua keputusan diselaraskan!");
-        fetchData();
-      } else {
-        showModal("Sebahagian data gagal diselaraskan.");
-      }
-    }
-
-    window.addEventListener('online', () => {
-      const statusEl = document.getElementById('network-status');
-      statusEl.innerText = 'Online';
-      statusEl.className = 'text-xs bg-green-500 px-3 py-1 rounded-full font-bold shadow';
-      let queue = [];
-      try { queue = JSON.parse(localStorage.getItem('offline_scores') || '[]'); } catch(e) {}
-      if(queue.length > 0) syncOfflineScores(); 
-    });
-    
-    window.addEventListener('offline', () => {
-      const statusEl = document.getElementById('network-status');
-      statusEl.innerText = 'Offline Mode';
-      statusEl.className = 'text-xs bg-red-500 px-3 py-1 rounded-full font-bold shadow';
-    });
-
-    // Inisialisasi Service Worker & Boot
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => console.warn('PWA Gagal:', err));
-      });
-    }
-
-    window.onload = function() {
-      updateAuthUI();
-      if(!navigator.onLine) {
-        document.getElementById('network-status').innerText = 'Offline Mode';
-        document.getElementById('network-status').className = 'text-xs bg-red-500 px-3 py-1 rounded-full font-bold shadow';
-      }
-      fetchData(); // Dapatkan jadual dan keputusan terkini sewaktu aplikasi dibuka
-    }
-  </script>
-</body>
-</html>
+  const lines = teamsRaw.split("\n").map
