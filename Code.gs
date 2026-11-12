@@ -89,8 +89,9 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.7.0';
-const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan'];
+const API_VERSI = '1.8.0';
+const GILIRAN_MAX = 6;                     // bil. perlawanan seterusnya dipaparkan per gelanggang
+const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby'];
 // FASA 6: log pengesahan keputusan oleh pengadil (tambah sahaja, tidak ditulis ganti)
 const SHEET_SAH_PENGADIL = 'Log_Sah_Pengadil';
 const SAH_PENGADIL_HEADER = ['Masa', 'ID Match', 'Gelanggang', 'Pasukan 1', 'Skor', 'Pasukan 2', 'Menang Penalti', 'Pengadil', 'ID Pengadil'];
@@ -1237,8 +1238,29 @@ function papanLive_() {
     }
     const pegang = k && k.pengadilId ? k : null;
     const rehat = k && k.rehat && m && String(m.id).toUpperCase() === String(k.matchId).toUpperCase() ? k.rehat : null;
+    // FASA 7: Giliran seterusnya (untuk makluman standby pengurus pasukan)
+    const curId = m ? String(m.id).toUpperCase() : '';
+    const giliran = table.rows.map(function (r) { return r.data; }).filter(function (d) {
+      if (String(d.gelanggang || '').toUpperCase() !== g) return false;
+      if (String(d.status || '').toUpperCase() !== 'MENUNGGU GILIRAN') return false;
+      return String(d.id).toUpperCase() !== curId;
+    }).sort(function (a, b) {
+      const ka = String(a.kategori || ''), kb = String(b.kategori || '');
+      if (ka !== kb) return ka.localeCompare(kb);
+      const na = Number(a.no) || 0, nb = Number(b.no) || 0;
+      if (na !== nb) return na - nb;
+      return String(a.id).localeCompare(String(b.id));
+    }).slice(0, GILIRAN_MAX).map(function (d) {
+      return {
+        id: String(d.id || ''), kategori: String(d.kategori || ''), peringkat: String(d.peringkat || ''),
+        kumpulan: String(d.kumpulan || ''), kodP1: String(d.kodP1 || ''), kodP2: String(d.kodP2 || ''),
+        namaP1: String(d.namaP1 || ''), namaP2: String(d.namaP2 || ''),
+        ditangguh: String(d.fasaMasa || '') === 'Ditangguhkan'
+      };
+    });
     out[g] = {
       gelanggang: g,
+      giliran: giliran,
       matchId: m ? m.id : null,
       namaP1: m ? m.namaP1 : '', namaP2: m ? m.namaP2 : '',
       skorP1: m ? m.skorP1 : null, skorP2: m ? m.skorP2 : null,

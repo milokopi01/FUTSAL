@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbw9-rwlUOLsv3TfX1w_jQWBTDJ1rdVtSaUI96DecLpJyOk5GBThE2FOmZ5bphCAkEC9/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -747,6 +747,44 @@
     .tangguh-opts label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); cursor: pointer; background: var(--glass); }
     .tangguh-opts label:has(input:checked) { border-color: var(--accent); background: rgba(255,181,71,.08); }
     .tangguh-opts small { display: block; color: var(--text-2); }
+    /* FASA 7: Papan live digabung ke kad gelanggang + Makluman Standby */
+    .live-board.compact { padding: 12px 18px; }
+    .live-board.compact .live-board-head { margin-bottom: 0; }
+    .standby-board { margin-top: 18px; padding: 16px 18px; }
+    .sb-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
+    .sb-head h3 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; }
+    .sb-head p { margin: 4px 0 0; color: var(--text-2); font-size: .8rem; max-width: 640px; line-height: 1.45; }
+    .sb-find { display: flex; flex-direction: column; gap: 4px; font-size: .76rem; color: var(--text-2); min-width: 240px; }
+    .sb-find select { background: var(--glass); color: var(--text-0); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 9px 10px; font: inherit; font-size: .85rem; }
+    .sb-find select option { background: #0f172a; color: #e5e7eb; }
+    .sb-result { margin: 0 0 12px; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass); font-size: .88rem; line-height: 1.5; color: var(--text-0); }
+    .sb-result.is-standby { border-color: rgba(255,181,71,.7); background: rgba(255,181,71,.12); }
+    .sb-result.is-now { border-color: rgba(34,197,94,.7); background: rgba(34,197,94,.12); }
+    .sb-result.is-live { border-color: rgba(239,68,68,.6); background: var(--court-live-bg); }
+    .sb-result small { display: block; color: var(--text-2); font-size: .76rem; }
+    .sb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .sb-card { border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 12px; background: var(--glass); display: flex; flex-direction: column; gap: 8px; }
+    .sb-card-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .sb-card-top strong { font-family: var(--font-display); font-size: .95rem; color: var(--text-0); }
+    .sb-card-top span { font-size: .72rem; color: var(--text-2); }
+    .sb-label { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); font-weight: 700; }
+    .sb-now { font-size: .8rem; color: var(--text-1); }
+    .sb-now .sb-tag { font-size: .68rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--glass-border); margin-left: 4px; }
+    .sb-tag.t-live { color: #ff8a8a; border-color: rgba(239,68,68,.5); }
+    .sb-tag.t-done { color: #93c5fd; border-color: rgba(147,197,253,.5); }
+    .sb-tag.t-ready { color: #86efac; border-color: rgba(134,239,172,.5); }
+    .sb-standby { border: 1px solid rgba(255,181,71,.6); background: rgba(255,181,71,.1); border-radius: var(--radius-sm); padding: 9px 10px; }
+    .sb-standby .sb-label { color: var(--accent); }
+    .sb-match { font-weight: 700; font-size: .86rem; color: var(--text-0); line-height: 1.35; }
+    .sb-match .mono { font-family: var(--font-mono); font-size: .74rem; color: var(--text-2); font-weight: 400; margin-right: 4px; }
+    .sb-hint { font-size: .74rem; color: var(--text-1); margin-top: 3px; }
+    .sb-later { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .78rem; color: var(--text-1); }
+    .sb-later li { line-height: 1.4; }
+    .sb-card .mono { font-family: var(--font-mono); font-size: .72rem; color: var(--text-2); margin-right: 6px; }
+    .sb-later .mono { font-family: var(--font-mono); color: var(--text-2); font-size: .72rem; }
+    .sb-mine { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+    .sb-empty { font-size: .78rem; color: var(--text-2); }
+
     /* FASA 5: Rehat Kecemasan (penangguhan sementara) */
     .badge-rehat { color: #fde68a; background: rgba(250,204,21,.14); border-color: rgba(250,204,21,.55); }
     .court-card.status-paused { border-color: rgba(250, 204, 21, 0.75); box-shadow: 0 0 0 1px rgba(250,204,21,.2), 0 12px 40px rgba(250,204,21,.14); }
@@ -1037,6 +1075,24 @@
 
         <div class="courts-grid" id="courtsGrid">
           <!-- Kad gelanggang A, B, C, D dijana oleh JavaScript (renderCourts) -->
+        </div>
+
+        <!-- MAKLUMAN STANDBY (Fasa 7): untuk pengurus pasukan -->
+        <div class="card glass standby-board" id="standbyBoard" aria-live="polite">
+          <div class="sb-head">
+            <div>
+              <h3>📣 Makluman Pengurus Pasukan · Sila Bersedia</h3>
+              <p>Pasukan berstatus <strong>STANDBY</strong> diminta bersedia di tepi gelanggang yang ditetapkan. Paparan ini dikemas kini secara automatik — tidak perlu bertanya urusetia.</p>
+            </div>
+            <label class="sb-find">
+              <span>🔎 Cari pasukan anda</span>
+              <select id="sbTeam" onchange="setStandbyTeam(this.value)">
+                <option value="">— Pilih sekolah —</option>
+              </select>
+            </label>
+          </div>
+          <div id="sbResult"></div>
+          <div class="sb-grid" id="sbGrid"></div>
         </div>
       </section>
 
@@ -2841,10 +2897,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return parts.length ? `<div class="court-controls">${parts.join('')}</div>` : '';
     }
 
-    function renderCourtCard(court) {
+    function renderCourtCard(realCourt) {
+      // FASA 7: paparan digabung dengan Papan Live (data Google Sheets terkini)
+      const view = courtDisplay(realCourt);
+      const court = view.v;
+      const realMatch = getMatch((isCourtPaused(realCourt) && realCourt.rehat.matchId) || realCourt.matchSemasa) || getMatch(realCourt.matchSemasa);
       const paused = isCourtPaused(court);
-      const match = getMatch((paused && court.rehat.matchId) || court.matchSemasa) || getMatch(court.matchSemasa);
-      const next = getMatch(court.matchSeterusnya);
+      const match = view.match;
+      const next = view.queue[0] || null;
       const overlay = courtOverlayText(court, match);
       const showLiveScore = court.status !== COURT_STATUS.SEDIA;
       const rs = paused ? rehatScore(court) : null;
@@ -2857,13 +2917,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         ? `${escapeHtml(match.id)} · ${escapeHtml(match.peringkat)}${match.kumpulan && match.kumpulan !== '-' ? ' · Kump. ' + escapeHtml(match.kumpulan) : ''}`
         : 'Tiada perlawanan';
       const fasaLabel = paused
-        ? `Rehat Kecemasan (${COURT_PHASE_LABELS[court.rehat.fasaSebelum] || court.rehat.fasaSebelum || '-'})`
+        ? (court.rehat.fasaSebelum ? `Rehat Kecemasan (${COURT_PHASE_LABELS[court.rehat.fasaSebelum] || court.rehat.fasaSebelum})` : 'Rehat Kecemasan')
         : court.status === COURT_STATUS.LIVE
           ? (COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa)
           : (court.status === COURT_STATUS.TAMAT ? 'Tamat' : 'Sedia');
       const rehatNote = paused
-        ? `<div class="rehat-banner">⏸ <strong>Ditangguhkan sementara</strong> sejak ${escapeHtml(formatTime(court.rehat.pada))}` +
-          ` oleh ${escapeHtml(court.rehat.oleh || '-')} · ${escapeHtml(court.rehat.sebab || '-')}<br>` +
+        ? `<div class="rehat-banner">⏸ <strong>Ditangguhkan sementara</strong>${court.rehat.pada ? ' sejak ' + escapeHtml(formatTime(court.rehat.pada)) : ''}` +
+          `${court.rehat.oleh ? ' oleh ' + escapeHtml(court.rehat.oleh) : ''} · ${escapeHtml(court.rehat.sebab || '-')}<br>` +
           `🔒 Markah dibekukan: <strong>${s1} - ${s2}</strong> · ` +
           (court.pengadilId
             ? `Pengadil semasa: <strong>${escapeHtml(court.pengadil || '-')}</strong>`
@@ -2877,7 +2937,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         ? `<div class="court-meta" style="padding-top:0;color:#fda4af;"><span>⚠ Ditolak Urusetia: ${escapeHtml(match.catatan || 'Sila semak semula skor.')}</span></div>`
         : '';
       const nextText = next
-        ? `Seterusnya: <strong>${escapeHtml(next.id)}</strong> — ${escapeHtml(next.namaP1)} lwn ${escapeHtml(next.namaP2)}`
+        ? `🟡 Standby: <strong>${escapeHtml(next.id)}</strong> — ${escapeHtml(next.namaP1)} lwn ${escapeHtml(next.namaP2)}`
         : 'Seterusnya: <strong>Tiada</strong>';
 
       return `
@@ -2887,7 +2947,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
               <div class="court-letter">${escapeHtml(court.id)}</div>
               <div>
                 <h3>${escapeHtml(court.nama)}</h3>
-                <small>${court.pengadilId ? '🔒 ' + escapeHtml(court.pengadil || court.pengadilId) + (court.kunciBasi ? ' (tidak aktif)' : '') : 'Pengadil: belum dikunci'} · ${katBadge}</small>
+                <small>${court.pengadilId ? '🧑‍⚖️ Pengadil: ' + escapeHtml(court.pengadil || court.pengadilId) + (court.kunciBasi ? ' (tidak aktif)' : '') : 'Pengadil: belum ditetapkan'} · ${katBadge}</small>
               </div>
             </div>
             ${courtStatusBadge(court)}
@@ -2915,13 +2975,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
           <div class="court-meta">
             <span>${matchInfo}</span>
-            <span>Fasa: <strong style="color:var(--text-0);">${escapeHtml(fasaLabel)}</strong> · <span class="court-timer" data-court-timer="${court.id}">00:00</span></span>
+            <span>Fasa: <strong style="color:var(--text-0);">${escapeHtml(fasaLabel)}</strong> · <span class="court-timer" data-court-timer="${court.id}"${view.source === 'server' && court.status === COURT_STATUS.LIVE && !paused && court.masaMula ? ` data-srv-start="${escapeHtml(court.masaMula)}"` : ''}>00:00</span></span>
           </div>
           ${rehatNote}
           ${penaltiNote}
           ${rejectNote}
           <div class="court-next">${nextText}</div>
-          ${renderCourtControls(court, match)}
+          ${renderCourtControls(realCourt, realMatch)}
         </article>`;
     }
 
@@ -2943,6 +3003,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       grid.innerHTML = courts.map(renderCourtCard).join('');
       updateCourtTimers();
       updateApprovalBadge();
+      renderStandby();
     }
 
     function updateCourtTimers() {
@@ -2950,7 +3011,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       document.querySelectorAll('[data-court-timer]').forEach(el => {
         const court = getCourt(el.dataset.courtTimer);
         if (!court) return;
-        if (isCourtPaused(court)) {
+        if (el.dataset.srvStart) {
+          const t = new Date(el.dataset.srvStart).getTime();
+          el.textContent = isNaN(t) ? '--:--' : formatDuration(Math.max(0, now - t));
+        } else if (isCourtPaused(court)) {
           el.textContent = `${formatDuration(Number(court.rehat.elapsedMs) || 0)} ⏸`;
         } else if (court.status === COURT_STATUS.LIVE && court.fasaMulaPada) {
           el.textContent = formatDuration(now - new Date(court.fasaMulaPada).getTime());
@@ -5210,7 +5274,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     async function fetchPublicLive() {
       const url = getGasUrl();
       if (!url || publicLive.busy) return false;
-      if (!navigator.onLine) { publicLive.error = 'Luar talian'; renderLiveBoard(); return false; }
+      if (!navigator.onLine) { publicLive.error = 'Luar talian'; renderLiveViews(); return false; }
       publicLive.busy = true;
       try {
         const sep = url.includes('?') ? '&' : '?';
@@ -5221,11 +5285,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         publicLive.data = data.gelanggang;
         publicLive.lastOk = nowIso();
         publicLive.error = '';
-        renderLiveBoard();
+        renderLiveViews();
         return true;
       } catch (err) {
         publicLive.error = (err && err.message) || 'ralat rangkaian';
-        renderLiveBoard();
+        renderLiveViews();
         return false;
       } finally {
         publicLive.busy = false;
@@ -5296,9 +5360,17 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       };
     }
 
+    function renderLiveViews() {
+      renderLiveBoard();
+      renderCourts();
+    }
+
+    // FASA 7: Papan Live kini hanya jalur status ringkas; butiran perlawanan
+    // dipaparkan terus dalam kad gelanggang (tiada maklumat berganda).
     function renderLiveBoard() {
       const el = document.getElementById('liveBoard');
       if (!el) return;
+      el.classList.add('compact');
       const entries = state.courts.map(c => ({ court: c, e: boardEntry(c) }));
       const liveCount = entries.filter(x => x.e.live && !x.e.rehat).length;
       const url = getGasUrl();
@@ -5306,73 +5378,223 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         ? 'Paparan peranti ini sahaja'
         : publicLive.error
           ? `⚠ Gagal segerak: ${publicLive.error}`
-          : publicLive.lastOk ? `🔄 Disegerak automatik · ${formatTime(publicLive.lastOk)}` : '🔄 Menyegerak...';
+          : publicLive.lastOk ? `🔄 Disegerak automatik setiap 15 saat · terakhir ${formatTime(publicLive.lastOk)}` : '🔄 Menyegerak...';
 
-      const flashes = [];
-      const cards = entries.map(({ court, e }) => {
-        const cls = e.rehat ? 'lb-tangguh' : e.live ? 'lb-live' : e.ditangguh ? 'lb-tangguh' : e.done ? 'lb-done' : '';
+      entries.forEach(({ court, e }) => {
         if (e.live && e.matchId && boardSeenLive[court.id] !== e.matchId) {
-          if (boardReady) flashes.push({ court, e });
+          if (boardReady) showToast(`🔴 LIVE: ${e.matchId} di Gelanggang ${court.id} telah bermula${e.pengadil ? ` · Pengadil: ${e.pengadil}` : ''}.`, 'info', 4500);
           boardSeenLive[court.id] = e.matchId;
         } else if (!e.live) {
           delete boardSeenLive[court.id];
         }
-        const badge = e.rehat ? '<span class="badge badge-rehat badge-dot">⏸ Rehat Kecemasan</span>'
-          : e.live ? '<span class="badge badge-live badge-dot">Live</span>'
-          : e.ditangguh ? '<span class="badge badge-tangguh badge-dot">Ditangguhkan</span>'
-          : e.done ? '<span class="badge badge-done badge-dot">Tamat</span>'
-          : '<span class="badge badge-ready badge-dot">Sedia</span>';
-        const score = e.skorP1 === null || e.skorP1 === undefined ? 'vs' : `${e.skorP1} - ${e.skorP2}`;
-        const teams = e.matchId
-          ? `<div class="lb-teams"><span>${escapeHtml(e.namaP1)}</span><span class="lb-score">${escapeHtml(score)}</span><span>${escapeHtml(e.namaP2)}</span></div>`
-          : '<div class="muted" style="font-size:.82rem;">Tiada perlawanan</div>';
-        let meta = '';
-        if (e.rehat) {
-          meta = `<span>⏸ Ditangguhkan sementara${e.rehatPada ? ' sejak ' + formatTime(e.rehatPada) : ''}</span>` +
-            (e.rehatSebab ? `<span>${escapeHtml(e.rehatSebab)}</span>` : '');
-        } else if (e.live) {
-          meta = `<span>⚽ Bermula ${e.masaMula ? formatTime(e.masaMula) : '-'}</span>` +
-            (e.fasa ? `<span>⏱ ${escapeHtml(e.fasa)}</span>` : '') +
-            (e.masaMula ? `<span data-board-timer="${escapeHtml(e.masaMula)}"></span>` : '');
-        } else if (e.ditangguh) {
-          meta = `<span>⏸ ${escapeHtml(e.sebab || 'Ditangguhkan')}</span>`;
-        } else if (e.done) {
-          meta = '<span>Menunggu pengesahan urusetia</span>';
-        } else if (e.matchId) {
-          meta = '<span>Menunggu sepak mula</span>';
-        }
-        const ref = e.pengadil
-          ? `<div class="lb-ref">🧑‍⚖️ Pengadil: <strong>${escapeHtml(e.pengadil)}</strong>${e.pengadilBasi ? ' <span class="muted">(tidak aktif)</span>' : ''}</div>`
-          : `<div class="lb-ref none">🧑‍⚖️ Pengadil: ${e.rehat ? 'menunggu pengadil mengambil alih' : e.live ? 'belum ditetapkan' : '—'}</div>`;
-        return `<div class="lb-card ${cls}" data-board-court="${court.id}">
-            <div class="lb-top"><strong>Gelanggang ${escapeHtml(court.id)}</strong>${badge}</div>
-            <div class="lb-top"><span>${e.matchId ? escapeHtml(e.matchId) : ''}</span><span>${escapeHtml(court.kategoriNama || court.kategori || '')}</span></div>
-            ${teams}
-            <div class="lb-meta">${meta}</div>
-            ${ref}
-          </div>`;
-      }).join('');
+      });
 
       el.innerHTML = `
         <div class="live-board-head">
           <div>
-            <h3>📺 Papan Live · Perlawanan Sedang Berlangsung</h3>
+            <h3>📺 Papan Live · Skor &amp; Status Gelanggang</h3>
             <p>${escapeHtml(syncText)}</p>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
             <span class="live-count ${liveCount ? '' : 'zero'}">${liveCount ? `🔴 ${liveCount} LIVE` : 'Tiada perlawanan live'}</span>
             ${url ? '<button type="button" class="btn btn-sm" onclick="fetchPublicLive()" aria-label="Muat semula papan live">🔄</button>' : ''}
           </div>
-        </div>
-        <div class="live-board-grid">${cards}</div>`;
-
-      flashes.forEach(({ court, e }) => {
-        const card = el.querySelector(`[data-board-court="${court.id}"]`);
-        if (card) card.classList.add('lb-flash');
-        showToast(`🔴 LIVE: ${e.matchId} di Gelanggang ${court.id} telah bermula${e.pengadil ? ` · Pengadil: ${e.pengadil}` : ''}.`, 'info', 4500);
-      });
+        </div>`;
       boardReady = true;
-      updateBoardTimers();
+    }
+
+    // Senarai perlawanan menunggu giliran (data peranti ini)
+    function localCourtQueue(courtId, excludeId) {
+      return state.matches
+        .filter(m => m.gelanggang === courtId && m.status === MATCH_STATUS.MENUNGGU && m.id !== excludeId)
+        .sort((a, b) => (a.kategori === b.kategori ? a.no - b.no : a.kategori.localeCompare(b.kategori)));
+    }
+
+    function srvMatchLike(x) {
+      const lm = getMatch(x.id) || {};
+      return Object.assign({}, lm, {
+        id: x.id,
+        namaP1: x.namaP1 || lm.namaP1 || '', namaP2: x.namaP2 || lm.namaP2 || '',
+        kodP1: x.kodP1 || lm.kodP1 || '', kodP2: x.kodP2 || lm.kodP2 || '',
+        peringkat: x.peringkat || lm.peringkat || '', kumpulan: x.kumpulan || lm.kumpulan || '',
+        kategori: x.kategori || lm.kategori || ''
+      });
+    }
+
+    function phaseKeyFromLabel(label) {
+      const L = String(label || '').toUpperCase();
+      return COURT_PHASES.find(p => p === L || String(COURT_PHASE_LABELS[p]).toUpperCase() === L) || 'SEPARUH 1';
+    }
+
+    /* Paparan gabungan satu gelanggang:
+       - v      : salinan gelanggang untuk dipaparkan (tidak disimpan)
+       - match  : perlawanan semasa di gelanggang
+       - queue  : perlawanan seterusnya (queue[0] = STANDBY)
+       Penonton / pengurus pasukan (tanpa log masuk) membaca Google Sheets;
+       pengguna log masuk kekal menggunakan data peranti bila gelanggang kosong. */
+    function courtDisplay(court) {
+      const e = boardEntry(court);
+      const srv = publicLive.data && publicLive.data[court.id];
+      const srvQueue = srv && Array.isArray(srv.giliran) ? srv.giliran.map(srvMatchLike) : null;
+      const publicViewer = !getSession();
+      const v = Object.assign({}, court);
+      let match = null;
+      let source = 'local';
+
+      if (e.source === 'server') {
+        const srvIdle = !e.live && !e.rehat && !e.done && !e.ditangguh &&
+          boardStatusUpper(srv && srv.status) === 'SELESAI';
+        if (!srvIdle) {
+          source = 'server';
+          match = srvMatchLike({ id: e.matchId, namaP1: e.namaP1, namaP2: e.namaP2 });
+          Object.assign(v, {
+            matchSemasa: e.matchId,
+            status: (e.live || e.rehat) ? COURT_STATUS.LIVE : e.done ? COURT_STATUS.TAMAT : COURT_STATUS.SEDIA,
+            skorLiveP1: Number(e.skorP1) || 0,
+            skorLiveP2: Number(e.skorP2) || 0,
+            ditangguh: e.ditangguh ? { sebab: e.sebab } : null,
+            rehat: e.rehat ? { sebab: e.rehatSebab, pada: e.rehatPada, matchId: e.matchId, fasaSebelum: '', oleh: '', elapsedMs: 0, skorP1: e.skorP1, skorP2: e.skorP2 } : null,
+            pengadil: e.pengadil || null,
+            pengadilId: e.pengadil ? (court.pengadilId || 'SRV') : null,
+            kunciBasi: !!e.pengadilBasi,
+            fasaMasa: e.live ? phaseKeyFromLabel(e.fasa) : 'SEDIA',
+            fasaMulaPada: null,
+            masaMula: e.masaMula || null
+          });
+        }
+      }
+
+      if (source === 'local' && publicViewer && srvQueue) {
+        // Gelanggang kosong menurut Google Sheets: perlawanan pertama dalam giliran sedang menunggu sepak mula
+        const first = srvQueue[0] || null;
+        source = 'server';
+        match = first;
+        Object.assign(v, {
+          matchSemasa: first ? first.id : null, status: COURT_STATUS.SEDIA,
+          skorLiveP1: 0, skorLiveP2: 0, ditangguh: null, rehat: null,
+          pengadil: null, pengadilId: null, kunciBasi: false, fasaMasa: 'SEDIA', fasaMulaPada: null, masaMula: null
+        });
+      }
+
+      if (source === 'local') {
+        match = getMatch((isCourtPaused(court) && court.rehat.matchId) || court.matchSemasa) || getMatch(court.matchSemasa);
+      }
+      const curId = match ? match.id : null;
+      const queue = (publicViewer && srvQueue)
+        ? srvQueue.filter(m => m.id !== curId)
+        : localCourtQueue(court.id, curId);
+      return { v, match, queue, source };
+    }
+
+    // ---------- FASA 7: Makluman Standby untuk pengurus pasukan ----------
+    const SB_TEAM_KEY = 'fpk_kbb_sb_team';
+    function getStandbyTeam() { try { return localStorage.getItem(SB_TEAM_KEY) || ''; } catch (e) { return ''; } }
+    function setStandbyTeam(name) {
+      try { name ? localStorage.setItem(SB_TEAM_KEY, name) : localStorage.removeItem(SB_TEAM_KEY); } catch (e) { /* abaikan */ }
+      renderStandby();
+    }
+
+    function sbMatchLine(m) {
+      if (!m) return '';
+      const ready = isMatchReady(m);
+      return `<span class="mono">${escapeHtml(m.id)}</span>${ready ? `${escapeHtml(m.namaP1)} <span class="muted">lwn</span> ${escapeHtml(m.namaP2)}` : '<span class="muted">Pasukan belum ditentukan</span>'}`;
+    }
+
+    function renderStandby() {
+      const grid = document.getElementById('sbGrid');
+      const resEl = document.getElementById('sbResult');
+      const sel = document.getElementById('sbTeam');
+      if (!grid || !resEl || !sel) return;
+      const filter = (state.ui && state.ui.kategori) || 'SEMUA';
+      const team = getStandbyTeam();
+      const norm = x => String(x || '').trim().toUpperCase();
+      const isMine = m => !!team && !!m && (norm(m.namaP1) === norm(team) || norm(m.namaP2) === norm(team));
+
+      const rows = state.courts
+        .filter(c => filter === 'SEMUA' || c.kategori === filter)
+        .map(c => ({ court: c, d: courtDisplay(c) }));
+
+      // Senarai pasukan untuk carian
+      const names = new Set();
+      state.matches.forEach(m => {
+        if (filter !== 'SEMUA' && m.kategori !== filter) return;
+        [m.namaP1, m.namaP2].forEach(n => { if (n && !isPlaceholderName(n)) names.add(String(n).trim()); });
+      });
+      rows.forEach(({ d }) => [d.match].concat(d.queue).forEach(m => {
+        if (m) [m.namaP1, m.namaP2].forEach(n => { if (n && !isPlaceholderName(n)) names.add(String(n).trim()); });
+      }));
+      if (team) names.add(team);
+      const list = Array.from(names).sort((a, b) => a.localeCompare(b));
+      const sig = list.join('|');
+      if (sel.dataset.sig !== sig) {
+        sel.innerHTML = '<option value="">— Pilih sekolah —</option>' +
+          list.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+        sel.dataset.sig = sig;
+      }
+      if (sel.value !== team) sel.value = team;
+
+      // Kad setiap gelanggang
+      grid.innerHTML = rows.map(({ court, d }) => {
+        const v = d.v;
+        const cur = d.match;
+        let curTag = '<span class="sb-tag t-ready">Menunggu sepak mula</span>';
+        if (isCourtPaused(v)) curTag = '<span class="sb-tag t-live">⏸ Rehat</span>';
+        else if (v.status === COURT_STATUS.LIVE) curTag = `<span class="sb-tag t-live">🔴 Live ${v.skorLiveP1}-${v.skorLiveP2}</span>`;
+        else if (v.status === COURT_STATUS.TAMAT) curTag = '<span class="sb-tag t-done">Tamat</span>';
+        else if (v.ditangguh) curTag = '<span class="sb-tag t-live">Ditangguhkan</span>';
+        const sb = d.queue[0] || null;
+        const later = d.queue.slice(1, 3);
+        const hint = !cur || v.status === COURT_STATUS.TAMAT
+          ? `Sila bersedia di tepi Gelanggang ${escapeHtml(court.id)} — akan dipanggil masuk sebentar lagi.`
+          : `Sila bersedia di tepi Gelanggang ${escapeHtml(court.id)} sekarang.`;
+        return `
+          <div class="sb-card">
+            <div class="sb-card-top"><strong>Gelanggang ${escapeHtml(court.id)}</strong><span>${escapeHtml(court.kategoriNama || court.kategori || '')}</span></div>
+            <div>
+              <div class="sb-label">Di gelanggang</div>
+              <div class="sb-now ${isMine(cur) ? 'sb-mine' : ''}">${cur ? sbMatchLine(cur) + curTag : '<span class="sb-empty">Tiada perlawanan</span>'}</div>
+            </div>
+            <div class="sb-standby ${isMine(sb) ? 'sb-mine' : ''}">
+              <div class="sb-label">🟡 Standby · Seterusnya</div>
+              ${sb ? `<div class="sb-match">${sbMatchLine(sb)}</div><div class="sb-hint">${hint}</div>` : '<div class="sb-empty">Tiada perlawanan seterusnya</div>'}
+            </div>
+            ${later.length ? `<div>
+              <div class="sb-label">Selepas itu</div>
+              <ul class="sb-later">${later.map(m => `<li class="${isMine(m) ? 'sb-mine' : ''}">${sbMatchLine(m)}</li>`).join('')}</ul>
+            </div>` : ''}
+          </div>`;
+      }).join('') || '<div class="sb-empty">Tiada gelanggang untuk kategori ini.</div>';
+
+      // Keputusan carian pasukan
+      if (!team) { resEl.innerHTML = ''; return; }
+      let found = null;
+      rows.forEach(({ court, d }) => {
+        if (found) return;
+        if (isMine(d.match)) { found = { court, d, pos: -1, m: d.match }; return; }
+        const i = d.queue.findIndex(isMine);
+        if (i >= 0) found = { court, d, pos: i, m: d.queue[i] };
+      });
+      let cls = '', html = '';
+      if (!found) {
+        html = `ℹ️ <strong>${escapeHtml(team)}</strong> tiada dalam giliran terdekat mana-mana gelanggang.<small>Semak tab Jadual Penuh untuk perlawanan anda yang lain.</small>`;
+      } else {
+        const g = escapeHtml(found.court.id);
+        const lawan = norm(found.m.namaP1) === norm(team) ? found.m.namaP2 : found.m.namaP1;
+        const vs = `${escapeHtml(found.m.id)} · lawan <strong>${escapeHtml(lawan || '-')}</strong>`;
+        const v = found.d.v;
+        if (found.pos === -1 && v.status === COURT_STATUS.LIVE) {
+          cls = 'is-live'; html = `🔴 <strong>${escapeHtml(team)}</strong> sedang bermain di <strong>Gelanggang ${g}</strong> (${vs}).`;
+        } else if (found.pos === -1 && v.status === COURT_STATUS.TAMAT) {
+          cls = 'is-now'; html = `✅ Perlawanan <strong>${escapeHtml(team)}</strong> di Gelanggang ${g} telah tamat (${vs}).<small>Menunggu pengesahan keputusan oleh urusetia.</small>`;
+        } else if (found.pos === -1) {
+          cls = 'is-now'; html = `⚽ <strong>${escapeHtml(team)}</strong>: sila masuk ke <strong>Gelanggang ${g}</strong> sekarang (${vs}). Menunggu sepak mula.`;
+        } else if (found.pos === 0) {
+          cls = 'is-standby'; html = `🟡 <strong>${escapeHtml(team)}</strong>: sila <strong>STANDBY di tepi Gelanggang ${g}</strong> sekarang — anda perlawanan seterusnya (${vs}).`;
+        } else {
+          html = `⏳ <strong>${escapeHtml(team)}</strong>: Gelanggang ${g} · ${found.pos} perlawanan lagi sebelum anda masuk standby (${vs}).<small>Paparan ini dikemas kini automatik.</small>`;
+        }
+      }
+      resEl.innerHTML = `<div class="sb-result ${cls}">${html}</div>`;
     }
 
     function updateBoardTimers() {
