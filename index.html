@@ -640,6 +640,20 @@
     .tangguh-opts label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); cursor: pointer; background: var(--glass); }
     .tangguh-opts label:has(input:checked) { border-color: var(--accent); background: rgba(255,181,71,.08); }
     .tangguh-opts small { display: block; color: var(--text-2); }
+
+    /* FASA 4: PEMBETULAN MARKAH (MASTER ADMIN) */
+    .badge-fix { color: var(--accent); background: rgba(255,181,71,.12); border-color: rgba(255,181,71,.45); }
+    .corr-old { font-size: .8rem; color: var(--text-2); margin-bottom: 10px; }
+    .corr-scores { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; margin-bottom: 12px; }
+    .corr-scores .field { margin: 0; }
+    .corr-scores .input { text-align: center; font-family: var(--font-mono); font-size: 1.4rem; font-weight: 800; }
+    .corr-team { display: block; font-size: .8rem; font-weight: 700; color: var(--text-1); margin-bottom: 4px; min-height: 2.3em; }
+    .corr-vs { padding-bottom: 12px; color: var(--text-2); font-weight: 800; }
+    .impact-box { display: grid; gap: 10px; margin: 12px 0; padding: 12px; border-radius: 12px; background: rgba(0,0,0,.25); border: 1px solid var(--glass-border); font-size: .8rem; }
+    .impact-sec h4 { font-size: .8rem; font-weight: 800; margin-bottom: 4px; color: var(--text-0); }
+    .impact-sec ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; color: var(--text-1); }
+    .impact-sec.danger h4 { color: #fda4af; }
+    .impact-sec.warn h4 { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -918,6 +932,36 @@
           </div>
 
           <div class="admin-grid">
+            <!-- FASA 4: Pembetulan Markah (Master Admin sahaja) -->
+            <div class="card glass" id="correctionCard" style="grid-column: 1 / -1; padding: 0; overflow: hidden;">
+              <div class="card-bar">
+                <div>
+                  <h3 class="card-title" style="margin:0;">✏️ Pembetulan Markah <span class="badge badge-fix">Master Admin Sahaja</span></h3>
+                  <p class="muted" style="font-size:.8rem;margin-top:4px;">Betulkan kesilapan markah pengadil bagi keputusan yang telah <strong>DISAHKAN</strong>. Pengadil &amp; Urusetia tidak boleh mengubah keputusan ini. Carta liga, kedudukan &amp; jadual perlawanan seterusnya dirombak automatik.</p>
+                </div>
+              </div>
+              <div class="ref-toolbar">
+                <input type="search" class="input" id="correctionSearch" placeholder="🔍 Cari ID / pasukan..." />
+                <span class="badge" id="correctionSummary">0 keputusan</span>
+              </div>
+              <div class="table-wrap" style="max-height: 460px; overflow-y: auto;">
+                <table class="data-table" id="correctionTable">
+                  <thead>
+                    <tr><th>ID</th><th>Kat.</th><th>Peringkat</th><th>Pasukan 1</th><th class="num">Skor</th><th>Pasukan 2</th><th>Disahkan Oleh</th><th>Tindakan</th></tr>
+                  </thead>
+                  <tbody id="correctionBody"><!-- Dijana oleh renderCorrections() --></tbody>
+                </table>
+              </div>
+              <div class="table-wrap" style="border-top:1px solid var(--glass-border);">
+                <table class="data-table" id="correctionLogTable">
+                  <thead>
+                    <tr><th>Masa</th><th>Match</th><th>Skor Lama → Baharu</th><th>Sebab</th><th>Kesan Rombakan</th><th>Sheets</th><th>Oleh</th></tr>
+                  </thead>
+                  <tbody id="correctionLogBody"><!-- Log pembetulan --></tbody>
+                </table>
+              </div>
+            </div>
+
             <!-- Pangkalan data pengadil -->
             <div class="card glass" id="refereeCard" style="grid-column: 1 / -1; padding: 0; overflow: hidden;">
               <div class="card-bar">
@@ -927,7 +971,7 @@
                 </div>
                 <div class="row-actions">
                   <button type="button" class="btn btn-sm" id="btnToggleRefPw">👁 Tunjuk Semua Kata Laluan</button>
-                  <button type="button" class="btn btn-sm" id="btnPullReferees" title="Muat turun senarai pengadil daripada Google Sheets">⬇ Tarik dari Sheets</button>
+                  <button type="button" class="btn btn-sm" id="btnPullReferees" title="Padankan senarai peranti ini dengan Google Sheets (ambil yang baharu & muat naik yang belum ada)">🔄 Segerak dengan Sheets</button>
                   <button type="button" class="btn btn-sm" id="btnPushReferees" title="Hantar keseluruhan senarai pengadil ke Google Sheets">⬆ Hantar ke Sheets</button>
                   <button type="button" class="btn btn-primary btn-sm" id="btnAddReferee">＋ Tambah Pengadil</button>
                 </div>
@@ -1194,6 +1238,67 @@
     </div>
   </div>
 
+  <!-- =========================================================
+       MODAL: PEMBETULAN MARKAH (FASA 4 - MASTER ADMIN SAHAJA)
+       ========================================================= -->
+  <div class="modal-backdrop" id="correctionModal" role="dialog" aria-modal="true" aria-labelledby="correctionTitle">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <div>
+          <h3 id="correctionTitle">✏️ Pembetulan Markah</h3>
+          <p id="corrMatchInfo">-</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal="correctionModal" aria-label="Tutup">×</button>
+      </div>
+      <form id="correctionForm" autocomplete="off">
+        <div class="corr-old" id="corrOldScore"></div>
+        <div class="corr-scores">
+          <div class="field">
+            <label for="corrScore1" class="corr-team" id="corrTeam1">Pasukan 1</label>
+            <input type="number" class="input" id="corrScore1" min="0" max="99" step="1" inputmode="numeric" />
+          </div>
+          <div class="corr-vs">–</div>
+          <div class="field">
+            <label for="corrScore2" class="corr-team" id="corrTeam2">Pasukan 2</label>
+            <input type="number" class="input" id="corrScore2" min="0" max="99" step="1" inputmode="numeric" />
+          </div>
+        </div>
+        <div class="field hidden" id="corrPenaltyField">
+          <label for="corrPenalty">Pemenang Penalti (kalah mati seri)</label>
+          <select class="select" id="corrPenalty">
+            <option value="">— Pilih pemenang —</option>
+            <option value="P1" id="corrPenP1">Pasukan 1</option>
+            <option value="P2" id="corrPenP2">Pasukan 2</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="corrReason">Sebab pembetulan (wajib)</label>
+          <select class="select" id="corrReason">
+            <option>Pengadil tersilap tekan skor</option>
+            <option>Gol tidak dikira / tertinggal</option>
+            <option>Skor tertukar antara pasukan</option>
+            <option>Keputusan penalti tersilap</option>
+            <option>Bantahan rasmi diterima</option>
+            <option>Lain-lain</option>
+          </select>
+          <input type="text" class="input" id="corrReasonText" maxlength="200" placeholder="Butiran tambahan (wajib jika Lain-lain)" style="margin-top:6px;" />
+        </div>
+        <div class="tangguh-opts">
+          <label><input type="radio" name="corrMode" value="MAIN_SEMULA" checked />
+            <span><strong>Rombak penuh (disyorkan)</strong><small>Perlawanan susulan yang telah dimainkan dengan pasukan yang salah dibatalkan &amp; dijadualkan semula dengan pasukan yang betul.</small></span></label>
+          <label><input type="radio" name="corrMode" value="KEKAL" />
+            <span><strong>Kekalkan perlawanan yang telah dimainkan</strong><small>Hanya perlawanan yang belum bermula dirombak. Perlawanan yang telah dimainkan ditanda untuk semakan manual.</small></span></label>
+        </div>
+        <div class="impact-box" id="corrImpact"></div>
+        <div class="form-msg" id="corrMsg"></div>
+        <div class="modal-foot">
+          <button type="button" class="btn" data-close-modal="correctionModal">Batal</button>
+          <button type="submit" class="btn btn-warn" id="btnCorrSubmit">💾 Simpan Pembetulan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Bekas notifikasi -->
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
@@ -1208,7 +1313,9 @@
     // URL Web App Google Apps Script lalai untuk SEMUA peranti (termasuk telefon pengadil).
     // Isi di sini supaya pengadil boleh log masuk dari mana-mana peranti. URL yang disimpan
     // dalam Tetapan Master Admin akan mengatasi nilai ini pada peranti tersebut.
-    const DEFAULT_GAS_URL = '';
+    // PENTING: jika anda deploy dengan "New deployment" (URL baharu), tukar URL di bawah.
+    // "Manage deployments > Edit > New version" mengekalkan URL yang sama.
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycby3Yaky1bgnTXy0WMXB5kTBME5D9YOO1iK2mtN79WQcwIGnwJkstec6oJpr7zT1V0in/exec';
     const ADMIN_KEY_STORAGE = 'FUTSAL_PK_KBB_ADMIN_KEY';
 
     const EVENTS = {
@@ -1471,6 +1578,7 @@
         users: deepClone(INITIAL_USERS),
         referees: deepClone(INITIAL_REFEREES),
         approvalLog: [],                 // { masa, matchId, keputusan, tindakan, oleh }
+        correctionLog: [],               // FASA 4: { masa, matchId, lama, baharu, sebab, mod, kesan, versi, oleh }
         drawXY: { X1: null, X2: null, X3: null, Y1: null, Y2: null, Y3: null },
         session: null,                   // { userId, nama, peranan, aksesGelanggang, masaLogMasuk }
         ui: { kategori: 'SEMUA', activeTab: 'tab-live' },
@@ -1500,6 +1608,11 @@
     }
 
     let state = loadState();
+    // FASA 4: konteks enjin rombakan pembetulan markah (aktif hanya semasa Master Admin membetulkan)
+    let reshuffleCtx = null;
+    let correctionTarget = null;
+    let correctionBusy = false;
+    let correctionPreviewTimer = null;
 
     function saveState() {
       try {
@@ -1582,6 +1695,7 @@
         if (typeof c.skorLiveP2 !== 'number') c.skorLiveP2 = Number(c.skorLiveP2) || 0;
       });
       if (!Array.isArray(state.approvalLog)) state.approvalLog = [];
+      if (!Array.isArray(state.correctionLog)) state.correctionLog = [];   // FASA 4
       if (!state.ui) state.ui = { kategori: 'SEMUA', activeTab: 'tab-live' };
 
       // MIGRASI: buang sepenuhnya akaun PIN setiap gelanggang (PENGADIL-A..D) & rujukannya
@@ -1891,14 +2005,24 @@
           ref = cacheReferee(res.pengadil, password);
           token = res.token || null;
           serverKunci = res.kunci || null;
+        } else if (res.kod === 'SKRIP_LAMA') {
+          setFormMsg(msgEl, res.error, 'error');
+          return false;
         } else if (!res.networkError) {
-          return loginFailed(msgEl, res.error || 'Nama ringkas atau kata laluan tidak sah.', pwEl);
+          return loginFailed(msgEl, (res.error || 'Nama ringkas atau kata laluan tidak sah.') +
+            ' (Disemak dengan Google Sheets. Pastikan akaun bertanda ☁ Sheets di panel Master Admin.)', pwEl);
         }
         // Ralat rangkaian -> semak senarai dalam peranti ini
       }
       if (!ref) {
         ref = state.referees.find(r => refNameKey(r.nama) === refNameKey(nama) && String(r.password) === password) || null;
-        if (!ref) return loginFailed(msgEl, 'Nama ringkas atau kata laluan pengadil tidak sah.', pwEl);
+        if (!ref && !url) {
+          setFormMsg(msgEl, 'Peranti ini belum disambung ke Google Sheets, jadi akaun pengadil tidak dapat disemak. Buka "Pautan Peranti" daripada Master Admin.', 'error');
+          return false;
+        }
+        if (!ref) return loginFailed(msgEl, navigator.onLine
+          ? 'Nama ringkas atau kata laluan pengadil tidak sah.'
+          : 'Tiada internet: akaun tidak dapat disemak dengan Google Sheets.', pwEl);
       }
       if (ref.status !== 'AKTIF') {
         return loginFailed(msgEl, 'Akaun pengadil ini telah digantung. Hubungi Master Admin.', pwEl);
@@ -3967,10 +4091,19 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
        masih MENUNGGU GILIRAN (perlawanan yang telah bermula dikunci).
        --------------------------------------------------------- */
     function setMatchSide(match, side, name, changes) {
-      if (!match || match.status !== MATCH_STATUS.MENUNGGU) return false;
+      if (!match) return false;
       const key = side === 1 ? 'namaP1' : 'namaP2';
       if (!name || match[key] === name) return false;
+      if (match.status !== MATCH_STATUS.MENUNGGU) {
+        // FASA 4: hanya enjin rombakan pembetulan (Master Admin) boleh menyentuh
+        // perlawanan yang telah bermula / selesai.
+        if (!reshuffleCtx) return false;
+        reshuffleCtx.noteConflict(match, side, name);
+        if (!reshuffleCtx.replay || match.status === MATCH_STATUS.LIVE) return false;
+        voidMatchForReplay(match, reshuffleCtx.reason);
+      }
       match[key] = name;
+      if (reshuffleCtx) reshuffleCtx.passChanges += 1;
       if (changes && !isPlaceholderName(name)) changes.push(`${match.id}: ${name}`);
       return true;
     }
@@ -4012,7 +4145,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     function generateSRGroupXY(changes = []) {
       const { complete, pool } = getSRQualifierPool();
       const xyMatches = srXYMatches();
-      const locked = xyMatches.some(m => m.status !== MATCH_STATUS.MENUNGGU);
+      // FASA 4: rombakan penuh selepas pembetulan boleh membuka semula undian X/Y
+      const locked = !(reshuffleCtx && reshuffleCtx.replay) && xyMatches.some(m => m.status !== MATCH_STATUS.MENUNGGU);
 
       if (!complete) {
         // Kumpulan A/B/C belum lengkap: kekalkan slot X/Y sebagai "(MENUNGGU UNDIAN)"
@@ -4481,7 +4615,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           <hr style="border:0;border-top:1px solid var(--glass-border);margin:16px 0;" />
           <div class="field">
             <label for="gasUrl">URL Web App Google Apps Script</label>
-            <input type="url" class="input" id="gasUrl" placeholder="https://script.google.com/macros/s/AKfycby7DhjJgnhZvvRRFViLMEcMB4cWTeXPMD__HqqSgXnNK24RFa0qlI2b6guzY0BXRTNf/exec" />
+            <input type="url" class="input" id="gasUrl" placeholder="https://script.google.com/macros/s/AKfycby3Yaky1bgnTXy0WMXB5kTBME5D9YOO1iK2mtN79WQcwIGnwJkstec6oJpr7zT1V0in/exec" />
           </div>
           <label style="display:flex;gap:8px;align-items:center;font-size:.84rem;margin-bottom:12px;cursor:pointer;">
             <input type="checkbox" id="gasAutoSync" /> Sync automatik selepas setiap pengesahan
@@ -4489,12 +4623,17 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button type="button" class="btn btn-sm" id="btnSaveGas">💾 Simpan URL</button>
             <button type="button" class="btn btn-primary btn-sm" id="btnSyncGas">☁ Sync ke Google Sheets</button>
+            <button type="button" class="btn btn-sm" id="btnCheckGas">🔌 Semak Sambungan</button>
+            <button type="button" class="btn btn-sm" id="btnCopyDeviceLink" title="Pautan yang menyambungkan peranti pengadil ke Google Sheets ini">📋 Salin Pautan Peranti</button>
           </div>
+          <div class="hint-box" id="gasCheckInfo" style="margin-top:10px;"></div>
           <div class="hint-box" id="gasSyncInfo">Belum pernah sync.</div>`;
         grid.appendChild(card);
         document.getElementById('btnCreateEvent').addEventListener('click', createNewEvent);
         document.getElementById('btnSaveGas').addEventListener('click', saveGasUrl);
         document.getElementById('btnSyncGas').addEventListener('click', () => syncToGoogleSheets());
+        document.getElementById('btnCheckGas').addEventListener('click', checkGasConnection);
+        document.getElementById('btnCopyDeviceLink').addEventListener('click', copyDeviceLink);
         document.getElementById('gasAutoSync').addEventListener('change', (e) => {
           state.settings.autoSync = !!e.target.checked;
           saveState();
@@ -4504,7 +4643,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const ev = document.getElementById('currentEventName');
       if (ev) ev.textContent = (state.events.SR && state.events.SR.nama) || '-';
       const urlInput = document.getElementById('gasUrl');
-      if (urlInput && document.activeElement !== urlInput) urlInput.value = state.settings.gasUrl || '';
+      if (urlInput && document.activeElement !== urlInput) urlInput.value = getGasUrl();
+      const chk = document.getElementById('gasCheckInfo');
+      if (chk) chk.textContent = state.settings.gasCheck || 'Tekan "🔌 Semak Sambungan" untuk memastikan Google Sheets & Code.gs terkini berfungsi.';
       const auto = document.getElementById('gasAutoSync');
       if (auto) auto.checked = !!state.settings.autoSync;
       const info = document.getElementById('gasSyncInfo');
@@ -4524,6 +4665,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       set('statUsers', state.users.filter(u => u.status === 'AKTIF' && u.peranan !== 'PENGADIL').length);
       set('statReferees', (state.referees || []).filter(r => r.status === 'AKTIF').length);
       if (!canManageSystem()) return;
+      if (!refReconcileDone && getGasUrl() && getAdminKey()) {
+        refReconcileDone = true;
+        setTimeout(() => reconcileReferees({ silent: true }), 300);
+      }
+      renderCorrections();   // FASA 4
       renderReferees();
       renderUsers();
       renderDrawSlots();
@@ -4593,6 +4739,24 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return court && court.matchSemasa === match.id && court.pengadil ? court.pengadil : '';
     }
 
+    // Satu baris perlawanan -> format lajur Jadual_Perlawanan (digunakan oleh syncAll & pembetulan)
+    function syncMatchRow(m) {
+      const court = state.courts.find(c => c.matchSemasa === m.id);
+      const fasaMasa = court && court.status === COURT_STATUS.LIVE
+        ? (COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa)
+        : (m.status === MATCH_STATUS.SELESAI || m.status === MATCH_STATUS.TUNGGU_SAH ? 'Tamat' : 'Belum Bermula');
+      return {
+        id: m.id, kategori: m.kategori, no: m.no, peringkat: m.peringkat, kumpulan: m.kumpulan,
+        kodP1: m.kodP1, namaP1: m.namaP1, skorP1: m.skorP1, skorP2: m.skorP2, namaP2: m.namaP2, kodP2: m.kodP2,
+        gelanggang: m.gelanggang, fasa: m.fasa, fasaMasa: fasaMasa,
+        status: m.status, pengesahan: m.pengesahan, pengadil: refereeName(m),
+        pemenangPenalti: m.pemenangPenalti ? (m.pemenangPenalti === 'P1' ? m.namaP1 : m.namaP2) : '',
+        masaMula: m.masaMula, masaTamat: m.masaTamat,
+        disahkanOleh: m.disahkanOleh, disahkanPada: m.disahkanPada, catatan: m.catatan,
+        versiPembetulan: m.versiPembetulan || ''   // FASA 4: cop versi daripada pelayan
+      };
+    }
+
     // Medan 'matches' sepadan dengan lajur tab Jadual_Perlawanan (lihat Code.gs)
     function buildSyncPayload() {
       const standings = [];
@@ -4606,21 +4770,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         sumber: 'LIVE-FUTSAL-PK-KBB',
         dihantarPada: nowIso(),
         events: state.events,
-        matches: state.matches.map(m => {
-          const court = state.courts.find(c => c.matchSemasa === m.id);
-          const fasaMasa = court && court.status === COURT_STATUS.LIVE
-            ? (COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa)
-            : (m.status === MATCH_STATUS.SELESAI || m.status === MATCH_STATUS.TUNGGU_SAH ? 'Tamat' : 'Belum Bermula');
-          return {
-            id: m.id, kategori: m.kategori, no: m.no, peringkat: m.peringkat, kumpulan: m.kumpulan,
-            kodP1: m.kodP1, namaP1: m.namaP1, skorP1: m.skorP1, skorP2: m.skorP2, namaP2: m.namaP2, kodP2: m.kodP2,
-            gelanggang: m.gelanggang, fasa: m.fasa, fasaMasa: fasaMasa,
-            status: m.status, pengesahan: m.pengesahan, pengadil: refereeName(m),
-            pemenangPenalti: m.pemenangPenalti ? (m.pemenangPenalti === 'P1' ? m.namaP1 : m.namaP2) : '',
-            masaMula: m.masaMula, masaTamat: m.masaTamat,
-            disahkanOleh: m.disahkanOleh, disahkanPada: m.disahkanPada, catatan: m.catatan
-          };
-        }),
+        // FASA 4: kunci Master Admin dihantar supaya pelayan menerima perubahan keputusan
+        // DISAHKAN hanya daripada Master Admin (Urusetia / pengadil ditolak di pelayan).
+        adminKey: canManageSystem() ? (getAdminKey() || undefined) : undefined,
+        matches: state.matches.map(syncMatchRow),
         standings,
         courts: state.courts.map(c => ({ id: c.id, status: c.status, matchSemasa: c.matchSemasa, fasaMasa: c.fasaMasa, skor: `${c.skorLiveP1}-${c.skorLiveP2}` })),
         approvalLog: state.approvalLog.slice(0, 200)
@@ -4797,6 +4950,72 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return pin.trim();
     }
 
+    const MATCH_GAS_ACTIONS = ['syncAll', 'updateMatch', 'updateMatches'];
+    const GAS_OLD_MSG = 'Google Sheets masih menggunakan Code.gs versi LAMA, jadi akaun pengadil tidak dapat disimpan / disemak. ' +
+      'Master Admin: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy.';
+
+    // FASA 4.1: pautan peranti (?gas=URL) -> sambungkan peranti ini ke Google Sheets yang sama
+    function applyGasUrlFromLink() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const g = (params.get('gas') || '').trim();
+        if (!g) return;
+        params.delete('gas');
+        const qs = params.toString();
+        history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+        if (!/^https:\/\/script\.google(usercontent)?\.com\/.+/i.test(g)) return;
+        if (state.settings.gasUrl !== g) {
+          state.settings.gasUrl = g;
+          saveState();
+          showToast('✅ Peranti ini kini disambung ke Google Sheets kejohanan.', 'success', 4500);
+        }
+      } catch (err) { /* abaikan */ }
+    }
+
+    function deviceLink() {
+      const url = getGasUrl();
+      return `${location.origin}${location.pathname}?gas=${encodeURIComponent(url)}`;
+    }
+
+    async function copyDeviceLink() {
+      if (!getGasUrl()) { showToast('Sila simpan URL Google Apps Script dahulu.', 'warn'); return; }
+      const link = deviceLink();
+      try {
+        await navigator.clipboard.writeText(link);
+        showToast('Pautan peranti disalin. Hantar kepada pengadil (buka sekali di telefon mereka).', 'success', 5000);
+      } catch (err) {
+        window.prompt('Salin pautan ini dan buka di peranti pengadil:', link);
+      }
+    }
+
+    // Semak URL & versi Code.gs yang di-deploy
+    async function checkGasConnection() {
+      const url = getGasUrl();
+      if (!url) { showToast('Sila simpan URL Google Apps Script dahulu.', 'warn'); return false; }
+      const btn = document.getElementById('btnCheckGas');
+      if (btn) btn.disabled = true;
+      let msg = '';
+      let ok = false;
+      try {
+        const sep = url.includes('?') ? '&' : '?';
+        const res = await fetch(`${url}${sep}action=ping&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        const data = JSON.parse(await res.text());
+        if (!data || !data.ok) msg = `⚠ Google Sheets membalas ralat: ${(data && data.error) || 'tidak diketahui'}`;
+        else if (!data.versi) msg = '⚠ ' + GAS_OLD_MSG;
+        else { ok = true; msg = `✅ Bersambung ke Google Sheets (Code.gs v${data.versi}).`; }
+      } catch (err) {
+        msg = '⚠ Tidak dapat menghubungi URL Google Apps Script. Semak URL & akses deployment ("Anyone").';
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+      state.settings.gasCheck = `${new Date().toLocaleString('ms-MY')} · ${msg}`;
+      saveState();
+      renderAdminExtras();
+      showToast(msg, ok ? 'success' : 'error', ok ? 3500 : 8000);
+      if (ok && canManageSystem()) await reconcileReferees({ prompt: true });
+      return ok;
+    }
+
     // POST text/plain ke Apps Script (tanpa preflight CORS) & baca respons JSON.
     async function callGas(payload) {
       const url = getGasUrl();
@@ -4810,7 +5029,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         });
         const text = await res.text();
         try {
-          return JSON.parse(text);
+          const data = JSON.parse(text);
+          // FASA 4.1: Code.gs lama tidak mengenali tindakan pengadil -> mesej yang jelas
+          if (data && data.ok === false && payload && payload.action &&
+              !MATCH_GAS_ACTIONS.includes(payload.action) &&
+              /Tiada data perlawanan diterima|Tindakan tidak dikenali/i.test(String(data.error || ''))) {
+            return { ok: false, kod: 'SKRIP_LAMA', error: GAS_OLD_MSG };
+          }
+          return data;
         } catch (err) {
           return { ok: false, networkError: true, error: 'Respons Google Sheets tidak sah. Pastikan Code.gs terkini telah di-deploy.' };
         }
@@ -4865,6 +5091,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         state.referees.push(ref);
       }
       Object.assign(ref, {
+        sheetSync: true,
         id: data.id || ref.id,
         nama: data.nama || ref.nama,
         status: data.status || ref.status,
@@ -4891,16 +5118,23 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         setRefSyncInfo('Belum disegerak ke Google Sheets (PIN Master Admin diperlukan).');
         return;
       }
+      if (op === 'padam' && ref.sheetSync !== true) {
+        // Belum pernah sampai ke Sheets -> padam dalam peranti ini sahaja (elak padam ID orang lain)
+        setRefSyncInfo(`${ref.nama} dipadam daripada peranti ini.`);
+        return;
+      }
       const payload = op === 'padam'
         ? { action: 'padamPengadil', adminKey, id: ref.id }
-        : { action: 'simpanPengadil', adminKey, pengadil: ref };
+        : { action: 'simpanPengadil', adminKey, pengadil: Object.assign({}, ref, { id: ref.sheetSync === true ? ref.id : '' }) };
       const res = await callGas(payload);
       if (res.ok) {
         if (res.pengadil && res.pengadil.id && res.pengadil.id !== ref.id) {
           // Pelayan menetapkan ID baharu (elak pertindihan)
-          const local = getRefereeById(ref.id);
-          if (local) local.id = res.pengadil.id;
+          remapRefereeId(ref.id, res.pengadil.id);
         }
+        const local = getRefereeById((res.pengadil && res.pengadil.id) || ref.id);
+        if (local && op !== 'padam') local.sheetSync = true;
+        saveState();
         setRefSyncInfo(`✅ ${op === 'padam' ? 'Padam' : 'Simpan'} ${ref.nama} disegerak ke Google Sheets.`);
         refreshAllViews();
       } else {
@@ -4924,7 +5158,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return true;
     }
 
-    function handleRefereeSubmit(event) {
+    // FASA 4.1: akaun disimpan ke Google Sheets DAHULU. Jika gagal, akaun TIDAK dicipta,
+    // supaya Master Admin tahu serta-merta (bukan hanya tersimpan dalam peranti ini).
+    async function handleRefereeSubmit(event) {
       if (event && typeof event.preventDefault === 'function') event.preventDefault();
       const msgEl = document.getElementById('refereeMsg');
       if (!canManageSystem()) {
@@ -4941,29 +5177,160 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
 
       const now = nowIso();
-      let ref;
-      if (editId) {
-        ref = getRefereeById(editId);
-        if (!ref) {
-          setFormMsg(msgEl, 'Pengadil tidak dijumpai.', 'error');
+      const editing = editId ? getRefereeById(editId) : null;
+      if (editId && !editing) {
+        setFormMsg(msgEl, 'Pengadil tidak dijumpai.', 'error');
+        return false;
+      }
+      const draft = editing
+        ? Object.assign({}, editing, { nama, password, dikemaskini: now })
+        : { id: generateRefereeId(), nama, password, status: 'AKTIF', dicipta: now, dikemaskini: now, loginTerakhir: null, diciptaOleh: getSession().userId };
+
+      let serverRef = null;
+      if (getGasUrl()) {
+        const adminKey = ensureAdminKey();
+        if (!adminKey) {
+          setFormMsg(msgEl, 'PIN Master Admin diperlukan untuk menyimpan akaun ke Google Sheets. Akaun BELUM disimpan.', 'error');
           return false;
         }
+        const btn = document.getElementById('btnRefereeSubmit');
+        if (btn) btn.disabled = true;
+        setFormMsg(msgEl, '☁ Menyimpan ke Google Sheets...', '');
+        // Akaun yang belum ada di Sheets: biar pelayan tetapkan ID (elak bertindih dengan peranti lain)
+        const res = await callGas({ action: 'simpanPengadil', adminKey, pengadil: Object.assign({}, draft, { id: (editing && editing.sheetSync === true) ? editing.id : '' }) });
+        if (btn) btn.disabled = false;
+        if (!res.ok || !res.pengadil) {
+          if (res.kod === 'BUKAN_ADMIN') setAdminKey(null);
+          const why = res.kod === 'BUKAN_ADMIN'
+            ? 'PIN Master Admin dalam aplikasi tidak sama dengan PIN dalam Google Sheets (MASTER_ADMIN_PIN).'
+            : (res.error || 'ralat tidak diketahui');
+          setFormMsg(msgEl, `❌ Akaun BELUM disimpan ke Google Sheets: ${why}`, 'error');
+          setRefSyncInfo(`⚠ Gagal simpan ${nama}: ${why}`);
+          return false;
+        }
+        serverRef = res.pengadil;
+      }
+
+      let ref;
+      if (editing) {
+        ref = editing;
         const oldName = ref.nama;
         Object.assign(ref, { nama, password, dikemaskini: now });
-        // Kemas kini nama pada gelanggang yang sedang dipegang
         state.courts.forEach(c => { if (c.pengadilId === ref.id) c.pengadil = nama; });
         if (state.session && state.session.userId === ref.id) state.session.nama = nama;
         showToast(oldName !== nama ? `${oldName} kini dikenali sebagai ${nama}.` : `Maklumat ${nama} dikemas kini.`, 'success');
       } else {
-        ref = { id: generateRefereeId(), nama, password, status: 'AKTIF', dicipta: now, dikemaskini: now, loginTerakhir: null, diciptaOleh: getSession().userId };
+        ref = draft;
         state.referees.push(ref);
-        showToast(`Pengadil ${nama} (${ref.id}) berjaya dicipta.`, 'success');
+      }
+      if (serverRef) {
+        if (serverRef.id && serverRef.id !== ref.id) remapRefereeId(ref.id, serverRef.id);
+        ref.sheetSync = true;
+        setRefSyncInfo(`✅ ${ref.nama} (${ref.id}) disimpan dalam Google Sheets. Boleh log masuk dari mana-mana peranti.`);
+        if (!editing) showToast(`Pengadil ${nama} (${ref.id}) dicipta & disimpan dalam Google Sheets.`, 'success', 4500);
+      } else {
+        ref.sheetSync = false;
+        setRefSyncInfo(`⚠ ${ref.nama} disimpan dalam peranti ini SAHAJA (URL Google Apps Script belum ditetapkan).`);
+        if (!editing) showToast(`Pengadil ${nama} dicipta dalam peranti ini sahaja. Simpan URL Google Sheets supaya boleh log masuk di peranti lain.`, 'warn', 6000);
       }
       saveState();
       closeModal('refereeModal');
       refreshAllViews();
-      pushRefereeChange('simpan', ref);
       return true;
+    }
+
+    // Tukar ID pengadil (ID daripada Google Sheets) termasuk rujukan gelanggang & sesi
+    function remapRefereeId(oldId, newId) {
+      if (!oldId || !newId || oldId === newId) return;
+      const ref = getRefereeById(oldId);
+      if (ref) ref.id = newId;
+      state.courts.forEach(c => { if (c.pengadilId === oldId) c.pengadilId = newId; });
+      if (state.session && state.session.userId === oldId) state.session.userId = newId;
+      if (refPwVisible.has(oldId)) { refPwVisible.delete(oldId); refPwVisible.add(newId); }
+    }
+
+    // FASA 4.1: padankan senarai peranti ini dengan tab Senarai_Pengadil.
+    // - Akaun yang ada di Sheets -> diambil (Sheets ialah sumber sah).
+    // - Akaun peranti ini yang belum pernah sampai ke Sheets -> dimuat naik automatik.
+    // - Akaun yang pernah disegerak tetapi telah dipadam di Sheets -> dibuang daripada peranti ini.
+    let refReconcileDone = false;
+    let refReconcileBusy = false;
+    async function reconcileReferees(opts = {}) {
+      if (refReconcileBusy || !canManageSystem() || !getGasUrl() || !navigator.onLine) return false;
+      const adminKey = opts.prompt ? ensureAdminKey() : getAdminKey();
+      if (!adminKey) return false;
+      refReconcileBusy = true;
+      try {
+        const res = await callGas({ action: 'senaraiPengadil', adminKey });
+        if (!res.ok || !Array.isArray(res.pengadil)) {
+          if (res.kod === 'BUKAN_ADMIN') setAdminKey(null);
+          const why = res.kod === 'BUKAN_ADMIN'
+            ? 'PIN Master Admin dalam aplikasi tidak sama dengan PIN dalam Google Sheets.'
+            : (res.error || 'ralat tidak diketahui');
+          setRefSyncInfo(`⚠ Tidak dapat menyemak Google Sheets: ${why}`);
+          if (!opts.silent || res.kod === 'SKRIP_LAMA' || res.kod === 'BUKAN_ADMIN') showToast(`Google Sheets: ${why}`, 'error', 8000);
+          return false;
+        }
+        const fromServer = (sp) => ({
+          id: sp.id, nama: sp.nama, password: String(sp.password), status: sp.status || 'AKTIF',
+          dicipta: sp.dicipta || null, dikemaskini: sp.dikemaskini || null, loginTerakhir: sp.loginTerakhir || null,
+          sheetSync: true
+        });
+        const server = res.pengadil;
+        const byName = new Map(server.map(sp => [refNameKey(sp.nama), sp]));
+        const byId = new Map(server.map(sp => [sp.id, sp]));
+        const used = new Set();
+        const next = [];
+        const pending = [];
+        const remap = [];
+        let removed = 0;
+        state.referees.forEach(l => {
+          let sp = byName.get(refNameKey(l.nama));
+          if (!sp && l.sheetSync === true) sp = byId.get(l.id);   // dinamakan semula di peranti lain
+          if (sp && !used.has(sp.id)) {
+            used.add(sp.id);
+            if (sp.id !== l.id) remap.push([l.id, sp.id]);
+            next.push(fromServer(sp));
+            return;
+          }
+          if (l.sheetSync === true) { removed += 1; return; }
+          pending.push(l);
+        });
+        server.forEach(sp => { if (!used.has(sp.id)) { used.add(sp.id); next.push(fromServer(sp)); } });
+
+        let uploaded = 0;
+        const failed = [];
+        for (const l of pending) {
+          const r = await callGas({ action: 'simpanPengadil', adminKey, pengadil: Object.assign({}, l, { id: '' }) });
+          if (r.ok && r.pengadil) {
+            if (r.pengadil.id !== l.id) remap.push([l.id, r.pengadil.id]);
+            next.push(Object.assign(fromServer(r.pengadil), { password: String(l.password) }));
+            uploaded += 1;
+          } else {
+            next.push(Object.assign({}, l, { sheetSync: false }));
+            failed.push(`${l.nama} (${r.error || 'ralat'})`);
+          }
+        }
+        remap.forEach(([a, b]) => {
+          state.courts.forEach(c => { if (c.pengadilId === a) c.pengadilId = b; });
+          if (state.session && state.session.userId === a) state.session.userId = b;
+        });
+        state.referees = next;
+        normalizeState();
+        saveState();
+        refreshAllViews();
+        const parts = [`✅ ${server.length + uploaded} pengadil dalam Google Sheets`];
+        if (uploaded) parts.push(`${uploaded} dimuat naik daripada peranti ini`);
+        if (removed) parts.push(`${removed} dibuang (telah dipadam di Sheets)`);
+        if (failed.length) parts.push(`⚠ gagal: ${failed.join(', ')}`);
+        setRefSyncInfo(parts.join(' · '));
+        if (!opts.silent || uploaded || failed.length) {
+          showToast(failed.length ? `Sebahagian akaun gagal disimpan: ${failed.join(', ')}` : parts.join(' · '), failed.length ? 'warn' : 'success', 5500);
+        }
+        return !failed.length;
+      } finally {
+        refReconcileBusy = false;
+      }
     }
 
     function toggleRefereeStatus(refId) {
@@ -5027,24 +5394,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         showToast('Sila simpan URL Google Apps Script dahulu.', 'warn');
         return false;
       }
-      const adminKey = ensureAdminKey();
-      if (!adminKey) return false;
-      const res = await callGas({ action: 'senaraiPengadil', adminKey });
-      if (!res.ok || !Array.isArray(res.pengadil)) {
-        showToast(`Gagal menarik senarai: ${res.error || 'ralat tidak diketahui'}`, 'error', 4500);
-        return false;
-      }
-      if (!window.confirm(`Gantikan senarai pengadil dalam peranti ini (${state.referees.length}) dengan ${res.pengadil.length} pengadil daripada Google Sheets?`)) return false;
-      state.referees = res.pengadil.map(p => ({
-        id: p.id, nama: p.nama, password: String(p.password), status: p.status || 'AKTIF',
-        dicipta: p.dicipta || null, dikemaskini: p.dikemaskini || null, loginTerakhir: p.loginTerakhir || null
-      }));
-      normalizeState();
-      saveState();
-      refreshAllViews();
-      setRefSyncInfo(`✅ ${state.referees.length} pengadil ditarik daripada Google Sheets.`);
-      showToast('Senarai pengadil dikemas kini daripada Google Sheets.', 'success');
-      return true;
+      return reconcileReferees({ prompt: true });
     }
 
     async function pushAllReferees() {
@@ -5062,6 +5412,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         setRefSyncInfo(`⚠ Gagal hantar senarai: ${res.error || 'ralat'}`);
         return false;
       }
+      if (Array.isArray(res.pengadil) && res.pengadil.length === state.referees.length) {
+        const pairs = state.referees.map((r, i) => [r.id, res.pengadil[i].id]);
+        pairs.forEach(([a, b]) => { if (a !== b) remapRefereeId(a, b); });
+      }
+      state.referees.forEach(r => { r.sheetSync = true; });
+      saveState();
+      refreshAllViews();
       setRefSyncInfo(`✅ ${res.jumlah} pengadil dihantar ke Google Sheets.`);
       showToast('Senarai pengadil dihantar ke Google Sheets.', 'success');
       return true;
@@ -5101,7 +5458,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           <tr>
             <td class="num">${i + 1}</td>
             <td class="mono">${escapeHtml(r.id)}</td>
-            <td><strong>${escapeHtml(r.nama)}</strong>${court ? ` <small class="muted">· Gel. ${escapeHtml(court.id)}</small>` : ''}</td>
+            <td><strong>${escapeHtml(r.nama)}</strong>${court ? ` <small class="muted">· Gel. ${escapeHtml(court.id)}</small>` : ''}
+              ${r.sheetSync === true
+                ? '<span class="badge badge-ok" title="Disimpan dalam Google Sheets - boleh log masuk dari mana-mana peranti">☁ Sheets</span>'
+                : '<span class="badge badge-reject" title="Belum ada dalam Google Sheets - hanya boleh log masuk di peranti ini">⚠ Peranti ini sahaja</span>'}</td>
             <td>
               <span class="pw-cell">
                 <span>${show ? escapeHtml(r.password) : '••••••'}</span>
@@ -5199,6 +5559,425 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         : 'Kemaskini terakhir: -';
     }
 
+    /* ---------------------------------------------------------
+       4.9 FASA 4: PEMBETULAN MARKAH (MASTER ADMIN SAHAJA)
+           & ROMBAKAN AUTOMATIK PERLAWANAN
+       Aliran: Master Admin log masuk -> Dashboard (Tetapan Master Admin)
+               -> Pembetulan Markah -> pilih keputusan DISAHKAN -> skor betul
+               + sebab -> pratonton kesan -> Simpan.
+       - Kebenaran: HANYA peranan MASTER_ADMIN (disemak di sini DAN di pelayan
+         melalui adminKey). Pengadil & Urusetia tidak boleh membetulkan markah.
+       - Rombakan: carta liga dikira semula, undian X/Y dipetakan semula ikut
+         label (Johan A, Naib Johan B...), slot Johan / Naib Johan / Menang /
+         Kalah diisi semula. Perlawanan susulan yang telah dimainkan dengan
+         pasukan salah -> MAIN SEMULA (atau ditanda, jika mod KEKAL).
+       --------------------------------------------------------- */
+    // (Pemboleh ubah reshuffleCtx & correction* diisytiharkan selepas `let state` di atas)
+    const CORRECTION_MAX_PASSES = 12;
+
+    function canCorrectScore() {
+      const s = getSession();
+      return !!s && s.peranan === 'MASTER_ADMIN';
+    }
+
+    function correctionScoreText(skor1, skor2, pen, match) {
+      if (skor1 === null || skor1 === undefined) return '– : –';
+      const p = pen ? ` (pen. ${pen === 'P1' ? match.namaP1 : match.namaP2})` : '';
+      return `${Number(skor1) || 0} - ${Number(skor2) || 0}${p}`;
+    }
+
+    // Batalkan keputusan perlawanan susulan supaya dimain semula dengan pasukan betul
+    function voidMatchForReplay(match, reason) {
+      if (reshuffleCtx) reshuffleCtx.voided.set(match.id, {
+        status: match.status, namaP1: match.namaP1, namaP2: match.namaP2,
+        skor: correctionScoreText(match.skorP1, match.skorP2, match.pemenangPenalti, match)
+      });
+      Object.assign(match, {
+        status: MATCH_STATUS.MENUNGGU, skorP1: null, skorP2: null, pengesahan: 'MENUNGGU',
+        pemenangPenalti: null, masaMula: null, masaTamat: null, disahkanOleh: null, disahkanPada: null,
+        dihantarOleh: null, pengadil: null,
+        catatan: `Main semula: ${reason}`.slice(0, 300)
+      });
+    }
+
+    function snapshotStandings(kategori) {
+      return (STANDING_GROUPS[kategori] || []).map(g => ({
+        kumpulan: g,
+        rows: computeGroupStandings(kategori, g).rows.map(r => ({ kod: r.kod, nama: r.nama, pos: r.pos, Mata: r.Mata, PG: r.PG }))
+      }));
+    }
+
+    // Petakan semula undian X/Y ikut LABEL (cth: slot "Johan A" kekal Johan A walaupun pasukannya bertukar)
+    function remapDrawAfterCorrection(poolBefore) {
+      const now = getSRQualifierPool();
+      if (!now.complete || !state.drawXY) return [];
+      const map = {};
+      poolBefore.forEach(p => {
+        const q = now.pool.find(x => x.label === p.label);
+        if (q && q.teamId !== p.teamId) map[p.teamId] = q;
+      });
+      const moved = [];
+      SR_XY_SLOTS.forEach(slot => {
+        const id = state.drawXY[slot];
+        if (id && map[id]) { state.drawXY[slot] = map[id].teamId; moved.push(`${slot}: ${map[id].nama} (${map[id].label})`); }
+      });
+      return moved;
+    }
+
+    // Baca borang modal -> input pembetulan
+    function readCorrectionInput() {
+      const val = id => ((document.getElementById(id) || {}).value || '').trim();
+      const toScore = v => (v === '' || !/^\d{1,2}$/.test(v)) ? null : Number(v);
+      const jenis = val('corrReason');
+      const butiran = val('corrReasonText');
+      const modEl = document.querySelector('input[name="corrMode"]:checked');
+      return {
+        matchId: correctionTarget,
+        skorP1: toScore(val('corrScore1')),
+        skorP2: toScore(val('corrScore2')),
+        pemenangPenalti: val('corrPenalty') || null,
+        sebab: jenis === 'Lain-lain' ? butiran : (butiran ? `${jenis}: ${butiran}` : jenis),
+        mod: modEl && modEl.value === 'KEKAL' ? 'KEKAL' : 'MAIN_SEMULA'
+      };
+    }
+
+    // ENJIN: gunakan pembetulan pada `state` SEMASA & rombak jadual. Tiada simpan / toast.
+    function executeCorrection(input) {
+      const report = { ok: false, error: '', blockers: [], slots: [], voided: [], flagged: [], standings: [], draw: [], susulan: [], affectedIds: [], voidedIds: [] };
+      const match = getMatch(input.matchId);
+      if (!match) { report.error = 'Perlawanan tidak dijumpai.'; return report; }
+      if (!isApproved(match)) { report.error = `${match.id} belum DISAHKAN. Gunakan "Tolak" di Peti Kelulusan untuk keputusan yang belum disahkan.`; return report; }
+      const s1 = input.skorP1, s2 = input.skorP2;
+      if (!Number.isInteger(s1) || !Number.isInteger(s2) || s1 < 0 || s2 < 0 || s1 > 99 || s2 > 99) {
+        report.error = 'Skor mesti nombor bulat 0 hingga 99.'; return report;
+      }
+      const ko = isKnockout(match);
+      let pen = null;
+      if (ko && s1 === s2) {
+        if (input.pemenangPenalti !== 'P1' && input.pemenangPenalti !== 'P2') { report.error = 'Perlawanan kalah mati seri: pilih pemenang penalti.'; return report; }
+        pen = input.pemenangPenalti;
+      }
+      if (Number(match.skorP1) === s1 && Number(match.skorP2) === s2 && (match.pemenangPenalti || null) === pen) {
+        report.error = 'Tiada perubahan markah.'; return report;
+      }
+
+      const kat = match.kategori;
+      const before = new Map(state.matches.map(m => [m.id, { namaP1: m.namaP1, namaP2: m.namaP2, status: m.status, sig: JSON.stringify(syncMatchRow(m)) }]));
+      const standingsBefore = snapshotStandings(kat);
+      const poolBefore = kat === 'SR' ? getSRQualifierPool() : null;
+      const xyLockedBefore = kat === 'SR' && srXYMatches().some(m => m.status !== MATCH_STATUS.MENUNGGU);
+      report.lama = correctionScoreText(match.skorP1, match.skorP2, match.pemenangPenalti, match);
+
+      const session = getSession();
+      Object.assign(match, {
+        skorP1: s1, skorP2: s2, pemenangPenalti: pen,
+        dibetulkanPada: nowIso(), dibetulkanOleh: session ? session.nama : 'Master Admin',
+        catatan: `Dibetulkan (Master Admin) ${report.lama} -> ${s1} - ${s2}: ${input.sebab}`.slice(0, 300)
+      });
+      report.baharu = correctionScoreText(s1, s2, pen, match);
+
+      const conflicts = new Map();
+      const ctx = {
+        replay: input.mod !== 'KEKAL',
+        reason: `pembetulan markah ${match.id}`,
+        voided: new Map(),
+        passChanges: 0,
+        noteConflict(m, side, name) {
+          conflicts.set(`${m.id}|${side}`, { id: m.id, side, name, status: m.status });
+        }
+      };
+      reshuffleCtx = ctx;
+      try {
+        if (poolBefore && poolBefore.complete) {
+          if (ctx.replay || !xyLockedBefore) {
+            report.draw = remapDrawAfterCorrection(poolBefore.pool);
+          } else {
+            // Mod KEKAL & Pusingan Kedua telah bermula: undian tidak diubah, hanya ditanda
+            const now = getSRQualifierPool();
+            poolBefore.pool.forEach(p => {
+              const q = now.pool.find(x => x.label === p.label);
+              if (q && q.teamId !== p.teamId) report.flagged.push(`Undian ${p.label}: sepatutnya ${q.nama} (bukan ${p.nama}) — Pusingan Kedua telah bermula`);
+            });
+          }
+        }
+        for (let i = 0; i < CORRECTION_MAX_PASSES; i++) {
+          ctx.passChanges = 0;
+          const changes = [];
+          generateSRGroupXY(changes);
+          generateSMKnockout(changes);
+          generateSRSemiFinals(changes);
+          autoUpdateBracketWinners(changes);
+          if (!ctx.passChanges) break;
+        }
+      } finally {
+        reshuffleCtx = null;
+      }
+
+      // ---- Laporan kesan ----
+      conflicts.forEach(c => {
+        const m = getMatch(c.id);
+        if (c.status === MATCH_STATUS.LIVE) {
+          report.blockers.push(`${c.id} sedang LIVE (${m.namaP1} lwn ${m.namaP2}). Tangguhkan perlawanan ini dahulu.`);
+        } else if (!ctx.voided.has(c.id)) {
+          report.flagged.push(`${c.id} (${m.peringkat}): ${c.side === 1 ? 'Pasukan 1' : 'Pasukan 2'} sepatutnya "${c.name}" — telah ${c.status}`);
+        }
+      });
+      ctx.voided.forEach((old, id) => {
+        const m = getMatch(id);
+        report.voidedIds.push(id);
+        report.voided.push(`${id} (${m.peringkat}): ${old.namaP1} ${old.skor} ${old.namaP2} → dibatalkan, main semula: ${m.namaP1} lwn ${m.namaP2}`);
+      });
+      state.matches.forEach(m => {
+        const b = before.get(m.id);
+        if (!b) return;
+        if (m.id !== match.id && !ctx.voided.has(m.id) && (b.namaP1 !== m.namaP1 || b.namaP2 !== m.namaP2)) {
+          report.slots.push(`${m.id} (${m.peringkat}): ${b.namaP1} lwn ${b.namaP2} → ${m.namaP1} lwn ${m.namaP2}`);
+        }
+        if (m.id !== match.id && b.sig !== JSON.stringify(syncMatchRow(m))) report.affectedIds.push(m.id);
+      });
+      const standingsAfter = snapshotStandings(kat);
+      standingsAfter.forEach((g, gi) => {
+        const old = standingsBefore[gi];
+        const diffs = g.rows.filter(r => {
+          const o = old.rows.find(x => x.kod === r.kod);
+          return !o || o.pos !== r.pos || o.Mata !== r.Mata || o.PG !== r.PG || o.nama !== r.nama;
+        }).map(r => {
+          const o = old.rows.find(x => x.kod === r.kod) || {};
+          const arrow = o.pos > r.pos ? '↑' : (o.pos < r.pos ? '↓' : '•');
+          const who = o.nama && o.nama !== r.nama ? `Slot ${r.kod}: ${o.nama} diganti ${r.nama}` : r.nama;
+          return `${arrow} ${who}: #${o.pos || '-'} → #${r.pos}, ${o.Mata ?? 0} → ${r.Mata} mata, PG ${o.PG ?? 0} → ${r.PG}`;
+        });
+        if (diffs.length) report.standings.push({ kumpulan: g.kumpulan, diffs });
+      });
+      report.susulan = report.affectedIds.map(id => syncMatchRow(getMatch(id)));
+      report.ok = true;
+      return report;
+    }
+
+    // Pratonton: jalankan enjin pada SALINAN state (state sebenar tidak disentuh)
+    function planCorrection(input) {
+      const original = state;
+      state = deepClone(original);
+      try {
+        return executeCorrection(input);
+      } catch (err) {
+        console.error('[planCorrection]', err);
+        return { ok: false, error: 'Ralat semasa mengira rombakan: ' + (err && err.message ? err.message : err) };
+      } finally {
+        state = original;
+      }
+    }
+
+    function renderCorrections() {
+      const body = document.getElementById('correctionBody');
+      const logBody = document.getElementById('correctionLogBody');
+      if (!body || !logBody) return;
+      if (!canCorrectScore()) {
+        body.innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;">🔒 Hanya Master Admin boleh membetulkan markah.</td></tr>';
+        logBody.innerHTML = '';
+        return;
+      }
+      const q = ((document.getElementById('correctionSearch') || {}).value || '').trim().toUpperCase();
+      const list = state.matches
+        .filter(isApproved)
+        .filter(m => categoryVisible(m.kategori))
+        .filter(m => !q || [m.id, m.namaP1, m.namaP2, m.peringkat, m.kumpulan].join(' ').toUpperCase().includes(q))
+        .sort((a, b) => a.kategori === b.kategori ? a.no - b.no : b.kategori.localeCompare(a.kategori));
+      const summary = document.getElementById('correctionSummary');
+      if (summary) summary.textContent = `${list.length} keputusan disahkan`;
+      body.innerHTML = list.length ? list.map(m => `
+        <tr>
+          <td class="mono">${escapeHtml(m.id)}</td>
+          <td>${m.kategori === 'SR' ? '<span class="badge badge-sr">SR</span>' : '<span class="badge badge-sm">SM</span>'}</td>
+          <td>${escapeHtml(stageLabel(m))}</td>
+          <td class="team-cell">${escapeHtml(m.namaP1)}</td>
+          <td class="score-cell">${scoreText(m)}${m.dibetulkanPada ? ' <span class="badge badge-fix" title="Dibetulkan oleh Master Admin">✏️</span>' : ''}</td>
+          <td class="team-cell">${escapeHtml(m.namaP2)}</td>
+          <td>${escapeHtml(m.disahkanOleh || '-')}</td>
+          <td><button type="button" class="btn btn-warn btn-sm" onclick="openCorrection('${m.id}')">✏️ Betulkan</button></td>
+        </tr>`).join('')
+        : '<tr><td colspan="8" class="muted" style="text-align:center;">Tiada keputusan disahkan untuk dibetulkan.</td></tr>';
+
+      const logs = (state.correctionLog || []).slice(0, 50);
+      logBody.innerHTML = logs.length ? logs.map(l => `
+        <tr>
+          <td class="mono">${escapeHtml(new Date(l.masa).toLocaleString('ms-MY'))}</td>
+          <td class="mono">${escapeHtml(l.matchId)}</td>
+          <td>${escapeHtml(l.lama)} → <strong>${escapeHtml(l.baharu)}</strong></td>
+          <td>${escapeHtml(l.sebab)}</td>
+          <td style="font-size:.78rem;">${escapeHtml(l.kesan || '-')}</td>
+          <td>${l.versi ? '<span class="badge badge-ok" title="' + escapeHtml(l.versi) + '">☁ Disimpan</span>' : '<span class="badge badge-pending">Peranti sahaja</span>'}</td>
+          <td>${escapeHtml(l.oleh)}</td>
+        </tr>`).join('')
+        : '<tr><td colspan="7" class="muted" style="text-align:center;">Belum ada pembetulan markah.</td></tr>';
+    }
+
+    function openCorrection(matchId) {
+      if (!canCorrectScore()) {
+        showToast('Akses ditolak: hanya Master Admin boleh membetulkan markah.', 'error');
+        return;
+      }
+      const m = getMatch(matchId);
+      if (!m || !isApproved(m)) {
+        showToast('Hanya keputusan yang telah DISAHKAN boleh dibetulkan.', 'warn');
+        return;
+      }
+      correctionTarget = m.id;
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      set('corrMatchInfo', `${m.id} · ${stageLabel(m)} · Gelanggang ${m.gelanggang}`);
+      set('corrOldScore', `Skor disahkan sekarang: ${correctionScoreText(m.skorP1, m.skorP2, m.pemenangPenalti, m)} · Disahkan oleh ${m.disahkanOleh || '-'}`);
+      set('corrTeam1', m.namaP1);
+      set('corrTeam2', m.namaP2);
+      set('corrPenP1', m.namaP1);
+      set('corrPenP2', m.namaP2);
+      document.getElementById('corrScore1').value = Number(m.skorP1) || 0;
+      document.getElementById('corrScore2').value = Number(m.skorP2) || 0;
+      document.getElementById('corrPenalty').value = m.pemenangPenalti || '';
+      document.getElementById('corrReason').selectedIndex = 0;
+      document.getElementById('corrReasonText').value = '';
+      const first = document.querySelector('input[name="corrMode"][value="MAIN_SEMULA"]');
+      if (first) first.checked = true;
+      openModal('correctionModal');
+      renderCorrectionPreview();
+    }
+
+    function scheduleCorrectionPreview() {
+      clearTimeout(correctionPreviewTimer);
+      correctionPreviewTimer = setTimeout(renderCorrectionPreview, 150);
+    }
+
+    function renderCorrectionPreview() {
+      const box = document.getElementById('corrImpact');
+      const btn = document.getElementById('btnCorrSubmit');
+      if (!box || !correctionTarget) return;
+      const m = getMatch(correctionTarget);
+      const input = readCorrectionInput();
+      const tie = m && isKnockout(m) && input.skorP1 !== null && input.skorP1 === input.skorP2;
+      const penField = document.getElementById('corrPenaltyField');
+      if (penField) penField.classList.toggle('hidden', !tie);
+
+      const plan = planCorrection(input);
+      const sec = (cls, title, items) => items.length
+        ? `<div class="impact-sec ${cls}"><h4>${title}</h4><ul>${items.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul></div>` : '';
+      if (!plan.ok) {
+        box.innerHTML = `<div class="impact-sec warn"><h4>⚠ ${escapeHtml(plan.error)}</h4></div>`;
+        if (btn) btn.disabled = true;
+        return;
+      }
+      const standingItems = [];
+      plan.standings.forEach(g => g.diffs.forEach(d => standingItems.push(`Kumpulan ${g.kumpulan}: ${d}`)));
+      const html = [
+        `<div class="impact-sec"><h4>📝 ${escapeHtml(m.id)}: ${escapeHtml(plan.lama)} → ${escapeHtml(plan.baharu)}</h4></div>`,
+        sec('danger', '⛔ Tidak boleh disimpan', plan.blockers),
+        sec('', '📊 Perubahan Carta Liga / Kedudukan', standingItems),
+        sec('', '🎲 Undian Kumpulan X & Y dipetakan semula', plan.draw),
+        sec('', '🔁 Jadual seterusnya dirombak (belum bermula)', plan.slots),
+        sec('warn', '♻ Dibatalkan & dijadualkan MAIN SEMULA', plan.voided),
+        sec('warn', '🚩 Perlu semakan manual (keputusan dikekalkan)', plan.flagged)
+      ].join('');
+      const noEffect = !plan.blockers.length && !standingItems.length && !plan.draw.length && !plan.slots.length && !plan.voided.length && !plan.flagged.length;
+      box.innerHTML = html + (noEffect ? '<div class="impact-sec"><h4>✅ Tiada kesan kepada kedudukan atau perlawanan lain.</h4></div>' : '');
+      if (btn) btn.disabled = plan.blockers.length > 0;
+    }
+
+    // Gunakan pembetulan pada state SEBENAR (selepas pelayan menerima, atau mod luar talian)
+    function applyCorrection(input, serverRes) {
+      const report = executeCorrection(input);
+      if (!report.ok) return report;
+      const match = getMatch(input.matchId);
+      const versi = serverRes && serverRes.versi ? serverRes.versi : null;
+      if (versi) [match.id].concat(report.affectedIds).forEach(id => { const m = getMatch(id); if (m) m.versiPembetulan = versi; });
+
+      // Gelanggang yang memegang perlawanan yang dibatalkan (Tamat - tunggu sah) dikosongkan
+      state.courts.forEach(c => {
+        if (report.voidedIds.includes(c.matchSemasa) && c.status === COURT_STATUS.TAMAT) resetCourt(c);
+      });
+      autoAssignCourts(null, { silent: true });
+
+      const kesan = [
+        report.voided.length ? `${report.voided.length} main semula (${report.voidedIds.join(', ')})` : '',
+        report.slots.length ? `${report.slots.length} slot dirombak` : '',
+        report.standings.length ? `carta ${report.standings.map(g => g.kumpulan).join('/')} berubah` : '',
+        report.flagged.length ? `${report.flagged.length} perlu semakan` : ''
+      ].filter(Boolean).join(' · ');
+      addApprovalLog(match, `DIBETULKAN (Master Admin): ${report.lama} → ${report.baharu} · ${input.sebab}`);
+      state.correctionLog.unshift({
+        masa: nowIso(), matchId: match.id, lama: report.lama, baharu: report.baharu, sebab: input.sebab,
+        mod: input.mod, kesan: kesan || 'Tiada kesan susulan', versi, oleh: (getSession() || {}).nama || 'Master Admin'
+      });
+      if (state.correctionLog.length > 200) state.correctionLog.length = 200;
+      saveState();
+      refreshAllViews();
+      report.kesan = kesan;
+      return report;
+    }
+
+    async function submitCorrection(event) {
+      if (event) event.preventDefault();
+      if (correctionBusy) return;
+      const msg = document.getElementById('corrMsg');
+      const btn = document.getElementById('btnCorrSubmit');
+      if (!canCorrectScore()) {
+        setFormMsg(msg, 'Akses ditolak: hanya Master Admin boleh membetulkan markah.', 'error');
+        return;
+      }
+      const input = readCorrectionInput();
+      if (!input.sebab || input.sebab.length < 5) {
+        setFormMsg(msg, 'Sila nyatakan sebab pembetulan (sekurang-kurangnya 5 aksara).', 'error');
+        return;
+      }
+      const plan = planCorrection(input);
+      if (!plan.ok) { setFormMsg(msg, plan.error, 'error'); return; }
+      if (plan.blockers.length) { setFormMsg(msg, plan.blockers[0], 'error'); return; }
+      const ringkas = [
+        `Sahkan pembetulan ${input.matchId}: ${plan.lama} → ${plan.baharu}?`,
+        plan.voided.length ? `• ${plan.voided.length} perlawanan akan dibatalkan & dimain semula.` : '',
+        plan.slots.length ? `• ${plan.slots.length} perlawanan seterusnya dirombak.` : '',
+        plan.flagged.length ? `• ${plan.flagged.length} perlawanan perlu semakan manual.` : ''
+      ].filter(Boolean).join('\n');
+      if (!window.confirm(ringkas)) return;
+
+      correctionBusy = true;
+      if (btn) btn.disabled = true;
+      try {
+        let serverRes = null;
+        if (getGasUrl()) {
+          const adminKey = ensureAdminKey();
+          if (!adminKey) { setFormMsg(msg, 'PIN Master Admin diperlukan untuk menyimpan ke Google Sheets.', 'error'); return; }
+          setFormMsg(msg, 'Menyimpan ke Google Sheets...', '');
+          serverRes = await callGas({
+            action: 'pembetulanSkor', adminKey, matchId: input.matchId,
+            skorP1: input.skorP1, skorP2: input.skorP2, pemenangPenalti: input.pemenangPenalti,
+            sebab: input.sebab, mod: input.mod, oleh: (getSession() || {}).nama || 'Master Admin',
+            susulan: plan.susulan
+          });
+          if (!serverRes || !serverRes.ok) {
+            if (serverRes && serverRes.networkError) {
+              const teruskan = window.confirm(`${serverRes.error}\n\nSimpan pembetulan dalam peranti ini dahulu? Tekan "Sync ke Google Sheets" apabila talian pulih.`);
+              if (!teruskan) { setFormMsg(msg, 'Pembetulan dibatalkan.', 'error'); return; }
+              serverRes = null;
+            } else {
+              if (serverRes && serverRes.kod === 'BUKAN_ADMIN') setAdminKey(null);
+              setFormMsg(msg, (serverRes && serverRes.error) || 'Pelayan menolak pembetulan.', 'error');
+              return;
+            }
+          }
+        }
+        const result = applyCorrection(input, serverRes);
+        if (!result.ok) { setFormMsg(msg, result.error, 'error'); return; }
+        closeModal('correctionModal');
+        correctionTarget = null;
+        showToast(`${input.matchId} dibetulkan: ${result.lama} → ${result.baharu}. ${result.kesan || 'Tiada kesan susulan.'}`, 'success', 6000);
+        if (serverRes && Array.isArray(serverRes.amaran) && serverRes.amaran.length) {
+          showToast(`Amaran pelayan: ${serverRes.amaran.slice(0, 2).join(' · ')}`, 'warn', 7000);
+        }
+        if (!serverRes && getGasUrl()) showToast('Pembetulan disimpan dalam peranti sahaja. Sila Sync ke Google Sheets.', 'warn', 6000);
+      } finally {
+        correctionBusy = false;
+        if (btn) btn.disabled = false;
+      }
+    }
+
     function renderAll() {
       updateAuthUI();
       document.querySelectorAll('#categorySwitch button').forEach(b => {
@@ -5245,6 +6024,15 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       on('btnResetData', 'click', resetFactoryData);
       on('importFile', 'change', (e) => { importData(e.target.files && e.target.files[0]); e.target.value = ''; });
 
+      // FASA 4: pembetulan markah
+      on('correctionSearch', 'input', renderCorrections);
+      on('correctionForm', 'submit', submitCorrection);
+      ['corrScore1', 'corrScore2', 'corrPenalty', 'corrReason', 'corrReasonText'].forEach(id => {
+        on(id, 'input', scheduleCorrectionPreview);
+        on(id, 'change', scheduleCorrectionPreview);
+      });
+      document.querySelectorAll('input[name="corrMode"]').forEach(r => r.addEventListener('change', scheduleCorrectionPreview));
+
       on('scheduleSearch', 'input', renderSchedule);
       on('scheduleFilterCourt', 'change', renderSchedule);
       on('scheduleFilterStatus', 'change', renderSchedule);
@@ -5289,6 +6077,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
        4.8 PERMULAAN APLIKASI & SERVICE WORKER
        --------------------------------------------------------- */
     function initApp() {
+      applyGasUrlFromLink();   // FASA 4.1
       bindEvents();
       const hashTab = location.hash.replace('#', '');
       if (hashTab && document.getElementById(hashTab) && canViewTab(hashTab)) state.ui.activeTab = hashTab;
