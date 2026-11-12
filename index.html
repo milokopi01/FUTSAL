@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbwro-oOj_3KsK7zCl6TqkOX591p5KpNyX0V20ubvLNydeMBNFG0E-Czv-D4hd_Z91rO/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -773,6 +773,166 @@
     .impact-sec ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; color: var(--text-1); }
     .impact-sec.danger h4 { color: #fda4af; }
     .impact-sec.warn h4 { color: var(--accent); }
+
+    /* =========================================================
+       12. MOD PENGADIL TELEFON (FASA 6)
+       - Pengadil log masuk dari telefon -> paparan ringkas skrin penuh.
+       - Pilih perlawanan -> paparan DIKUNCI pada perlawanan itu sahaja
+         sehingga keputusan disahkan & dihantar.
+       ========================================================= */
+    body.ref-mode .app-header,
+    body.ref-mode main,
+    body.ref-mode .app-footer { display: none !important; }
+    /* Telefon pengadil: notifikasi di atas, hanya yang terkini (tidak menutup butang skor) */
+    body.ref-mode .toast-stack { left: 12px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 8px); bottom: auto; pointer-events: none; }
+    body.ref-mode .toast { max-width: none; min-width: 0; }
+    body.ref-mode .toast-stack .toast:not(:last-child) { display: none; }
+    .ref-mobile {
+      --rm-pad: 14px;
+      min-height: 100vh; min-height: 100dvh;
+      max-width: 560px; margin: 0 auto;
+      padding: calc(env(safe-area-inset-top, 0px) + 10px) var(--rm-pad) calc(env(safe-area-inset-bottom, 0px) + 96px);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .rm-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .rm-top small { display: block; font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
+    .rm-top strong { font-family: var(--font-display); font-size: 1.05rem; }
+    .rm-top-actions { display: flex; gap: 8px; }
+    .rm-icon-btn {
+      font: inherit; font-weight: 800; font-size: .82rem; color: var(--text-0); cursor: pointer;
+      min-height: 44px; padding: 0 14px; border-radius: 12px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+    }
+    .rm-icon-btn.danger { color: #fecdd3; border-color: rgba(244,63,94,.45); background: rgba(244,63,94,.12); }
+    .rm-sync { font-size: .74rem; color: var(--text-2); line-height: 1.4; }
+    .rm-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; line-height: 1.2; }
+    .rm-sub { font-size: .84rem; color: var(--text-2); margin-top: -8px; }
+
+    /* Senarai pilihan perlawanan */
+    .rm-list { display: grid; gap: 12px; }
+    .rm-pick {
+      font: inherit; color: var(--text-0); text-align: left; cursor: pointer; width: 100%;
+      display: grid; gap: 10px; padding: 16px; border-radius: 18px;
+      background: linear-gradient(160deg, rgba(46,230,166,.10), rgba(0,0,0,.25));
+      border: 1px solid rgba(46,230,166,.45);
+      transition: transform var(--t-fast), box-shadow var(--t-fast);
+    }
+    .rm-pick:active { transform: scale(.985); }
+    .rm-pick:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--brand-glow); }
+    .rm-pick.urgent { background: linear-gradient(160deg, rgba(250,204,21,.14), rgba(0,0,0,.25)); border-color: rgba(250,204,21,.55); }
+    .rm-pick.live { background: linear-gradient(160deg, rgba(239,68,68,.14), rgba(0,0,0,.25)); border-color: rgba(239,68,68,.5); }
+    .rm-pick-top { display: flex; align-items: center; gap: 10px; }
+    .rm-pick-top .court-letter { width: 40px; height: 40px; font-size: 1.15rem; border-radius: 12px; flex: none; }
+    .rm-pick-court { flex: 1; min-width: 0; font-weight: 800; font-size: .92rem; }
+    .rm-pick-court small { display: block; font-size: .7rem; font-weight: 700; color: var(--text-2); letter-spacing: .04em; }
+    .rm-pick-teams { display: grid; gap: 2px; font-family: var(--font-display); font-weight: 800; font-size: 1.08rem; line-height: 1.25; overflow-wrap: anywhere; }
+    .rm-pick-teams em { font-style: normal; font-family: var(--font-body); font-size: .72rem; font-weight: 800; color: var(--text-2); text-transform: uppercase; letter-spacing: .1em; }
+    .rm-pick-meta { font-family: var(--font-mono); font-size: .72rem; color: var(--text-2); }
+    .rm-pick-cta {
+      display: flex; align-items: center; justify-content: center; min-height: 50px; border-radius: 14px;
+      font-weight: 800; font-size: 1rem; color: #04130d; background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    }
+    .rm-pick.urgent .rm-pick-cta { background: linear-gradient(135deg, #facc15, var(--accent)); }
+    .rm-pick.live .rm-pick-cta { background: linear-gradient(135deg, #f87171, var(--court-live)); color: #fff; }
+    .rm-empty { text-align: center; padding: 28px 16px; border-radius: 18px; border: 1px dashed var(--glass-border-strong); color: var(--text-2); font-size: .9rem; }
+    .rm-empty .icon { font-size: 2rem; margin-bottom: 6px; }
+    .rm-others { border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(0,0,0,.18); }
+    .rm-others summary { cursor: pointer; padding: 14px 16px; font-weight: 800; font-size: .86rem; color: var(--text-1); list-style: none; }
+    .rm-others summary::-webkit-details-marker { display: none; }
+    .rm-others summary::after { content: "▾"; float: right; color: var(--text-2); }
+    .rm-others[open] summary::after { content: "▴"; }
+    .rm-other-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 16px; border-top: 1px solid var(--glass-border); font-size: .8rem; }
+    .rm-other-row .court-letter { width: 30px; height: 30px; font-size: .9rem; border-radius: 9px; flex: none; }
+    .rm-other-row small { display: block; color: var(--text-2); margin-top: 2px; }
+
+    /* Paparan fokus (dikunci) */
+    .rm-lockbar {
+      display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
+      padding: 9px 12px; border-radius: 12px; font-size: .78rem; font-weight: 800; letter-spacing: .02em;
+      color: var(--brand); background: rgba(46,230,166,.10); border: 1px solid rgba(46,230,166,.4);
+    }
+    .rm-head { display: flex; align-items: center; gap: 12px; }
+    .rm-head .court-letter { width: 46px; height: 46px; font-size: 1.3rem; border-radius: 13px; flex: none; color: var(--brand); border-color: rgba(46,230,166,.6); }
+    .rm-head-info { flex: 1; min-width: 0; }
+    .rm-head-info strong { display: block; font-family: var(--font-display); font-size: 1rem; }
+    .rm-head-info small { display: block; font-size: .74rem; color: var(--text-2); overflow-wrap: anywhere; }
+    .rm-timer { font-family: var(--font-mono); font-weight: 700; font-size: 1.2rem; padding: 6px 10px; border-radius: 10px; background: rgba(0,0,0,.3); border: 1px solid var(--glass-border); }
+    .rm-status { display: flex; justify-content: center; }
+    .rm-status span { font-size: .78rem; font-weight: 800; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--glass-border); }
+    .rm-status .live { color: #fecaca; background: var(--court-live-bg); border-color: rgba(239,68,68,.5); }
+    .rm-status .ready { color: #bbf7d0; background: var(--court-ready-bg); border-color: rgba(34,197,94,.45); }
+    .rm-status .paused { color: #fde68a; background: var(--court-done-bg); border-color: rgba(250,204,21,.5); }
+    .rm-score { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: start; }
+    .rm-team { display: grid; gap: 8px; text-align: center; min-width: 0; }
+    .rm-team-code { font-family: var(--font-mono); font-size: .72rem; color: var(--text-2); }
+    .rm-team-name { font-weight: 800; font-size: .92rem; line-height: 1.25; min-height: 2.5em; overflow-wrap: anywhere; display: flex; align-items: center; justify-content: center; }
+    .rm-num {
+      font-family: var(--font-display); font-weight: 800; font-size: 4.2rem; line-height: 1;
+      padding: 14px 0; border-radius: 18px; background: rgba(0,0,0,.32); border: 1px solid var(--glass-border);
+      font-variant-numeric: tabular-nums;
+    }
+    .rm-vs { align-self: center; font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; color: var(--text-2); padding-top: 2.6em; }
+    .rm-goal {
+      font: inherit; cursor: pointer; min-height: 76px; border-radius: 18px; font-size: 1.25rem; font-weight: 800;
+      color: #04130d; border: 0; background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      box-shadow: 0 8px 26px var(--brand-glow); touch-action: manipulation;
+    }
+    .rm-goal:active { transform: scale(.97); }
+    .rm-undo {
+      font: inherit; cursor: pointer; min-height: 44px; border-radius: 12px; font-size: .84rem; font-weight: 800;
+      color: var(--text-1); background: var(--glass); border: 1px solid var(--glass-border); touch-action: manipulation;
+    }
+    .rm-phase { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 5px; border-radius: 14px; background: rgba(0,0,0,.28); border: 1px solid var(--glass-border); }
+    .rm-phase button {
+      font: inherit; cursor: pointer; min-height: 46px; border-radius: 10px; border: 0; font-weight: 800; font-size: .84rem;
+      color: var(--text-1); background: transparent;
+    }
+    .rm-phase button[aria-pressed="true"] { color: #1a1205; background: linear-gradient(135deg, #facc15, var(--accent)); }
+    .rm-label { font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); margin-bottom: -6px; }
+    .rm-btn {
+      font: inherit; cursor: pointer; width: 100%; min-height: 58px; border-radius: 16px; font-size: 1.04rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; text-align: center;
+      color: var(--text-0); background: var(--glass); border: 1px solid var(--glass-border-strong);
+    }
+    .rm-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .rm-btn-primary { color: #04130d; border: 0; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 8px 26px var(--brand-glow); min-height: 68px; font-size: 1.15rem; }
+    .rm-btn-finish { color: #fff; border: 0; background: linear-gradient(135deg, #f87171, var(--danger)); box-shadow: 0 8px 26px rgba(244,63,94,.35); }
+    .rm-btn-warn { color: #1a1205; border: 0; background: linear-gradient(135deg, #facc15, var(--accent)); }
+    .rm-btn-ghost { background: transparent; }
+    .rm-more { border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(0,0,0,.18); }
+    .rm-more summary { cursor: pointer; padding: 14px 16px; font-weight: 800; font-size: .86rem; color: var(--text-1); list-style: none; text-align: center; }
+    .rm-more summary::-webkit-details-marker { display: none; }
+    .rm-more-body { display: grid; gap: 10px; padding: 0 12px 12px; }
+    .rm-note { padding: 12px 14px; border-radius: 14px; font-size: .84rem; line-height: 1.45; border: 1px solid var(--glass-border); background: rgba(0,0,0,.22); color: var(--text-1); }
+    .rm-note.warn { border-color: rgba(250,204,21,.5); background: rgba(250,204,21,.08); }
+    .rm-note.danger { border-color: rgba(244,63,94,.5); background: rgba(244,63,94,.10); color: #fecdd3; }
+    .rm-note.ok { border-color: rgba(46,230,166,.45); background: rgba(46,230,166,.08); }
+    .rm-foot { font-size: .74rem; color: var(--text-2); text-align: center; line-height: 1.45; }
+
+    /* Semak & sahkan keputusan */
+    .rm-final { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 18px 14px; border-radius: 18px; background: rgba(0,0,0,.32); border: 1px solid var(--glass-border-strong); text-align: center; }
+    .rm-final .t { font-weight: 800; font-size: .9rem; line-height: 1.25; overflow-wrap: anywhere; }
+    .rm-final .n { font-family: var(--font-display); font-weight: 800; font-size: 2.8rem; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .rm-pen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .rm-pen button {
+      font: inherit; cursor: pointer; min-height: 58px; border-radius: 14px; font-weight: 800; font-size: .88rem; padding: 8px;
+      color: var(--text-0); background: var(--glass); border: 1px solid var(--glass-border-strong); overflow-wrap: anywhere;
+    }
+    .rm-pen button[aria-pressed="true"] { color: #04130d; border-color: transparent; background: linear-gradient(135deg, var(--brand), var(--brand-2)); }
+    .rm-check { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 14px; cursor: pointer; font-size: .92rem; line-height: 1.4; border: 1px solid var(--glass-border-strong); background: rgba(0,0,0,.22); }
+    .rm-check input { width: 26px; height: 26px; flex: none; accent-color: var(--brand); margin-top: 1px; }
+    .rm-receipt { display: grid; gap: 6px; text-align: center; padding: 22px 16px; border-radius: 18px; border: 1px solid rgba(46,230,166,.45); background: rgba(46,230,166,.07); }
+    .rm-receipt .big { font-size: 2.6rem; }
+    .rm-receipt h2 { font-family: var(--font-display); font-size: 1.25rem; }
+    .rm-receipt p { font-size: .86rem; color: var(--text-1); }
+    .rm-send { font-size: .84rem; font-weight: 800; }
+    .rm-send.ok { color: var(--brand); }
+    .rm-send.fail { color: #fda4af; }
+    .rm-send.wait { color: var(--accent); }
+
+    /* Peti Kelulusan: pengesahan pengadil */
+    .ap-sah { color: #8ff3cf; }
+    .ap-nosah { color: var(--accent); }
   </style>
 </head>
 <body data-category="SEMUA">
@@ -1464,6 +1624,9 @@
   </div>
 
   <!-- Bekas notifikasi -->
+  <!-- MOD PENGADIL TELEFON (Fasa 6): paparan ringkas skrin penuh untuk pengadil -->
+  <div class="ref-mobile hidden" id="refMobile" aria-live="polite"></div>
+
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
   <script>
@@ -2229,7 +2392,9 @@
       const cur = state.session && state.session.aksesGelanggang;
       showToast(cur
         ? `Selamat datang, ${ref.nama}. Anda masih mengawal Gelanggang ${cur}.`
-        : `Selamat datang, ${ref.nama}. Pilih gelanggang di Meja Pengadil, kemudian tekan ⚽ Sepak Mula.`, 'success', 4800);
+        : (isRefMode()
+          ? `Selamat datang, ${ref.nama}. Pilih perlawanan untuk diadili.`
+          : `Selamat datang, ${ref.nama}. Pilih gelanggang di Meja Pengadil, kemudian tekan ⚽ Sepak Mula.`), 'success', 4800);
       setTimeout(() => {
         const desk = document.getElementById('refDesk');
         if (desk) desk.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2503,6 +2668,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if (!canManageSystem()) closeModal('registerModal');
 
       updateApprovalBadge();
+      renderRefMobile();   // FASA 6: mod pengadil telefon
     }
 
     /* ---------------------------------------------------------
@@ -2966,7 +3132,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // Pengadil: tamatkan perlawanan & hantar ke Peti Kelulusan
-    function refereeSubmitMatch(courtId) {
+    function refereeSubmitMatch(courtId, opts = {}) {
       if (!canRefereeCourt(courtId)) {
         showToast(`Anda tidak dibenarkan menamatkan perlawanan Gelanggang ${courtId}.`, 'error');
         return false;
@@ -2991,7 +3157,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       let penalti = null;
 
       // Kalah mati tidak boleh seri: rekod pemenang sepakan penalti
-      if (isKnockout(match) && s1 === s2) {
+      if (isKnockout(match) && s1 === s2 && (opts.penalti === 'P1' || opts.penalti === 'P2')) {
+        penalti = opts.penalti;
+      } else if (isKnockout(match) && s1 === s2) {
         const ans = window.prompt(
           `Keputusan seri ${s1}-${s2} dalam perlawanan kalah mati (${match.peringkat}).\n` +
           `Masukkan pemenang sepakan penalti:\n1 = ${match.namaP1}\n2 = ${match.namaP2}`
@@ -3007,15 +3175,17 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
 
       const penaltiText = penalti ? `\nMenang penalti: ${penalti === 'P1' ? match.namaP1 : match.namaP2}` : '';
-      const ok = window.confirm(
+      const session = getSession();
+      const isRefSesi = !!session && session.peranan === 'PENGADIL';
+      const ok = opts.tanpaSahkan || window.confirm(
         `Tamat & hantar keputusan ${match.id}?\n\n` +
         `${match.namaP1}  ${s1} - ${s2}  ${match.namaP2}${penaltiText}\n\n` +
+        (isRefSesi ? `Dengan menekan OK, anda (${session.nama}) MENGESAHKAN keputusan ini betul. ` : '') +
         `Keputusan akan dihantar ke Peti Kelulusan Urusetia.`
       );
       if (!ok) return false;
 
       const now = nowIso();
-      const session = getSession();
       Object.assign(match, {
         skorP1: s1,
         skorP2: s2,
@@ -3024,7 +3194,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         masaTamat: now,
         pemenangPenalti: penalti,
         dihantarOleh: session ? session.userId : null,
-        pengadil: session && session.peranan === 'PENGADIL' ? session.nama : (court.pengadil || match.pengadil || null)
+        pengadil: isRefSesi ? session.nama : (court.pengadil || match.pengadil || null),
+        // FASA 6: rekod pengadil yang mengesahkan keputusan (rujukan Urusetia jika ada ralat markah)
+        sahPengadil: isRefSesi ? session.nama : null,
+        sahPengadilId: isRefSesi ? session.userId : null,
+        sahPengadilPada: isRefSesi ? now : null
       });
       Object.assign(court, {
         status: COURT_STATUS.TAMAT,
@@ -3032,12 +3206,32 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         fasaMulaPada: null,
         kemaskiniTerakhir: now
       });
-      addApprovalLog(match, 'DIHANTAR PENGADIL');
+      addApprovalLog(match, isRefSesi ? 'DISAHKAN & DIHANTAR PENGADIL' : 'DIHANTAR PENGADIL');
 
       // Fasa 2: hantar keputusan ke Google Sheets & lepaskan kunci gelanggang
       let released = false;
-      if (session && session.peranan === 'PENGADIL' && court.pengadilId === session.userId) {
-        queueLivePush(courtId, 0, { lepas: true });
+      if (isRefSesi && court.pengadilId === session.userId) {
+        // FASA 6: resit pengesahan pengadil (dipaparkan di telefon pengadil)
+        const online = !!getGasUrl() && !!session.token;
+        const resit = {
+          matchId: match.id, gelanggang: courtId, namaP1: match.namaP1, namaP2: match.namaP2, s1, s2,
+          penalti: penalti ? (penalti === 'P1' ? match.namaP1 : match.namaP2) : '',
+          nama: session.nama, pada: now, hantar: online ? 'menghantar' : 'tempatan'
+        };
+        state.ui.refResit = resit;
+        if (online) {
+          clearTimeout(livePushTimers[courtId]);
+          delete livePushTimers[courtId];
+          resit.payload = buildLivePayload(courtId, session.token, true, true);
+          pushLiveNow(courtId, { lepas: true, sahkan: true }).then(res => {
+            if (state.ui.refResit !== resit) return;
+            resit.hantar = res && res.ok ? 'ok' : 'gagal';
+            if (res && res.ok) delete resit.payload;
+            else resit.ralat = res && res.networkError ? 'Tiada sambungan internet.' : ((res && res.error) || '');
+            saveState();
+            renderRefMobile();
+          });
+        }
         clearCourtLock(court);
         state.session.aksesGelanggang = null;
         state.session.aksesEvent = null;
@@ -3138,7 +3332,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         pengesahan: 'DITOLAK',
         catatan: reason.trim() || 'Skor perlu disemak semula',
         masaTamat: null,
-        pemenangPenalti: null
+        pemenangPenalti: null,
+        sahPengadil: null, sahPengadilId: null, sahPengadilPada: null   // FASA 6: perlu disahkan semula
       });
       const court = state.courts.find(c => c.matchSemasa === match.id);
       if (court) {
@@ -3410,7 +3605,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // Data markah live untuk tindakan skorLive (Code.gs)
-    function buildLivePayload(courtId, token, lepas = false) {
+    function buildLivePayload(courtId, token, lepas = false, sahkan = false) {
       const court = getCourt(courtId);
       const match = court ? getMatch(court.matchSemasa) : null;
       if (!court || !match || !token) return null;
@@ -3429,7 +3624,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         pemenangPenalti: match.pemenangPenalti ? (match.pemenangPenalti === 'P1' ? match.namaP1 : match.namaP2) : '',
         masaMula: match.masaMula,
         masaTamat: match.masaTamat,
-        lepas: !!lepas
+        lepas: !!lepas,
+        sahkan: !!sahkan   // FASA 6: pengadil mengesahkan keputusan (nama direkod oleh pelayan)
       };
     }
 
@@ -3447,7 +3643,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     async function pushLiveNow(courtId, extra = null) {
       const s = getSession();
       if (!s || s.peranan !== 'PENGADIL' || !s.token) return null;
-      const payload = buildLivePayload(courtId, s.token, extra && extra.lepas);
+      const payload = buildLivePayload(courtId, s.token, extra && extra.lepas, extra && extra.sahkan);
       if (!payload) return null;
       const res = await callGas(payload);
       if (res.ok) {
@@ -3467,7 +3663,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // ⚽ SEPAK MULA: kunci gelanggang untuk pengadil & mulakan / sambung perlawanan
-    async function refereeKickOff(courtId) {
+    async function refereeKickOff(courtId, opts = {}) {
       const s0 = getSession();
       if (!s0 || s0.peranan !== 'PENGADIL') {
         showToast('Hanya pengadil yang telah log masuk boleh menekan Sepak Mula.', 'error');
@@ -3508,7 +3704,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
       const resume = court.status === COURT_STATUS.LIVE;
       const takeover = court.pengadilId && court.kunciBasi ? `\n\n⚠ Kunci tidak aktif milik ${court.pengadil} akan diambil alih.` : '';
-      const ok = window.confirm(
+      // FASA 6: perlawanan telah dipilih & dikunci di paparan telefon -> terus Sepak Mula
+      const ok = (opts.terus && opt.mine && court.status === COURT_STATUS.SEDIA) || window.confirm(
         `⚽ ${resume ? 'Sepak Mula · Sambung Kawalan' : 'Sepak Mula'} di ${court.nama}?\n\n` +
         `${match.id} · ${match.namaP1} lwn ${match.namaP2}\n\n` +
         `Gelanggang akan DIKUNCI untuk anda. Pengadil lain tidak boleh memberi markah di gelanggang ini sehingga anda menekan "Tamat & Hantar Keputusan" atau melepaskannya.${takeover}`
@@ -3663,6 +3860,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
     // Paparan Meja Pengadil (atas kad gelanggang)
     function renderRefDesk() {
+      renderRefMobile();   // FASA 6: paparan telefon pengadil
       const el = document.getElementById('refDesk');
       if (!el) return;
       const s = getSession();
@@ -3769,9 +3967,478 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
             <h3>🧑‍⚖️ Meja Pengadil · ${escapeHtml(s.nama)}</h3>
             <p>${escapeHtml(syncText)}</p>
           </div>
-          <button type="button" class="btn btn-sm" onclick="refreshCourtLocks()" ${url ? '' : 'disabled'}>🔄 Semak Status</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm" onclick="refSetMode('telefon')" title="Paparan ringkas seperti di telefon">📱 Paparan Telefon</button>
+            <button type="button" class="btn btn-sm" onclick="refreshCourtLocks()" ${url ? '' : 'disabled'}>🔄 Semak Status</button>
+          </div>
         </div>
         <div class="ref-desk-body">${body}</div>`;
+    }
+
+
+    /* ---------------------------------------------------------
+       3.8d FASA 6: MOD PENGADIL TELEFON
+       - Pengadil log masuk dari telefon -> paparan ringkas (skrin penuh),
+         tab & paparan lain disembunyikan.
+       - Langkah 1: pilih perlawanan (kad besar, satu ketik).
+       - Langkah 2: paparan DIKUNCI pada perlawanan itu sahaja (Sepak Mula,
+         skor, fasa, rehat kecemasan, tangguh). Tiada butang ke paparan lain.
+       - Langkah 3: Tamat -> Semak & SAHKAN keputusan (nama pengadil direkod)
+         -> dihantar ke Urusetia -> kunci dilepaskan -> kembali ke senarai.
+       --------------------------------------------------------- */
+    let refFinish = null;        // { courtId, penalti, setuju } semasa skrin "Semak & Sahkan"
+    let refWakeLock = null;      // kekalkan skrin telefon menyala semasa mengadili
+    let refViewKey = '';
+
+    function isPhoneDevice() {
+      try {
+        return window.matchMedia('(max-width: 900px)').matches ||
+          window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+      } catch (err) {
+        return window.innerWidth <= 900;
+      }
+    }
+
+    // Gelanggang yang sedang dipegang (dikunci) oleh pengadil ini
+    function refHeldCourt() {
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL' || !s.aksesGelanggang) return null;
+      const c = getCourt(s.aksesGelanggang);
+      return c && c.pengadilId === s.userId ? c : null;
+    }
+
+    // Telefon: sentiasa mod pengadil. Komputer: hanya jika dipilih ("📱 Paparan Telefon").
+    function isRefMode() {
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL') return false;
+      if (isPhoneDevice()) return true;
+      return !!(state.ui && state.ui.refMode === 'telefon');
+    }
+
+    function refSetMode(mode) {
+      if (mode !== 'telefon' && refHeldCourt() && isRefMode()) {
+        showToast('Paparan dikunci pada perlawanan anda. Tamatkan perlawanan dahulu.', 'warn');
+        return;
+      }
+      state.ui.refMode = mode === 'telefon' ? 'telefon' : null;
+      saveState();
+      updateAuthUI();
+      refreshAllViews();
+    }
+
+    async function updateWakeLock() {
+      const want = isRefMode() && !!refHeldCourt() && !document.hidden;
+      try {
+        if (want && !refWakeLock && navigator.wakeLock && navigator.wakeLock.request) {
+          const w = await navigator.wakeLock.request('screen');
+          refWakeLock = w;
+          w.addEventListener('release', () => { if (refWakeLock === w) refWakeLock = null; });
+        } else if (!want && refWakeLock) {
+          const w = refWakeLock;
+          refWakeLock = null;
+          await w.release();
+        }
+      } catch (err) { /* pelayar tidak menyokong - abaikan */ }
+    }
+
+    function refBuzz(ms = 25) {
+      try { if (navigator.vibrate) navigator.vibrate(ms); } catch (err) { /* abaikan */ }
+    }
+
+    function refSyncText(s) {
+      const url = getGasUrl();
+      if (!url) return '📴 Mod peranti ini sahaja (Google Sheets belum disambung).';
+      if (!s.token) return '⚠ Log masuk luar talian. Log keluar & masuk semula dengan internet.';
+      if (lockSync.error) return `⚠ ${lockSync.error}`;
+      if (lockSync.lastOk) return `🟢 Disambung ke Google Sheets · ${formatTime(lockSync.lastOk)}`;
+      return '🔄 Menyemak status gelanggang...';
+    }
+
+    // Langkah 1: pengadil pilih perlawanan -> gelanggang dikunci & paparan dikunci
+    async function refereePickMatch(courtId) {
+      const s0 = getSession();
+      if (!s0 || s0.peranan !== 'PENGADIL') return false;
+      if (kickoffBusy || rehatBusy) return false;
+      const held = refHeldCourt();
+      if (held && held.id !== courtId) {
+        showToast(`Anda sedang mengadili ${held.nama}. Tamatkan perlawanan itu dahulu.`, 'warn', 4500);
+        return false;
+      }
+      let court = getCourt(courtId);
+      if (!court) return false;
+      if (isCourtPaused(court)) return takeoverCourt(courtId);
+      const opt = refCourtOption(court);
+      if (!opt.can) {
+        showToast(opt.reason || 'Perlawanan ini tidak boleh dipilih.', 'warn', 4500);
+        return false;
+      }
+      // Perlawanan LIVE tanpa pengadil -> terus ambil alih kawalan (aliran Sepak Mula sedia ada)
+      if (court.status === COURT_STATUS.LIVE) return refereeKickOff(courtId);
+      if (opt.mine) { renderRefMobile(); return true; }
+
+      const check = checkCourtStartable(court);
+      if (check.error) {
+        showToast(check.error, check.level || 'warn', 4500);
+        if (check.save) { saveState(); refreshAllViews(); }
+        return false;
+      }
+      const match = check.match;
+      const ok = window.confirm(
+        `Adili perlawanan ini?\n\n${match.id} · ${match.namaP1} lwn ${match.namaP2}\n${court.nama}\n\n` +
+        `Paparan anda akan DIKUNCI pada perlawanan ini sahaja sehingga anda menamatkan & mengesahkan keputusan.`
+      );
+      if (!ok) return false;
+
+      const url = getGasUrl();
+      kickoffBusy = true;
+      lockEpoch += 1;
+      renderRefMobile();
+      try {
+        if (url) {
+          if (!s0.token) {
+            showToast('Sesi anda belum disahkan oleh Google Sheets. Log keluar dan log masuk semula ketika ada internet.', 'error', 6000);
+            return false;
+          }
+          const res = await callGas({ action: 'kunciGelanggang', token: s0.token, gelanggang: courtId, matchId: match.id });
+          if (!res.ok) {
+            if (handleSesiError(res)) return false;
+            if (res.kunci) applyServerLocks(res.kunci, { silent: true });
+            showToast(res.networkError
+              ? 'Tiada sambungan ke Google Sheets. Semak internet & cuba lagi.'
+              : (res.error || 'Gagal mengunci gelanggang.'), 'error', 5500);
+            updateAuthUI();
+            refreshAllViews();
+            return false;
+          }
+          if (res.kunci) applyServerLocks(res.kunci, { silent: true });
+          lastHeartbeatAt = Date.now();
+        }
+        const s = getSession();
+        court = getCourt(courtId);
+        if (!s || s.peranan !== 'PENGADIL' || !court) return false;
+        const now = nowIso();
+        state.courts.forEach(c => { if (c.id !== courtId && c.pengadilId === s.userId) clearCourtLock(c); });
+        Object.assign(court, { pengadil: s.nama, pengadilId: s.userId, dikunciPada: now, kunciBasi: false, kemaskiniTerakhir: now });
+        state.session.aksesGelanggang = courtId;
+        state.session.aksesEvent = court.eventId;
+        state.ui.refResit = null;
+        refFinish = null;
+        refSelectedCourt = null;
+        lockEpoch += 1;
+        saveState();
+        updateAuthUI();
+        refreshAllViews();
+        showToast(`🔒 ${match.id} dikunci untuk anda. Tekan ⚽ Sepak Mula bila wisel dibunyikan.`, 'success', 4500);
+        return true;
+      } finally {
+        kickoffBusy = false;
+        renderRefMobile();
+      }
+    }
+
+    function refGoal(courtId, side, delta) {
+      if (updateScore(courtId, side, delta)) refBuzz(delta > 0 ? 40 : 15);
+    }
+
+    // Langkah 3a: buka skrin "Semak & Sahkan Keputusan"
+    function refStartFinish(courtId) {
+      const c = getCourt(courtId);
+      if (!c || c.status !== COURT_STATUS.LIVE || !canRefereeCourt(courtId)) return;
+      if (isCourtPaused(c)) {
+        showToast('Tekan ▶ Sambung Perlawanan sebelum menamatkan perlawanan.', 'warn');
+        return;
+      }
+      refFinish = { courtId, penalti: null, setuju: false };
+      renderRefMobile();
+    }
+
+    function refCancelFinish() {
+      refFinish = null;
+      renderRefMobile();
+    }
+
+    function refSetPenalti(side) {
+      if (!refFinish) return;
+      refFinish.penalti = side === 'P1' || side === 'P2' ? side : null;
+      renderRefMobile();
+    }
+
+    function refToggleSetuju(checked) {
+      if (!refFinish) return;
+      refFinish.setuju = !!checked;
+      renderRefMobile();
+    }
+
+    // Langkah 3b: pengadil SAHKAN & hantar keputusan
+    function refConfirmSubmit() {
+      const c = refHeldCourt();
+      if (!refFinish || !c || c.id !== refFinish.courtId) { refFinish = null; renderRefMobile(); return false; }
+      const m = getMatch(c.matchSemasa);
+      const s1 = Number(c.skorLiveP1) || 0;
+      const s2 = Number(c.skorLiveP2) || 0;
+      const perluPenalti = !!m && isKnockout(m) && s1 === s2;
+      if (!refFinish.setuju) { showToast('Tandakan pengesahan anda dahulu.', 'warn'); return false; }
+      if (perluPenalti && !refFinish.penalti) { showToast('Pilih pemenang sepakan penalti.', 'warn'); return false; }
+      const ok = refereeSubmitMatch(c.id, { penalti: perluPenalti ? refFinish.penalti : null, tanpaSahkan: true });
+      if (ok) { refFinish = null; refBuzz(60); }
+      renderRefMobile();
+      return ok;
+    }
+
+    async function refRetrySend() {
+      const r = state.ui && state.ui.refResit;
+      if (!r || !r.payload) return false;
+      r.hantar = 'menghantar';
+      renderRefMobile();
+      const res = await callGas(r.payload);
+      const cur = state.ui.refResit;
+      if (cur !== r) return false;
+      if (res.ok) {
+        r.hantar = 'ok';
+        delete r.payload;
+        showToast('Keputusan diterima oleh Google Sheets.', 'success');
+      } else {
+        if (handleSesiError(res)) return false;
+        r.hantar = 'gagal';
+        r.ralat = res.networkError ? 'Tiada sambungan internet.' : (res.error || 'Ralat tidak diketahui.');
+        showToast(`Gagal dihantar: ${r.ralat}`, 'error', 5000);
+      }
+      saveState();
+      renderRefMobile();
+      return !!res.ok;
+    }
+
+    function refCloseReceipt() {
+      const r = state.ui && state.ui.refResit;
+      if (r && r.hantar === 'gagal' && r.payload &&
+          !window.confirm('Keputusan BELUM diterima oleh Google Sheets.\n\nTeruskan juga? Maklumkan Urusetia supaya keputusan ini disemak.')) return;
+      state.ui.refResit = null;
+      saveState();
+      renderRefMobile();
+    }
+
+    function refPickView(s) {
+      const opts = state.courts.map(refCourtOption);
+      const rank = o => (o.rehat ? 0 : (o.court.status === COURT_STATUS.LIVE ? 1 : 2));
+      const avail = opts.filter(o => o.can && o.match).sort((a, b) => rank(a) - rank(b) || a.court.id.localeCompare(b.court.id));
+      const others = opts.filter(o => !(o.can && o.match));
+      const cards = avail.map(o => {
+        const m = o.match;
+        const c = o.court;
+        const cls = o.rehat ? 'urgent' : (c.status === COURT_STATUS.LIVE ? 'live' : '');
+        const tag = o.rehat ? '⏸ Rehat Kecemasan' : (c.status === COURT_STATUS.LIVE ? '🔴 LIVE · tiada pengadil' : (c.ditangguh ? '⏸ Ditangguhkan' : '🟢 Sedia'));
+        const cta = o.rehat ? '🤝 Ambil Alih Perlawanan' : (c.status === COURT_STATUS.LIVE ? '🧑‍⚖️ Ambil Alih Kawalan' : '🧑‍⚖️ Adili Perlawanan Ini');
+        return `
+          <button type="button" class="rm-pick ${cls}" onclick="refereePickMatch('${c.id}')" ${kickoffBusy || rehatBusy ? 'disabled' : ''}>
+            <span class="rm-pick-top">
+              <span class="court-letter">${escapeHtml(c.id)}</span>
+              <span class="rm-pick-court">${escapeHtml(c.nama)}<small>${escapeHtml(c.kategoriNama || '')}</small></span>
+              <span class="lock-chip ${o.rehat ? 'rehat' : 'free'}">${escapeHtml(tag)}</span>
+            </span>
+            <span class="rm-pick-teams"><span>${escapeHtml(m.namaP1)}</span><em>lwn</em><span>${escapeHtml(m.namaP2)}</span></span>
+            <span class="rm-pick-meta">${escapeHtml(m.id)} · ${escapeHtml(stageLabel(m))}</span>
+            <span class="rm-pick-cta">${kickoffBusy ? '⏳ Mengunci...' : cta}</span>
+          </button>`;
+      }).join('');
+      const otherRows = others.map(o => `
+          <div class="rm-other-row">
+            <span class="court-letter">${escapeHtml(o.court.id)}</span>
+            <div><strong>${o.match ? `${escapeHtml(o.match.id)} · ${escapeHtml(o.match.namaP1)} lwn ${escapeHtml(o.match.namaP2)}` : escapeHtml(o.court.nama)}</strong>
+              <small>${escapeHtml(o.lock.text)}${o.reason ? ' · ' + escapeHtml(o.reason) : ''}</small></div>
+          </div>`).join('');
+      const desktopExit = !isPhoneDevice()
+        ? `<button type="button" class="rm-btn rm-btn-ghost" onclick="refSetMode(null)">🖥 Kembali ke Paparan Penuh</button>` : '';
+      return {
+        key: 'pick',
+        html: `
+          <div class="rm-top">
+            <div><small>🧑‍⚖️ Pengadil</small><strong>${escapeHtml(s.nama)}</strong></div>
+            <div class="rm-top-actions">
+              <button type="button" class="rm-icon-btn" onclick="refreshCourtLocks()" aria-label="Semak status gelanggang" ${getGasUrl() ? '' : 'disabled'}>🔄</button>
+              <button type="button" class="rm-icon-btn danger" onclick="logout()">Log Keluar</button>
+            </div>
+          </div>
+          <p class="rm-sync">${escapeHtml(refSyncText(s))}</p>
+          <h2 class="rm-title">Pilih perlawanan untuk diadili</h2>
+          <p class="rm-sub">Ketik satu perlawanan. Paparan akan dikunci pada perlawanan itu sahaja.</p>
+          <div class="rm-list">${cards || `
+            <div class="rm-empty"><div class="icon">⏳</div>
+              Tiada perlawanan sedia untuk diadili sekarang.<br>Tekan 🔄 untuk semak semula.</div>`}
+          </div>
+          ${others.length ? `<details class="rm-others"><summary>Gelanggang lain (${others.length})</summary>${otherRows}</details>` : ''}
+          ${desktopExit}`
+      };
+    }
+
+    function refFocusView(s, c) {
+      const paused = isCourtPaused(c);
+      const m = getMatch((paused && c.rehat.matchId) || c.matchSemasa) || getMatch(c.matchSemasa);
+      const live = c.status === COURT_STATUS.LIVE;
+      const rs = paused ? rehatScore(c) : null;
+      const s1 = paused ? rs.s1 : (live ? Number(c.skorLiveP1) || 0 : 0);
+      const s2 = paused ? rs.s2 : (live ? Number(c.skorLiveP2) || 0 : 0);
+      const canScore = live && !paused && canRefereeCourt(c.id);
+      const status = paused
+        ? `<span class="paused">⏸ REHAT KECEMASAN</span>`
+        : live
+          ? `<span class="live">🔴 LIVE · ${escapeHtml(COURT_PHASE_LABELS[c.fasaMasa] || c.fasaMasa)}</span>`
+          : `<span class="ready">${c.ditangguh ? '⏸ Ditangguhkan · belum bermula' : '🟢 Sedia · menunggu wisel'}</span>`;
+      const team = (side) => {
+        const nama = m ? (side === 1 ? m.namaP1 : m.namaP2) : '—';
+        const kod = m ? (side === 1 ? m.kodP1 : m.kodP2) : '';
+        return `
+          <div class="rm-team">
+            <div class="rm-team-code">${escapeHtml(kod || '')}</div>
+            <div class="rm-team-name">${escapeHtml(nama)}</div>
+            <div class="rm-num" aria-label="Skor ${escapeHtml(nama)}">${side === 1 ? s1 : s2}</div>
+            ${canScore ? `
+              <button type="button" class="rm-goal" onclick="refGoal('${c.id}', ${side}, 1)" aria-label="Tambah gol ${escapeHtml(nama)}">＋ GOL</button>
+              <button type="button" class="rm-undo" onclick="refGoal('${c.id}', ${side}, -1)" aria-label="Batal gol ${escapeHtml(nama)}">− Batal 1 gol</button>` : ''}
+          </div>`;
+      };
+      const rejected = m && m.pengesahan === 'DITOLAK' && live
+        ? `<div class="rm-note danger">⚠ <strong>Ditolak Urusetia:</strong> ${escapeHtml(m.catatan || 'Sila semak semula skor.')}</div>` : '';
+      let actions = '';
+      if (paused) {
+        actions = `
+          <div class="rm-note warn">⏸ <strong>Ditangguhkan sementara</strong> · ${escapeHtml(c.rehat.sebab || '-')}<br>Markah dibekukan pada <strong>${s1} - ${s2}</strong>.</div>
+          <button type="button" class="rm-btn rm-btn-primary" onclick="resumeMatch('${c.id}')" ${rehatBusy ? 'disabled' : ''}>${rehatBusy ? '⏳ Menyambung...' : '▶ Sambung Perlawanan'}</button>
+          <button type="button" class="rm-btn" onclick="refereeReleaseCourt()">🔓 Serah kepada Pengadil Lain</button>`;
+      } else if (live) {
+        actions = `
+          <div class="rm-label">Fasa perlawanan</div>
+          <div class="rm-phase" role="group" aria-label="Fasa perlawanan">
+            ${COURT_PHASES.map(p => `<button type="button" aria-pressed="${c.fasaMasa === p ? 'true' : 'false'}" onclick="setPhase('${c.id}', '${p}')">${COURT_PHASE_LABELS[p]}</button>`).join('')}
+          </div>
+          <button type="button" class="rm-btn rm-btn-finish" onclick="refStartFinish('${c.id}')">🏁 Tamat Perlawanan</button>
+          <details class="rm-more">
+            <summary>⋯ Tindakan lain</summary>
+            <div class="rm-more-body">
+              ${canPauseCourt(c.id) ? `<button type="button" class="rm-btn rm-btn-warn" onclick="openEmergencyPause('${c.id}')">🚻 Rehat Kecemasan</button>` : ''}
+              ${canPostponeCourt(c.id) ? `<button type="button" class="rm-btn" onclick="openPostpone('${c.id}')">⏸ Tangguh Perlawanan (salah sepak mula)</button>` : ''}
+            </div>
+          </details>`;
+      } else {
+        actions = `
+          ${c.ditangguh ? `<div class="rm-note warn">⏸ Ditangguhkan: ${escapeHtml(c.ditangguh.sebab || '-')}</div>` : ''}
+          <button type="button" class="rm-btn rm-btn-primary" onclick="refereeKickOff('${c.id}', { terus: true })" ${kickoffBusy || !m || !isMatchReady(m) ? 'disabled' : ''}>${kickoffBusy ? '⏳ Memulakan...' : '⚽ Sepak Mula'}</button>
+          <button type="button" class="rm-btn rm-btn-ghost" onclick="refereeReleaseCourt()">↩ Salah pilih? Lepaskan perlawanan ini</button>`;
+      }
+      return {
+        key: `focus-${c.id}-${m ? m.id : ''}`,
+        html: `
+          <div class="rm-lockbar">🔒 Paparan dikunci · ${escapeHtml(s.nama)}</div>
+          <div class="rm-head">
+            <span class="court-letter">${escapeHtml(c.id)}</span>
+            <div class="rm-head-info">
+              <strong>${escapeHtml(c.nama)} · ${m ? escapeHtml(m.id) : '-'}</strong>
+              <small>${m ? escapeHtml(stageLabel(m)) : ''}${c.kategoriNama ? ' · ' + escapeHtml(c.kategoriNama) : ''}</small>
+            </div>
+            <span class="rm-timer" data-court-timer="${c.id}">00:00</span>
+          </div>
+          <div class="rm-status">${status}</div>
+          ${rejected}
+          <div class="rm-score">${team(1)}<div class="rm-vs">:</div>${team(2)}</div>
+          ${actions}
+          <p class="rm-foot">Paparan lain dikunci sehingga keputusan perlawanan ini disahkan &amp; dihantar.<br><span class="rm-sync">${escapeHtml(refSyncText(s))}</span></p>`
+      };
+    }
+
+    function refFinishView(s, c) {
+      const m = getMatch(c.matchSemasa);
+      const s1 = Number(c.skorLiveP1) || 0;
+      const s2 = Number(c.skorLiveP2) || 0;
+      const perluPenalti = !!m && isKnockout(m) && s1 === s2;
+      const f = refFinish;
+      const ready = f.setuju && (!perluPenalti || !!f.penalti);
+      return {
+        key: `finish-${c.id}`,
+        html: `
+          <div class="rm-lockbar">🔒 ${escapeHtml(c.nama)} · ${m ? escapeHtml(m.id) : ''}</div>
+          <h2 class="rm-title">Semak &amp; sahkan keputusan</h2>
+          <p class="rm-sub">Pastikan skor betul. Nama anda direkod sebagai pengadil yang mengesahkan keputusan ini.</p>
+          <div class="rm-final">
+            <div class="t">${m ? escapeHtml(m.namaP1) : '-'}</div>
+            <div class="n">${s1} - ${s2}</div>
+            <div class="t">${m ? escapeHtml(m.namaP2) : '-'}</div>
+          </div>
+          ${perluPenalti ? `
+            <div class="rm-note warn">Seri dalam perlawanan kalah mati. Pilih pemenang sepakan penalti:</div>
+            <div class="rm-pen">
+              <button type="button" aria-pressed="${f.penalti === 'P1' ? 'true' : 'false'}" onclick="refSetPenalti('P1')">🥅 ${escapeHtml(m.namaP1)}</button>
+              <button type="button" aria-pressed="${f.penalti === 'P2' ? 'true' : 'false'}" onclick="refSetPenalti('P2')">🥅 ${escapeHtml(m.namaP2)}</button>
+            </div>` : ''}
+          <label class="rm-check">
+            <input type="checkbox" ${f.setuju ? 'checked' : ''} onchange="refToggleSetuju(this.checked)" />
+            <span>Saya, <strong>${escapeHtml(s.nama)}</strong>, mengesahkan keputusan perlawanan ini adalah betul.</span>
+          </label>
+          <button type="button" class="rm-btn rm-btn-primary" onclick="refConfirmSubmit()" ${ready ? '' : 'disabled'}>✅ Sahkan &amp; Hantar ke Urusetia</button>
+          <button type="button" class="rm-btn rm-btn-ghost" onclick="refCancelFinish()">← Kembali ke perlawanan</button>
+          <p class="rm-foot">Jam perlawanan masih berjalan sehingga anda menekan Sahkan.</p>`
+      };
+    }
+
+    function refReceiptView(s, r) {
+      const send = r.hantar === 'ok'
+        ? '<p class="rm-send ok">☁ Diterima oleh Google Sheets</p>'
+        : r.hantar === 'menghantar'
+          ? '<p class="rm-send wait">⏳ Menghantar ke Google Sheets...</p>'
+          : r.hantar === 'gagal'
+            ? `<p class="rm-send fail">⚠ Belum diterima Google Sheets${r.ralat ? ' · ' + escapeHtml(r.ralat) : ''}</p>`
+            : '<p class="rm-send wait">📴 Disimpan dalam peranti ini sahaja</p>';
+      return {
+        key: `resit-${r.matchId}`,
+        html: `
+          <div class="rm-receipt">
+            <div class="big">✅</div>
+            <h2>Keputusan disahkan &amp; dihantar</h2>
+            <p><strong>${escapeHtml(r.matchId)}</strong> · Gelanggang ${escapeHtml(r.gelanggang)}</p>
+            <div class="rm-final" style="margin:8px 0;">
+              <div class="t">${escapeHtml(r.namaP1)}</div><div class="n">${r.s1} - ${r.s2}</div><div class="t">${escapeHtml(r.namaP2)}</div>
+            </div>
+            ${r.penalti ? `<p>🥅 Menang penalti: <strong>${escapeHtml(r.penalti)}</strong></p>` : ''}
+            <p>Disahkan oleh <strong>${escapeHtml(r.nama)}</strong> · ${escapeHtml(formatTime(r.pada))}</p>
+            ${send}
+            <p class="rm-foot">Keputusan kini menunggu pengesahan Urusetia.</p>
+          </div>
+          ${r.hantar === 'gagal' && r.payload ? `<button type="button" class="rm-btn rm-btn-warn" onclick="refRetrySend()">🔁 Cuba Hantar Semula</button>` : ''}
+          <button type="button" class="rm-btn rm-btn-primary" onclick="refCloseReceipt()">➡ Pilih Perlawanan Seterusnya</button>`
+      };
+    }
+
+    function renderRefMobile() {
+      const el = document.getElementById('refMobile');
+      if (!el) return;
+      const on = isRefMode();
+      document.body.classList.toggle('ref-mode', on);
+      el.classList.toggle('hidden', !on);
+      if (!on) {
+        el.innerHTML = '';
+        refViewKey = '';
+        refFinish = null;
+        updateWakeLock();
+        return;
+      }
+      const s = getSession();
+      const held = refHeldCourt();
+      if (refFinish && (!held || held.id !== refFinish.courtId || held.status !== COURT_STATUS.LIVE || isCourtPaused(held))) refFinish = null;
+      let view;
+      if (held && refFinish) view = refFinishView(s, held);
+      else if (held) view = refFocusView(s, held);
+      else if (state.ui && state.ui.refResit) view = refReceiptView(s, state.ui.refResit);
+      else view = refPickView(s);
+      // Kekalkan keadaan "Tindakan lain" (terbuka/tertutup) selepas paparan dijana semula
+      const moreOpen = !!el.querySelector('details.rm-more[open]');
+      const othersOpen = !!el.querySelector('details.rm-others[open]');
+      el.innerHTML = view.html;
+      if (moreOpen) { const d = el.querySelector('details.rm-more'); if (d) d.open = true; }
+      if (othersOpen) { const d = el.querySelector('details.rm-others'); if (d) d.open = true; }
+      if (view.key !== refViewKey) {
+        refViewKey = view.key;
+        window.scrollTo(0, 0);
+      }
+      updateCourtTimers();
+      updateWakeLock();
     }
 
 
@@ -5145,14 +5812,19 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       list.innerHTML = pending.length ? pending.map(m => {
         const pen = m.pemenangPenalti
           ? `<div class="ap-meta">🥅 Menang penalti: <strong>${escapeHtml(m.pemenangPenalti === 'P1' ? m.namaP1 : m.namaP2)}</strong></div>` : '';
-        const by = m.dihantarOleh ? (getUserById(m.dihantarOleh) || {}).nama || m.dihantarOleh : 'Pengadil';
+        const by = m.pengadil || (m.dihantarOleh ? ((getUserById(m.dihantarOleh) || getRefereeById(m.dihantarOleh) || {}).nama || m.dihantarOleh) : 'Pengadil');
+        // FASA 6: siapa pengadil yang mengesahkan keputusan ini
+        const sah = m.sahPengadil
+          ? `<div class="ap-meta ap-sah">✅ Disahkan pengadil: <strong>${escapeHtml(m.sahPengadil)}</strong>${m.sahPengadilId ? ` (${escapeHtml(m.sahPengadilId)})` : ''} · ${formatTime(m.sahPengadilPada)}</div>`
+          : `<div class="ap-meta ap-nosah">⚠ Tiada pengesahan pengadil · dihantar oleh ${escapeHtml(by)}</div>`;
         return `
           <div class="card glass approval-item">
             <div>
               <div class="ap-title">${escapeHtml(m.id)} · ${escapeHtml(stageLabel(m))} ${m.kategori === 'SR' ? '<span class="badge badge-sr">SR</span>' : '<span class="badge badge-sm">SM</span>'}</div>
-              <div class="ap-meta">Gelanggang ${escapeHtml(m.gelanggang)} · Dihantar oleh ${escapeHtml(by)} · ${formatTime(m.masaTamat)}</div>
+              <div class="ap-meta">Gelanggang ${escapeHtml(m.gelanggang)} · 🧑‍⚖️ Pengadil: ${escapeHtml(by)} · ${formatTime(m.masaTamat)}</div>
               <div class="ap-score">${escapeHtml(m.namaP1)} <span style="color:var(--brand);">${Number(m.skorP1) || 0} - ${Number(m.skorP2) || 0}</span> ${escapeHtml(m.namaP2)}</div>
               ${pen}
+              ${sah}
             </div>
             <div class="approval-actions">
               <button type="button" class="btn btn-success btn-sm" onclick="approveMatch('${m.id}')">✔ Sahkan</button>
@@ -6341,7 +7013,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       Object.assign(match, {
         status: MATCH_STATUS.MENUNGGU, skorP1: null, skorP2: null, pengesahan: 'MENUNGGU',
         pemenangPenalti: null, masaMula: null, masaTamat: null, disahkanOleh: null, disahkanPada: null,
-        dihantarOleh: null, pengadil: null,
+        dihantarOleh: null, pengadil: null, sahPengadil: null, sahPengadilId: null, sahPengadilPada: null,
         catatan: `Main semula: ${reason}`.slice(0, 300)
       });
     }
@@ -6812,7 +7484,19 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       });
 
       // Kembali ke aplikasi (skrin telefon dihidupkan) -> semak kunci & hantar isyarat aktif segera
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) lockSyncTick(true); });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) lockSyncTick(true); updateWakeLock(); });
+
+      // FASA 6: tukar antara paparan telefon / komputer bila saiz skrin berubah
+      let refResizeT = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(refResizeT);
+        refResizeT = setTimeout(() => { if (getSession()) updateAuthUI(); }, 200);
+      });
+      // Amaran jika pengadil cuba menutup / keluar halaman semasa mengadili
+      window.addEventListener('beforeunload', (e) => {
+        const held = isRefMode() ? refHeldCourt() : null;
+        if (held && held.status === COURT_STATUS.LIVE) { e.preventDefault(); e.returnValue = ''; }
+      });
       window.addEventListener('online', () => lockSyncTick(true));
 
       window.addEventListener('hashchange', () => {

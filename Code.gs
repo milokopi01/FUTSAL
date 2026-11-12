@@ -53,6 +53,15 @@
  *                - Sambung Perlawanan: skor diambil daripada Jadual_Perlawanan (sumber sah),
  *                  fasa & masa fasa disambung. Semua tindakan dicatat dalam Log_Tangguh.
  *
+ *              + FASA 6 - PENGESAHAN PENGADIL (MOD TELEFON):
+ *                - Pengadil WAJIB mengesahkan keputusan sebelum dihantar ke Urusetia.
+ *                  { action: 'skorLive', ..., status: 'TAMAT - TUNGGU SAH', lepas: true, sahkan: true }
+ *                - Nama pengadil diambil daripada TOKEN SESI (bukan daripada peranti) dan
+ *                  ditulis ke lajur "Disahkan Pengadil" & "Masa Sah Pengadil" dalam
+ *                  Jadual_Perlawanan, serta dicatat dalam tab Log_Sah_Pengadil.
+ *                - Lajur ini hanya boleh ditulis melalui skorLive (pengadil) atau Master Admin.
+ *                  Tangguh perlawanan mengosongkan pengesahan.
+ *
  *  Lajur dikesan melalui NAMA TAJUK (baris 1), jadi susunan lajur Bahagian 1
  *  boleh dikekalkan. Lajur yang tiada akan ditambah automatik di hujung.
  * =========================================================
@@ -70,8 +79,13 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.5.0';
-const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan'];
+const API_VERSI = '1.6.0';
+const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil'];
+// FASA 6: log pengesahan keputusan oleh pengadil (tambah sahaja, tidak ditulis ganti)
+const SHEET_SAH_PENGADIL = 'Log_Sah_Pengadil';
+const SAH_PENGADIL_HEADER = ['Masa', 'ID Match', 'Gelanggang', 'Pasukan 1', 'Skor', 'Pasukan 2', 'Menang Penalti', 'Pengadil', 'ID Pengadil'];
+// Medan yang HANYA boleh ditulis oleh pengadil (skorLive) atau Master Admin
+const PENGADIL_ONLY_FIELDS = ['sahPengadil', 'sahPengadilPada'];
 // Tindakan perlawanan yang sah (selain PENGADIL_ACTIONS)
 const MATCH_ACTIONS = ['', 'syncall', 'updatematch', 'updatematches'];
 
@@ -121,7 +135,8 @@ const KUNCI_BASI_SAAT = 900;               // 15 minit
 const SESI_PREFIX = 'SESI_';               // Script Properties: SESI_<token>
 const SESI_TEMPOH_JAM = 24;                // sesi log masuk pengadil sah selama 24 jam
 // Medan markah yang HANYA boleh diubah oleh pengadil pemegang kunci gelanggang
-const LOCK_PROTECTED_FIELDS = ['skorP1', 'skorP2', 'fasaMasa', 'status', 'pengesahan', 'pengadil', 'pemenangPenalti', 'masaTamat'];
+const LOCK_PROTECTED_FIELDS = ['skorP1', 'skorP2', 'fasaMasa', 'status', 'pengesahan', 'pengadil', 'pemenangPenalti', 'masaTamat',
+  'sahPengadil', 'sahPengadilPada'];
 
 /* ---------- FASA 4: PEMBETULAN MARKAH ---------- */
 // Medan keputusan yang DIKUNCI selepas perlawanan DISAHKAN (SELESAI).
@@ -131,7 +146,7 @@ const GROUP_STAGES = ['PERINGKAT KUMPULAN', 'PUSINGAN KEDUA'];
 const KNOCKOUT_STAGES = ['SUKU AKHIR', 'SEPARUH AKHIR', 'TEMPAT 3/4', 'AKHIR'];
 // Medan perlawanan susulan yang boleh dihantar bersama pembetulan (hasil rombakan aplikasi)
 const SUSULAN_FIELDS = ['namaP1', 'namaP2', 'skorP1', 'skorP2', 'status', 'pengesahan', 'pemenangPenalti',
-  'fasaMasa', 'masaMula', 'masaTamat', 'disahkanOleh', 'disahkanPada', 'pengadil', 'catatan'];
+  'fasaMasa', 'masaMula', 'masaTamat', 'disahkanOleh', 'disahkanPada', 'pengadil', 'catatan', 'sahPengadil', 'sahPengadilPada'];
 const ADMIN_MAX_GAGAL = 8;                 // cubaan kunci Master Admin salah sebelum disekat
 const ADMIN_KUNCI_SAAT = 600;              // tempoh sekatan (10 minit)
 
@@ -157,6 +172,9 @@ const FIELDS = {
   status:          ['Status Perlawanan', 'status', 'statusperlawanan', 'statusmatch'],
   pengesahan:      ['Status Pengesahan', 'pengesahan', 'statuspengesahan', 'pengesahanurusetia'],
   pengadil:        ['Nama Pengadil', 'pengadil', 'namapengadil'],
+  // FASA 6: pengadil yang mengesahkan keputusan (nama daripada token sesi)
+  sahPengadil:     ['Disahkan Pengadil', 'disahkanpengadil', 'sahpengadil', 'pengesahanpengadil'],
+  sahPengadilPada: ['Masa Sah Pengadil', 'masasahpengadil', 'sahpengadilpada'],
   pemenangPenalti: ['Menang Penalti', 'pemenangpenalti', 'menangpenalti', 'penalti'],
   masaMula:        ['Masa Mula', 'masamula'],
   masaTamat:       ['Masa Tamat', 'masatamat'],
@@ -172,9 +190,9 @@ const FIELDS = {
 const UPDATABLE = [
   'kategori', 'no', 'peringkat', 'kumpulan', 'kodP1', 'namaP1', 'skorP1', 'skorP2', 'namaP2', 'kodP2',
   'gelanggang', 'fasa', 'fasaMasa', 'status', 'pengesahan', 'pengadil', 'pemenangPenalti',
-  'masaMula', 'masaTamat', 'disahkanOleh', 'disahkanPada', 'catatan'
+  'masaMula', 'masaTamat', 'disahkanOleh', 'disahkanPada', 'catatan', 'sahPengadil', 'sahPengadilPada'
 ];
-const DATE_FIELDS = ['masaMula', 'masaTamat', 'disahkanPada', 'kemaskini'];
+const DATE_FIELDS = ['masaMula', 'masaTamat', 'disahkanPada', 'kemaskini', 'sahPengadilPada'];
 
 const STATUS_MAP = {
   'BELUMBERMULA': 'MENUNGGU GILIRAN', 'MENUNGGU': 'MENUNGGU GILIRAN', 'MENUNGGUGILIRAN': 'MENUNGGU GILIRAN',
@@ -376,6 +394,8 @@ function upsertMatches_(list, opts) {
 
     UPDATABLE.forEach(function (field) {
       if (!(field in m) || m[field] === undefined) return;
+      // FASA 6: pengesahan pengadil hanya melalui skorLive (token pengadil) atau Master Admin
+      if (PENGADIL_ONLY_FIELDS.indexOf(field) >= 0 && !admin && !opts.abaikanKunci) return;
       // Gelanggang dikunci pengadil: markah hanya boleh diubah oleh pengadil tersebut
       if (dikunci && LOCK_PROTECTED_FIELDS.indexOf(field) >= 0) { dilindungi = true; return; }
       const nilai = cleanValue_(field, m[field]);
@@ -1072,8 +1092,21 @@ function skorLive_(body) {
     data.skorP1 = ''; data.skorP2 = ''; data.masaMula = ''; data.masaTamat = '';
     data.pengesahan = 'MENUNGGU'; data.pemenangPenalti = '';
     data.catatan = 'Ditangguhkan: ' + String(body.sebab || 'Sepak mula terlalu awal').slice(0, 200);
+    data.sahPengadil = ''; data.sahPengadilPada = '';
+  }
+  // FASA 6: pengadil mengesahkan keputusan -> nama diambil daripada token sesi
+  const sahkan = !tangguh && (body.sahkan === true || body.sahkan === 'true') &&
+    cleanValue_('status', data.status || '') === 'TAMAT - TUNGGU SAH';
+  const sahPada = new Date();
+  if (sahkan) {
+    data.sahPengadil = ref.nama;
+    data.sahPengadilPada = sahPada.toISOString();
   }
   upsertMatches_([data], { abaikanKunci: true });
+  if (sahkan) {
+    logSahPengadil_({ masa: sahPada, matchId: id, gelanggang: g, ref: ref, skorP1: data.skorP1, skorP2: data.skorP2,
+      pemenangPenalti: data.pemenangPenalti || '' });
+  }
 
   const lepas = body.lepas === true || body.lepas === 'true';
   if (tangguh) {
@@ -1087,7 +1120,20 @@ function skorLive_(body) {
     k.aktiviti = new Date().toISOString();
     tulisKunci_(db.sheet, k);
   }
-  return { ok: true, dilepaskan: lepas, masa: new Date().toISOString() };
+  return { ok: true, dilepaskan: lepas, disahkanPengadil: sahkan ? ref.nama : null, masa: new Date().toISOString() };
+}
+
+// FASA 6: catat setiap pengesahan keputusan oleh pengadil (tab Log_Sah_Pengadil)
+function logSahPengadil_(x) {
+  const sheet = getOrCreateSheet_(SHEET_SAH_PENGADIL);
+  if (sheet.getRange(1, 1, 1, SAH_PENGADIL_HEADER.length).getValues()[0].join('') === '') {
+    sheet.getRange(1, 1, 1, SAH_PENGADIL_HEADER.length).setValues([SAH_PENGADIL_HEADER]).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  const m = cariPerlawanan_(x.matchId) || {};
+  sheet.appendRow([x.masa, x.matchId, x.gelanggang, m.namaP1 || '', (skorInt_(x.skorP1) || 0) + ' - ' + (skorInt_(x.skorP2) || 0),
+    m.namaP2 || '', x.pemenangPenalti || '', x.ref.nama, x.ref.id]);
+  sheet.getRange(sheet.getLastRow(), 1).setNumberFormat('dd/MM/yyyy HH:mm:ss');
 }
 
 /* =========================================================
@@ -1169,6 +1215,7 @@ function papanLive_() {
       rehat: !!rehat,
       rehatSebab: rehat ? rehat.sebab : '',
       rehatPada: rehat ? rehat.pada : null,
+      sahPengadil: m ? String(m.sahPengadil || '') : '',   // FASA 6
       kemaskini: m ? m.kemaskini : null
     };
   });
@@ -1199,7 +1246,8 @@ function perlawananAwam_(d) {
     namaP1: String(d.namaP1 || ''), namaP2: String(d.namaP2 || ''), kodP1: String(d.kodP1 || ''), kodP2: String(d.kodP2 || ''),
     skorP1: skorInt_(d.skorP1), skorP2: skorInt_(d.skorP2),
     status: String(d.status || ''), pengesahan: String(d.pengesahan || ''), fasaMasa: String(d.fasaMasa || ''),
-    masaMula: d.masaMula || null, pengadil: String(d.pengadil || ''), gelanggang: String(d.gelanggang || '')
+    masaMula: d.masaMula || null, pengadil: String(d.pengadil || ''), gelanggang: String(d.gelanggang || ''),
+    sahPengadil: String(d.sahPengadil || ''), sahPengadilPada: d.sahPengadilPada || null
   };
 }
 
