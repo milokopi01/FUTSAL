@@ -62,6 +62,16 @@
  *                - Lajur ini hanya boleh ditulis melalui skorLive (pengadil) atau Master Admin.
  *                  Tangguh perlawanan mengosongkan pengesahan.
  *
+ *              + FASA 7 - PETI KELULUSAN URUSETIA / MASTER ADMIN:
+ *                - Peranti Urusetia / Master Admin membaca GET ?action=read setiap 15 saat
+ *                  supaya keputusan "TAMAT - TUNGGU SAH" daripada telefon pengadil muncul
+ *                  dalam Peti Kelulusan.
+ *                - Sahkan / Tolak dihantar terus: { action: 'updateMatches', matches:[...],
+ *                  logBaharu:[...] }. 'logBaharu' DITAMBAH ke tab Log_Pengesahan (tidak
+ *                  memadam log sedia ada).
+ *                - Keputusan DITOLAK mengosongkan "Disahkan Pengadil" supaya pengadil
+ *                  perlu mengesahkan semula.
+ *
  *  Lajur dikesan melalui NAMA TAJUK (baris 1), jadi susunan lajur Bahagian 1
  *  boleh dikekalkan. Lajur yang tiada akan ditambah automatik di hujung.
  * =========================================================
@@ -79,8 +89,8 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.6.0';
-const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil'];
+const API_VERSI = '1.7.0';
+const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan'];
 // FASA 6: log pengesahan keputusan oleh pengadil (tambah sahaja, tidak ditulis ganti)
 const SHEET_SAH_PENGADIL = 'Log_Sah_Pengadil';
 const SAH_PENGADIL_HEADER = ['Masa', 'ID Match', 'Gelanggang', 'Pasukan 1', 'Skor', 'Pasukan 2', 'Menang Penalti', 'Pengadil', 'ID Pengadil'];
@@ -326,6 +336,8 @@ function doPost(e) {
     if (carta.length) writeStandings_(carta);
     else if (Array.isArray(body.standings) && body.standings.length) writeStandings_(body.standings);
     if (Array.isArray(body.approvalLog) && body.approvalLog.length) writeApprovalLog_(body.approvalLog);
+    // FASA 7: log Sahkan / Tolak daripada Peti Kelulusan -> ditambah, bukan ditulis ganti
+    if (Array.isArray(body.logBaharu) && body.logBaharu.length) tambahApprovalLog_(body.logBaharu);
 
     return output_({
       ok: true,
@@ -408,6 +420,12 @@ function upsertMatches_(list, opts) {
       }
       row[colOf[field]] = nilai;
     });
+    // FASA 7: keputusan DITOLAK -> pengesahan pengadil dikosongkan (perlu disahkan semula)
+    if (!ditolakMuktamad && !dilindungi && String(row[colOf.pengesahan] || '').toUpperCase() === 'DITOLAK' &&
+        cleanValue_('pengesahan', m.pengesahan || '') === 'DITOLAK') {
+      if (colOf.sahPengadil !== undefined) row[colOf.sahPengadil] = '';
+      if (colOf.sahPengadilPada !== undefined) row[colOf.sahPengadilPada] = '';
+    }
     if (admin && m.versiPembetulan !== undefined && colOf.versiPembetulan !== undefined) {
       row[colOf.versiPembetulan] = String(m.versiPembetulan || '').slice(0, 60);
     }
@@ -497,6 +515,25 @@ function writeApprovalLog_(log) {
     sheet.getRange(2, 1, rows.length, 1).setNumberFormat('dd/MM/yyyy HH:mm:ss');
   }
   sheet.setFrozenRows(1);
+}
+
+// FASA 7: tambah baris log pengesahan (Sahkan / Tolak) tanpa memadam log sedia ada
+function tambahApprovalLog_(log) {
+  const sheet = getOrCreateSheet_(SHEET_LOG);
+  const header = ['Masa', 'Match', 'Keputusan', 'Tindakan', 'Oleh'];
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  const rows = log.slice(0, 50).map(function (l) {
+    const d = new Date(l && l.masa);
+    return [isNaN(d.getTime()) ? new Date() : d, String(l && l.matchId || '').slice(0, 20),
+      String(l && l.keputusan || '').slice(0, 300), String(l && l.tindakan || '').slice(0, 300), String(l && l.oleh || '').slice(0, 100)];
+  });
+  if (!rows.length) return;
+  const start = sheet.getLastRow() + 1;
+  sheet.getRange(start, 1, rows.length, header.length).setValues(rows);
+  sheet.getRange(start, 1, rows.length, 1).setNumberFormat('dd/MM/yyyy HH:mm:ss');
 }
 
 /* =========================================================

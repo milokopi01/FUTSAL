@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbwCrO0iMxN5dKUrldaEp3K-lamw8vKn5LZjgtin_JK9-awMj-OzbpTnUjnYZD67qFF4/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -523,6 +523,8 @@
        8. PETI KELULUSAN URUSETIA
        ========================================================= */
     .approval-list { display: grid; gap: 14px; }
+    .approval-sync-info { font-size: .8rem; margin: -6px 0 14px; }
+    .approval-sync-info.is-error { color: var(--danger, #e5484d); }
     .approval-item {
       display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
       padding: 16px 18px; border-left: 4px solid var(--court-done);
@@ -1148,9 +1150,11 @@
             <p>Keputusan yang dihantar oleh pengadil gelanggang perlu disahkan sebelum dikira dalam carta liga.</p>
           </div>
           <div class="panel-tools">
+            <button type="button" class="btn btn-sm" id="btnPullResults" title="Ambil keputusan terkini yang dihantar pengadil daripada Google Sheets">🔄 Semak Keputusan Baharu</button>
             <button type="button" class="btn btn-success btn-sm" id="btnApproveAll">✔ Sahkan Semua</button>
           </div>
         </div>
+        <p class="muted approval-sync-info" id="approvalSyncInfo"></p>
 
         <div class="card glass lock-screen hidden" id="approvalLocked">
           <div class="icon">🔒</div>
@@ -2263,6 +2267,7 @@
       });
       state.ui.activeTab = tabId;
       saveState();
+      if (tabId === 'tab-approval' && canApprove()) pullMatchesFromSheet();
     }
 
     function updateApprovalBadge() {
@@ -2649,6 +2654,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if (approvalLocked) approvalLocked.classList.toggle('hidden', canApprove());
       if (approvalContent) approvalContent.classList.toggle('hidden', !canApprove());
       if (btnApproveAll) btnApproveAll.classList.toggle('hidden', !canApprove());
+      const btnPullResults = document.getElementById('btnPullResults');
+      if (btnPullResults) btnPullResults.classList.toggle('hidden', !canApprove() || !getGasUrl());
       document.querySelectorAll('#approvalLocked [data-open-login]').forEach(b => b.classList.toggle('hidden', share));
 
       // Panel Tetapan Master Admin
@@ -3271,6 +3278,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         disahkanPada: now
       });
       addApprovalLog(match, 'DISAHKAN');
+      markDecision(match.id);
+      if (!options.silent) pushDecisions([match.id]);
 
       // Kosongkan gelanggang & cari perlawanan seterusnya (MENUNGGU GILIRAN)
       const court = state.courts.find(c => c.matchSemasa === match.id);
@@ -3305,7 +3314,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
       if (!window.confirm(`Sahkan ${pending.length} keputusan sekaligus?`)) return 0;
       let count = 0;
-      pending.forEach(m => { if (approveMatch(m.id, { silent: true })) count += 1; });
+      const done = [];
+      pending.forEach(m => { if (approveMatch(m.id, { silent: true })) { count += 1; done.push(m.id); } });
+      if (done.length) pushDecisions(done);
       saveState();
       refreshAllViews();
       showToast(`${count} keputusan disahkan.`, 'success');
@@ -3347,11 +3358,241 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         });
       }
       addApprovalLog(match, `DITOLAK: ${match.catatan}`);
+      markDecision(match.id);
+      pushDecisions([match.id]);
 
       saveState();
       refreshAllViews();
       showToast(`${match.id} ditolak dan dikembalikan kepada pengadil untuk semakan.`, 'warn');
       return true;
+    }
+
+    /* ---------------------------------------------------------
+       3.7b PENYEGERAKAN KEPUTUSAN PENGADIL -> PETI KELULUSAN (FASA 7)
+       Pengadil menghantar keputusan dari telefon sendiri (skorLive) terus ke
+       Google Sheets. Peranti Urusetia / Master Admin kini MEMBACA semula tab
+       Jadual_Perlawanan (GET ?action=read) setiap 15 saat, bila tab Peti
+       Kelulusan dibuka, atau bila butang "Semak Keputusan Baharu" ditekan.
+       Keputusan Sahkan / Tolak pula terus dihantar ke Google Sheets.
+       --------------------------------------------------------- */
+    const resultSync = { busy: false, lastOk: null, error: '', lastPullAt: 0 };
+    const DECISION_HOLD_MS = 120000;     // abaikan data pelayan bagi keputusan yang baru diputuskan di peranti ini
+    const recentDecisions = {};          // matchId -> masa (ms) keputusan tempatan
+
+    function markDecision(matchId) { recentDecisions[matchId] = Date.now(); }
+    function isDecisionHeld(matchId) {
+      const t = recentDecisions[matchId];
+      if (!t) return false;
+      if (Date.now() - t > DECISION_HOLD_MS) { delete recentDecisions[matchId]; return false; }
+      return true;
+    }
+
+    function srvStatus(v) {
+      const k = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (k === 'TAMATTUNGGUSAH' || k === 'TAMAT') return MATCH_STATUS.TUNGGU_SAH;
+      if (k === 'SELESAI' || k === 'DISAHKAN') return MATCH_STATUS.SELESAI;
+      if (k === 'LIVE' || k === 'SEDANGBERLANGSUNG') return MATCH_STATUS.LIVE;
+      if (k === 'MENUNGGUGILIRAN' || k === 'MENUNGGU' || k === 'BELUMBERMULA') return MATCH_STATUS.MENUNGGU;
+      return String(v || '');
+    }
+    function srvScore(v) {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Number(v);
+      return isNaN(n) ? null : n;
+    }
+    function srvPenalti(v, match) {
+      const t = String(v || '').trim();
+      if (!t) return null;
+      if (t === 'P1' || t === 'P2') return t;
+      const key = x => String(x || '').trim().toUpperCase();
+      if (key(t) === key(match.namaP1)) return 'P1';
+      if (key(t) === key(match.namaP2)) return 'P2';
+      return null;
+    }
+
+    function updateApprovalSyncInfo() {
+      const el = document.getElementById('approvalSyncInfo');
+      if (!el) return;
+      if (!canApprove()) { el.textContent = ''; return; }
+      if (!getGasUrl()) {
+        el.classList.add('is-error');
+        el.textContent = '⚠ URL Google Apps Script belum ditetapkan. Keputusan dari telefon pengadil tidak dapat dibaca.';
+        return;
+      }
+      el.classList.toggle('is-error', !!resultSync.error);
+      if (resultSync.error) el.textContent = `⚠ Gagal membaca keputusan pengadil: ${resultSync.error}`;
+      else if (resultSync.busy && !resultSync.lastOk) el.textContent = '⏳ Menyemak keputusan pengadil di Google Sheets…';
+      else if (resultSync.lastOk) el.textContent = `☁ Disemak dengan Google Sheets pada ${formatTime(resultSync.lastOk)} · semakan automatik setiap 15 saat.`;
+      else el.textContent = '';
+    }
+
+    // Gabungkan satu baris Jadual_Perlawanan ke dalam state tempatan. Pulangkan jenis perubahan.
+    function mergeServerMatch(row) {
+      const match = getMatch(String(row.id || '').toUpperCase());
+      if (!match || isDecisionHeld(match.id)) return null;
+      const st = srvStatus(row.status);
+      const sah = String(row.pengesahan || '').toUpperCase();
+      const s1 = srvScore(row.skorP1), s2 = srvScore(row.skorP2);
+      const penalti = srvPenalti(row.pemenangPenalti, match);
+      const findCourt = () => state.courts.find(c => c.matchSemasa === match.id);
+
+      // (a) Pengadil telah tamat & mengesahkan -> masuk Peti Kelulusan
+      if (st === MATCH_STATUS.TUNGGU_SAH) {
+        if (match.status === MATCH_STATUS.SELESAI) return null;
+        const same = match.status === MATCH_STATUS.TUNGGU_SAH && Number(match.skorP1) === s1 &&
+          Number(match.skorP2) === s2 && (match.pemenangPenalti || null) === penalti &&
+          (match.sahPengadil || null) === (row.sahPengadil || null);
+        if (same) return null;
+        Object.assign(match, {
+          skorP1: s1 === null ? 0 : s1,
+          skorP2: s2 === null ? 0 : s2,
+          status: MATCH_STATUS.TUNGGU_SAH,
+          pengesahan: 'MENUNGGU',
+          pemenangPenalti: penalti,
+          masaMula: row.masaMula || match.masaMula || null,
+          masaTamat: row.masaTamat || match.masaTamat || nowIso(),
+          pengadil: row.pengadil || match.pengadil || null,
+          sahPengadil: row.sahPengadil || null,
+          sahPengadilPada: row.sahPengadilPada || null
+        });
+        let court = findCourt();
+        if (!court) {
+          const g = getCourt(match.gelanggang);
+          const cur = g ? getMatch(g.matchSemasa) : null;
+          if (g && g.status !== COURT_STATUS.LIVE && g.status !== COURT_STATUS.TAMAT &&
+              (!cur || cur.status === MATCH_STATUS.MENUNGGU || cur.status === MATCH_STATUS.SELESAI)) {
+            court = g;
+            court.matchSemasa = match.id;
+          }
+        }
+        if (court) {
+          Object.assign(court, {
+            status: COURT_STATUS.TAMAT,
+            fasaMasa: 'TAMAT',
+            fasaMulaPada: null,
+            skorLiveP1: Number(match.skorP1) || 0,
+            skorLiveP2: Number(match.skorP2) || 0,
+            kemaskiniTerakhir: nowIso()
+          });
+        }
+        addApprovalLog(match, `DITERIMA DARIPADA PENGADIL${match.sahPengadil ? ' (' + match.sahPengadil + ')' : ''}`);
+        return 'baharu';
+      }
+
+      // (b) Telah DISAHKAN di peranti Urusetia / Master Admin lain
+      if (st === MATCH_STATUS.SELESAI && sah === 'DISAHKAN') {
+        if (match.status === MATCH_STATUS.SELESAI) return null;
+        Object.assign(match, {
+          skorP1: s1 === null ? (Number(match.skorP1) || 0) : s1,
+          skorP2: s2 === null ? (Number(match.skorP2) || 0) : s2,
+          status: MATCH_STATUS.SELESAI,
+          pengesahan: 'DISAHKAN',
+          pemenangPenalti: penalti,
+          masaTamat: row.masaTamat || match.masaTamat || null,
+          pengadil: row.pengadil || match.pengadil || null,
+          disahkanOleh: row.disahkanOleh || 'Urusetia',
+          disahkanPada: row.disahkanPada || nowIso()
+        });
+        const court = findCourt();
+        if (typeof window.resolveKnockoutTeams === 'function') window.resolveKnockoutTeams();
+        if (court) { resetCourt(court); autoAssignCourts(court.id, { silent: true }); }
+        return 'disahkan';
+      }
+
+      // (c) Telah DITOLAK di peranti lain -> kembali kepada pengadil
+      if (st === MATCH_STATUS.LIVE && sah === 'DITOLAK' && match.status === MATCH_STATUS.TUNGGU_SAH) {
+        Object.assign(match, {
+          status: MATCH_STATUS.LIVE, pengesahan: 'DITOLAK',
+          catatan: row.catatan || match.catatan || 'Skor perlu disemak semula',
+          masaTamat: null, pemenangPenalti: null, sahPengadil: null, sahPengadilId: null, sahPengadilPada: null
+        });
+        const court = findCourt();
+        if (court) Object.assign(court, { status: COURT_STATUS.LIVE, fasaMasa: 'SEPARUH 2', fasaMulaPada: nowIso(), kemaskiniTerakhir: nowIso() });
+        return 'ditolak';
+      }
+      return null;
+    }
+
+    // Baca Jadual_Perlawanan daripada Google Sheets & kemas kini Peti Kelulusan
+    async function pullMatchesFromSheet(opts = {}) {
+      const url = getGasUrl();
+      if (!canApprove() || !url || isShareView()) { updateApprovalSyncInfo(); return false; }
+      if (resultSync.busy) return false;
+      if (!opts.manual && !opts.silent && Date.now() - resultSync.lastPullAt < 5000) return false;
+      if (!navigator.onLine) {
+        resultSync.error = 'Tiada sambungan internet.';
+        updateApprovalSyncInfo();
+        if (opts.manual) showToast('Tiada sambungan internet.', 'error');
+        return false;
+      }
+      resultSync.busy = true;
+      resultSync.lastPullAt = Date.now();
+      const btn = document.getElementById('btnPullResults');
+      if (btn && opts.manual) btn.disabled = true;
+      updateApprovalSyncInfo();
+      try {
+        const sep = url.includes('?') ? '&' : '?';
+        const res = await fetch(`${url}${sep}action=read&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        let data = null;
+        try { data = JSON.parse(await res.text()); } catch (err) { data = null; }
+        if (!data || !data.ok || !Array.isArray(data.matches)) {
+          throw new Error((data && data.error) || 'Respons Google Sheets tidak sah. Pastikan Code.gs telah di-deploy.');
+        }
+        const count = { baharu: 0, disahkan: 0, ditolak: 0 };
+        const baru = [];
+        data.matches.forEach(row => {
+          const kind = mergeServerMatch(row);
+          if (kind) { count[kind] += 1; if (kind === 'baharu') baru.push(String(row.id).toUpperCase()); }
+        });
+        resultSync.lastOk = nowIso();
+        resultSync.error = '';
+        const changed = count.baharu + count.disahkan + count.ditolak;
+        if (changed) {
+          saveState();
+          refreshAllViews();
+          if (!opts.silent && count.baharu) {
+            showToast(`📥 ${count.baharu} keputusan baharu daripada pengadil (${baru.join(', ')}) menunggu pengesahan anda.`, 'warn', 6000);
+          }
+        }
+        if (opts.manual && !changed) {
+          const n = state.matches.filter(m => m.status === MATCH_STATUS.TUNGGU_SAH).length;
+          showToast(n ? `Tiada keputusan baharu. ${n} keputusan masih menunggu pengesahan.` : 'Tiada keputusan baharu daripada pengadil.', 'info');
+        }
+        return true;
+      } catch (err) {
+        resultSync.error = (err && err.message) || 'ralat rangkaian';
+        if (opts.manual) showToast(`Gagal membaca Google Sheets: ${resultSync.error}`, 'error', 5500);
+        return false;
+      } finally {
+        resultSync.busy = false;
+        if (btn) btn.disabled = false;
+        updateApprovalSyncInfo();
+      }
+    }
+
+    // Hantar keputusan Sahkan / Tolak terus ke Google Sheets
+    async function pushDecisions(ids) {
+      if (!getGasUrl() || !ids || !ids.length) return null;
+      const matches = ids.map(id => getMatch(id)).filter(Boolean);
+      if (!matches.length) return null;
+      const logIds = new Set(ids);
+      const logBaharu = state.approvalLog.filter(l => logIds.has(l.matchId)).slice(0, ids.length * 2);
+      const res = await callGas({
+        action: 'updateMatches',
+        sumber: 'PETI-KELULUSAN',
+        adminKey: canManageSystem() ? (getAdminKey() || undefined) : undefined,
+        matches: matches.map(syncMatchRow),
+        logBaharu
+      });
+      if (res && res.ok) {
+        ids.forEach(id => { recentDecisions[id] = Date.now() - DECISION_HOLD_MS + 20000; });
+        if (res.dimuktamad) showToast('Sebahagian keputusan telah pun disahkan di Google Sheets sebelum ini.', 'info');
+        return res;
+      }
+      showToast(res && res.networkError
+        ? 'Keputusan disimpan dalam peranti ini tetapi GAGAL dihantar ke Google Sheets. Semak internet & tekan "Semak Keputusan Baharu".'
+        : `Google Sheets menolak keputusan: ${(res && res.error) || 'ralat tidak diketahui'}`, 'error', 6500);
+      return res;
     }
 
     /* ---------------------------------------------------------
@@ -3589,6 +3830,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if (!s || !getGasUrl()) return;
       if (document.hidden && !force) return;
       refreshCourtLocks();
+      if (canApprove()) pullMatchesFromSheet();
       if (s.peranan === 'PENGADIL' && s.aksesGelanggang &&
           (force || Date.now() - lastHeartbeatAt >= LOCK_HEARTBEAT_MS)) {
         sendHeartbeat();
@@ -5799,6 +6041,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const list = document.getElementById('approvalList');
       const logBody = document.getElementById('approvalLogBody');
       if (!list || !logBody) return;
+      updateApprovalSyncInfo();
       if (!canApprove()) {
         list.innerHTML = '';
         logBody.innerHTML = '';
@@ -6189,6 +6432,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const btn = document.getElementById('btnSyncGas');
       if (btn) btn.disabled = true;
       try {
+        // Ambil keputusan terkini pengadil dahulu supaya data peranti lama tidak
+        // menulis ganti keputusan "TAMAT - TUNGGU SAH" di Google Sheets.
+        await pullMatchesFromSheet({ silent: true });
         // text/plain + no-cors: elak preflight CORS Apps Script
         await fetch(url, {
           method: 'POST',
@@ -7438,6 +7684,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       on('btnPushReferees', 'click', pushAllReferees);
       on('refereeSearch', 'input', renderReferees);
       on('btnApproveAll', 'click', approveAllPending);
+      on('btnPullResults', 'click', () => pullMatchesFromSheet({ manual: true }));
       on('btnAutoDraw', 'click', autoDrawXY);
       on('btnSaveDraw', 'click', saveDrawXY);
       on('btnExportData', 'click', () => exportData(false));
