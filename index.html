@@ -2,6 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -36,6 +37,17 @@
       --brand-glow: rgba(46, 230, 166, 0.35);
       --accent: #ffb547;
 
+      /* Warna tema ikut kategori (lalai = SEMUA kategori) */
+      --tint-1: rgba(19, 184, 214, 0.22);
+      --tint-2: rgba(46, 230, 166, 0.16);
+      --tint-3: rgba(255, 181, 71, 0.10);
+      --cat: var(--brand);
+      --cat-2: var(--brand-2);
+      --cat-soft: rgba(46, 230, 166, 0.12);
+      --cat-line: rgba(46, 230, 166, 0.38);
+      --cat-glow: rgba(46, 230, 166, 0.45);
+      --cat-text: #8ff3cf;
+
       /* Indikator status gelanggang */
       --court-ready: #22c55e;
       --court-ready-bg: rgba(34, 197, 94, 0.12);
@@ -62,6 +74,37 @@
       --t-med: 280ms cubic-bezier(.4, 0, .2, 1);
     }
 
+    /* =========================================================
+       1b. TEMA WARNA KATEGORI
+       SR = Sekolah Rendah (biru) · SM = Sekolah Menengah (jingga)
+       ========================================================= */
+    body[data-category="SR"] {
+      --tint-1: rgba(56, 189, 248, 0.28);
+      --tint-2: rgba(14, 165, 233, 0.20);
+      --tint-3: rgba(56, 189, 248, 0.18);
+      --bg-1: #0a1e38;
+      --bg-2: #10263f;
+      --cat: #38bdf8;
+      --cat-2: #0ea5e9;
+      --cat-soft: rgba(56, 189, 248, 0.14);
+      --cat-line: rgba(56, 189, 248, 0.45);
+      --cat-glow: rgba(56, 189, 248, 0.45);
+      --cat-text: #9fdcff;
+    }
+    body[data-category="SM"] {
+      --tint-1: rgba(251, 146, 60, 0.28);
+      --tint-2: rgba(249, 115, 22, 0.20);
+      --tint-3: rgba(255, 181, 71, 0.18);
+      --bg-1: #18100a;
+      --bg-2: #241a0f;
+      --cat: #fb923c;
+      --cat-2: #f97316;
+      --cat-soft: rgba(251, 146, 60, 0.14);
+      --cat-line: rgba(251, 146, 60, 0.45);
+      --cat-glow: rgba(251, 146, 60, 0.45);
+      --cat-text: #ffcf9e;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
@@ -77,9 +120,9 @@
       content: "";
       position: fixed; inset: 0; z-index: -2;
       background:
-        radial-gradient(900px 600px at 10% -10%, rgba(19, 184, 214, 0.22), transparent 60%),
-        radial-gradient(800px 600px at 110% 10%, rgba(46, 230, 166, 0.16), transparent 60%),
-        radial-gradient(700px 500px at 50% 120%, rgba(255, 181, 71, 0.10), transparent 60%),
+        radial-gradient(900px 600px at 10% -10%, var(--tint-1), transparent 60%),
+        radial-gradient(800px 600px at 110% 10%, var(--tint-2), transparent 60%),
+        radial-gradient(700px 500px at 50% 120%, var(--tint-3), transparent 60%),
         linear-gradient(180deg, var(--bg-0), var(--bg-1));
     }
     body::after {
@@ -175,7 +218,8 @@
       position: sticky; top: 0; z-index: 50;
       background: rgba(7, 11, 22, 0.72);
       backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-      border-bottom: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--cat-line);
+      box-shadow: 0 6px 26px var(--cat-soft);
     }
     .header-inner {
       display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center;
@@ -201,7 +245,9 @@
       transition: background var(--t-fast), color var(--t-fast);
     }
     .category-switch button:hover { color: var(--text-0); }
-    .category-switch button.active { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #04121a; }
+    .category-switch button.active { background: linear-gradient(135deg, var(--cat), var(--cat-2)); color: #04121a; }
+    .category-switch button[data-category="SR"].active { box-shadow: 0 0 16px rgba(56,189,248,.45); }
+    .category-switch button[data-category="SM"].active { box-shadow: 0 0 16px rgba(251,146,60,.45); }
 
     .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
     .access-badge {
@@ -217,6 +263,26 @@
     .access-badge[data-role="URUSETIA"] .role-dot { background: var(--info); box-shadow: 0 0 10px var(--info); }
     .access-badge[data-role="PENGADIL"] { border-color: rgba(46,230,166,.5); }
     .access-badge[data-role="PENGADIL"] .role-dot { background: var(--brand); box-shadow: 0 0 10px var(--brand); }
+
+    /* =========================================================
+       3b. PITA KATEGORI (penanda kategori semasa)
+       ========================================================= */
+    .cat-ribbon {
+      display: flex; align-items: center; gap: 10px;
+      margin: 14px 0 4px; padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 0.78rem; font-weight: 800;
+      letter-spacing: .05em; text-transform: uppercase;
+      color: var(--cat-text);
+      background: var(--cat-soft);
+      border: 1px solid var(--cat-line);
+      transition: background var(--t-med), border-color var(--t-med), color var(--t-med);
+    }
+    .cat-ribbon .cat-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      background: var(--cat); box-shadow: 0 0 12px var(--cat-glow);
+    }
+    .cat-ribbon .cat-note { margin-left: auto; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text-2); }
 
     /* =========================================================
        4. NAVIGASI TAB
@@ -246,6 +312,38 @@
       font-size: 0.7rem; font-weight: 800; background: var(--court-done); color: #1a1400;
     }
     .tab-btn.locked { opacity: .55; }
+    .tab-btn.tab-ko { border-color: var(--cat-line); }
+    .tab-btn.tab-ko.ko-ready::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--cat); box-shadow: 0 0 10px var(--cat-glow); }
+
+    /* ===== CARTA KALAH MATI (BRACKET) ===== */
+    .ko-block { margin-bottom: 28px; }
+    .ko-scroll { overflow-x: auto; padding: 8px 4px 16px; }
+    .ko-bracket { display: flex; gap: 48px; min-height: 260px; align-items: stretch; }
+    .ko-round { display: flex; flex-direction: column; min-width: 230px; flex-shrink: 0; }
+    .ko-round-title { font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--cat-text); text-align: center; margin-bottom: 10px; }
+    .ko-round-body { flex: 1; display: flex; flex-direction: column; }
+    .ko-pair { position: relative; flex: 1; display: flex; flex-direction: column; }
+    .ko-slot { position: relative; flex: 1; display: flex; align-items: center; padding: 8px 0; }
+    .ko-pair.has-next.two::after { content: ""; position: absolute; right: -24px; top: 25%; bottom: 25%; width: 24px; border: 2px solid rgba(255,255,255,.22); border-left: 0; border-radius: 0 6px 6px 0; }
+    .ko-pair.has-next.one .ko-slot::after { content: ""; position: absolute; right: -48px; top: 50%; width: 48px; border-top: 2px solid rgba(255,255,255,.22); }
+    .ko-round.has-prev .ko-slot::before { content: ""; position: absolute; left: -24px; top: 50%; width: 24px; border-top: 2px solid rgba(255,255,255,.22); }
+    .ko-card { width: 100%; background: rgba(10,14,22,.85); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.35); overflow: hidden; }
+    .ko-card.live { border-color: rgba(239,68,68,.7); box-shadow: 0 0 0 1px rgba(239,68,68,.4), 0 6px 18px rgba(0,0,0,.35); }
+    .ko-card.final { border-color: var(--cat-line); box-shadow: 0 0 22px var(--cat-glow); }
+    .ko-meta { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 6px 12px; font-size: .66rem; font-family: var(--font-mono); color: var(--text-2); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .ko-meta .badge { font-size: .6rem; padding: 2px 6px; }
+    .ko-team { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; font-weight: 700; }
+    .ko-team .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ko-team .sc { font-family: var(--font-mono); font-weight: 800; }
+    .ko-team.win { color: var(--text-0); }
+    .ko-team.win .sc { color: var(--cat); }
+    .ko-team.lose { color: var(--text-2); }
+    .ko-team.lose .nm { text-decoration: line-through; }
+    .ko-team.tbd .nm { color: var(--text-2); font-style: italic; font-weight: 600; font-size: .8rem; }
+    .ko-extra { display: flex; gap: 48px; flex-wrap: wrap; margin-top: 8px; }
+    .ko-extra .ko-round { min-width: 230px; }
+    .ko-champ { display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; padding: 4px 12px; border-radius: 999px; background: var(--cat-soft); border: 1px solid var(--cat-line); color: var(--cat-text); font-size: .8rem; font-weight: 800; }
+    .ko-cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; padding: 12px 16px; border-radius: 12px; background: var(--cat-soft); border: 1px solid var(--cat-line); font-weight: 700; }
     .tab-btn.locked::before { content: "🔒"; font-size: .75rem; }
 
     /* =========================================================
@@ -383,6 +481,13 @@
        ========================================================= */
     .standings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 18px; }
     .group-card { padding: 0; overflow: hidden; }
+    /* Aksen warna pada kad kumpulan ikut kategori */
+    #standingsSR .group-card { border-color: rgba(56,189,248,.32); }
+    #standingsSM .group-card { border-color: rgba(251,146,60,.32); }
+    #standingsTitleSR { color: #9fdcff; }
+    #standingsTitleSM { color: #ffcf9e; }
+    #koTitleSR { color: #9fdcff; }
+    #koTitleSM { color: #ffcf9e; }
     .group-card .group-head {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
       padding: 14px 18px; border-bottom: 1px solid var(--glass-border); background: rgba(255,255,255,.03);
@@ -670,7 +775,7 @@
     .impact-sec.warn h4 { color: var(--accent); }
   </style>
 </head>
-<body>
+<body data-category="SEMUA">
 
   <!-- =========================================================
        HEADER
@@ -720,6 +825,9 @@
         <button type="button" class="tab-btn" role="tab" data-tab="tab-standings" aria-selected="false">
           <span aria-hidden="true">🏆</span> Carta Liga
         </button>
+        <button type="button" class="tab-btn tab-ko" role="tab" data-tab="tab-knockout" aria-selected="false" id="tabBtnKnockout">
+          <span aria-hidden="true">⚔️</span> Kalah Mati
+        </button>
         <button type="button" class="tab-btn" role="tab" data-tab="tab-schedule" aria-selected="false">
           <span aria-hidden="true">📅</span> Jadual Penuh (65 Match)
         </button>
@@ -736,6 +844,13 @@
 
   <main>
     <div class="container">
+
+      <!-- PITA KATEGORI: menunjukkan kategori yang sedang dipaparkan -->
+      <div class="cat-ribbon" id="catRibbon" role="status" aria-live="polite">
+        <span class="cat-dot" aria-hidden="true"></span>
+        <span id="catRibbonText">Semua Kategori</span>
+        <span class="cat-note" id="catRibbonNote">Sekolah Rendah + Sekolah Menengah</span>
+      </div>
 
       <!-- =========================================================
            TAB 1: SIMULASI GELANGGANG LIVE
@@ -787,27 +902,23 @@
           <!-- Jadual kumpulan A, B, C, D (Sekolah Menengah) dijana oleh JavaScript -->
         </div>
 
-        <div class="card glass" style="margin-top: 24px;">
-          <h3 class="card-title">🧩 Laluan Kalah Mati</h3>
-          <div class="table-wrap">
-            <table class="data-table" id="knockoutTable">
-              <thead>
-                <tr>
-                  <th>Match</th>
-                  <th>Kategori</th>
-                  <th>Peringkat</th>
-                  <th>Pasukan 1</th>
-                  <th class="num">Skor</th>
-                  <th>Pasukan 2</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="knockoutBody">
-                <!-- Dijana oleh JavaScript -->
-              </tbody>
-            </table>
+        <div class="ko-cta hidden" id="koCta">
+          <span>🏁 Peringkat liga telah tamat. Pusingan kalah mati kini bermula.</span>
+          <button type="button" class="btn" id="btnGoKnockout">⚔️ Lihat Carta Kalah Mati</button>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           TAB KHAS: PUSINGAN KALAH MATI (BRACKET)
+           ========================================================= -->
+      <section class="tab-panel" id="tab-knockout" role="tabpanel">
+        <div class="panel-head">
+          <div>
+            <h2>Pusingan Kalah Mati</h2>
+            <p>Carta perlawanan dikemas kini automatik selepas keputusan DISAHKAN oleh Urusetia. Pasukan tersingkir dipotong.</p>
           </div>
         </div>
+        <div id="knockoutBracket"></div>
       </section>
 
       <!-- =========================================================
@@ -4630,30 +4741,67 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       });
     }
 
-    function renderKnockout() {
-      const body = document.getElementById('knockoutBody');
-      if (!body) return;
-      const rows = state.matches
-        .filter(m => isKnockout(m) && categoryVisible(m.kategori))
-        .sort((a, b) => a.kategori === b.kategori ? a.no - b.no : b.kategori.localeCompare(a.kategori));
-      if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="7" class="muted" style="text-align:center;">Tiada perlawanan kalah mati.</td></tr>';
-        return;
-      }
-      body.innerHTML = rows.map(m => {
-        const win = matchWinnerSide(m);
-        const cls = m.status === MATCH_STATUS.LIVE ? 'row-live' : (m.status === MATCH_STATUS.TUNGGU_SAH ? 'row-done' : '');
-        return `
-          <tr class="${cls}">
-            <td class="mono">${escapeHtml(m.id)}</td>
-            <td>${m.kategori === 'SR' ? '<span class="badge badge-sr">SR</span>' : '<span class="badge badge-sm">SM</span>'}</td>
-            <td>${escapeHtml(m.peringkat)}</td>
-            <td class="team-cell">${win === 'P1' ? '🏅 ' : ''}${escapeHtml(m.namaP1)}<small>${escapeHtml(m.kodP1)}</small></td>
-            <td class="score-cell">${scoreText(m)}</td>
-            <td class="team-cell">${win === 'P2' ? '🏅 ' : ''}${escapeHtml(m.namaP2)}<small>${escapeHtml(m.kodP2)}</small></td>
-            <td>${statusBadge(m)}</td>
-          </tr>`;
+    const KO_ROUNDS = ['SUKU AKHIR', 'SEPARUH AKHIR', 'AKHIR'];
+
+    function isLeagueFinished(kat) {
+      const g = state.matches.filter(m => m.kategori === kat && GROUP_STAGES.includes(m.peringkat));
+      return g.length > 0 && g.every(isApproved);
+    }
+
+    function koCard(m) {
+      const win = matchWinnerSide(m);
+      const has = m.skorP1 !== null && m.skorP1 !== undefined;
+      const side = (p) => {
+        const nama = p === 'P1' ? m.namaP1 : m.namaP2;
+        const sk = p === 'P1' ? m.skorP1 : m.skorP2;
+        const cls = isPlaceholderName(nama) ? 'tbd' : (win ? (win === p ? 'win' : 'lose') : '');
+        const pen = m.pemenangPenalti === p ? ' <small class="muted">(pen)</small>' : '';
+        return `<div class="ko-team ${cls}"><span class="nm" title="${escapeHtml(nama)}">${escapeHtml(nama)}</span><span class="sc">${has ? (Number(sk) || 0) : '–'}${pen}</span></div>`;
+      };
+      const cls = (m.status === MATCH_STATUS.LIVE ? ' live' : '') + (m.peringkat === 'AKHIR' ? ' final' : '');
+      return `<div class="ko-card${cls}"><div class="ko-meta"><span>${escapeHtml(m.id)}</span>${statusBadge(m)}</div>${side('P1')}${side('P2')}</div>`;
+    }
+
+    function renderKoBlock(kat) {
+      const ms = state.matches.filter(m => m.kategori === kat && isKnockout(m)).sort((a, b) => a.no - b.no);
+      const label = kat === 'SR' ? '🧒 Sekolah Rendah' : '🧑 Sekolah Menengah';
+      if (!ms.length) return `<div class="ko-block"><h3 class="card-title" id="koTitle${kat}">${label}</h3><p class="muted">Tiada perlawanan kalah mati.</p></div>`;
+      const rounds = KO_ROUNDS.map(r => ({ r, list: ms.filter(m => m.peringkat === r) })).filter(x => x.list.length);
+      const final = ms.find(m => m.peringkat === 'AKHIR');
+      const fw = final && matchWinnerSide(final);
+      const champ = fw ? `<span class="ko-champ">🏆 Johan: ${escapeHtml(fw === 'P1' ? final.namaP1 : final.namaP2)}</span>` : '';
+      const cols = rounds.map((x, i) => {
+        const hasNext = i < rounds.length - 1;
+        const pairs = [];
+        for (let k = 0; k < x.list.length; k += 2) pairs.push(x.list.slice(k, k + 2));
+        const body = pairs.map(p => `<div class="ko-pair ${hasNext ? 'has-next' : ''} ${p.length === 2 ? 'two' : 'one'}">${p.map(m => `<div class="ko-slot">${koCard(m)}</div>`).join('')}</div>`).join('');
+        return `<div class="ko-round ${i > 0 ? 'has-prev' : ''}"><div class="ko-round-title">${escapeHtml(x.r)}</div><div class="ko-round-body">${body}</div></div>`;
       }).join('');
+      const third = ms.filter(m => m.peringkat === 'TEMPAT 3/4');
+      const extra = third.length ? `<div class="ko-extra"><div class="ko-round"><div class="ko-round-title">Tempat 3/4</div>${third.map(m => `<div class="ko-slot">${koCard(m)}</div>`).join('')}</div></div>` : '';
+      return `<div class="card glass ko-block"><h3 class="card-title" id="koTitle${kat}">${label}${champ}</h3><div class="ko-scroll"><div class="ko-bracket">${cols}</div></div>${extra}</div>`;
+    }
+
+    function renderKnockout() {
+      const box = document.getElementById('knockoutBracket');
+      if (box) box.innerHTML = ['SM', 'SR'].filter(categoryVisible).map(renderKoBlock).join('');
+      const vis = ['SR', 'SM'].filter(categoryVisible);
+      const done = vis.filter(isLeagueFinished);
+      const ready = done.length > 0;
+      const btn = document.getElementById('tabBtnKnockout');
+      if (btn) btn.classList.toggle('ko-ready', ready);
+      const cta = document.getElementById('koCta');
+      if (cta) cta.classList.toggle('hidden', !ready);
+      // Tukar automatik ke tab Kalah Mati sekali sahaja bila liga sesuatu kategori tamat
+      state.ui.koAuto = state.ui.koAuto || {};
+      const fresh = done.filter(k => !state.ui.koAuto[k]);
+      if (fresh.length) {
+        fresh.forEach(k => { state.ui.koAuto[k] = true; });
+        if (['tab-live', 'tab-standings'].includes(state.ui.activeTab || 'tab-live')) {
+          setActiveTab('tab-knockout');
+          if (typeof showToast === 'function') showToast('Peringkat liga tamat — paparan ditukar ke Pusingan Kalah Mati.', 'info', 4500);
+        } else saveState();
+      }
     }
 
     /* ---------------------------------------------------------
@@ -5186,7 +5334,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           <hr style="border:0;border-top:1px solid var(--glass-border);margin:16px 0;" />
           <div class="field">
             <label for="gasUrl">URL Web App Google Apps Script</label>
-            <input type="url" class="input" id="gasUrl" placeholder="https://script.google.com/macros/s/AKfycby3Yaky1bgnTXy0WMXB5kTBME5D9YOO1iK2mtN79WQcwIGnwJkstec6oJpr7zT1V0in/exec" />
+            <input type="url" class="input" id="gasUrl" placeholder="https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec" />
           </div>
           <label style="display:flex;gap:8px;align-items:center;font-size:.84rem;margin-bottom:12px;cursor:pointer;">
             <input type="checkbox" id="gasAutoSync" /> Sync automatik selepas setiap pengesahan
@@ -6056,9 +6204,36 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     /* ---------------------------------------------------------
        4.6 FUNGSI UTILITI UI
        --------------------------------------------------------- */
+    const CATEGORY_LABELS = {
+      SEMUA: 'Semua Kategori',
+      SR: 'Sekolah Rendah',
+      SM: 'Sekolah Menengah'
+    };
+    const CATEGORY_NOTES = {
+      SEMUA: 'Sekolah Rendah + Sekolah Menengah',
+      SR: 'Gelanggang C & D · Kumpulan A, B, C, X, Y',
+      SM: 'Gelanggang A & B · Kumpulan A, B, C, D'
+    };
+    const CATEGORY_CHROME = { SEMUA: '#0f172a', SR: '#071a2b', SM: '#221207' };
+
+    // Terapkan warna tema kategori semasa ke seluruh halaman
+    function applyCategoryTheme(kategori) {
+      const k = ['SEMUA', 'SR', 'SM'].includes(kategori) ? kategori : 'SEMUA';
+      document.body.dataset.category = k;
+      const label = document.getElementById('catRibbonText');
+      if (label) label.textContent = CATEGORY_LABELS[k];
+      const note = document.getElementById('catRibbonNote');
+      if (note) note.textContent = CATEGORY_NOTES[k];
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', CATEGORY_CHROME[k]);
+      const ribbon = document.getElementById('catRibbon');
+      if (ribbon) ribbon.setAttribute('aria-label', `Kategori semasa: ${CATEGORY_LABELS[k]}`);
+    }
+
     function switchEvent(kategori) {
       const k = ['SEMUA', 'SR', 'SM'].includes(kategori) ? kategori : 'SEMUA';
       state.ui.kategori = k;
+      applyCategoryTheme(k);
       document.querySelectorAll('#categorySwitch button').forEach(b => {
         const active = b.dataset.category === k;
         b.classList.toggle('active', active);
@@ -6551,6 +6726,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
     function renderAll() {
       updateAuthUI();
+      applyCategoryTheme(state.ui.kategori || 'SEMUA');
       document.querySelectorAll('#categorySwitch button').forEach(b => {
         b.classList.toggle('active', b.dataset.category === (state.ui.kategori || 'SEMUA'));
       });
@@ -6571,6 +6747,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         b.addEventListener('click', () => openTab(b.dataset.tab)));
 
       on('btnShareLive', 'click', copyShareLink);
+      on('btnGoKnockout', 'click', () => openTab('tab-knockout'));
       on('btnLogin', 'click', () => openModal('loginModal'));
       on('btnLogout', 'click', logout);
       on('btnOpenRegister', 'click', () => openModal('registerModal'));
