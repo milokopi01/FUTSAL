@@ -640,6 +640,20 @@
     .tangguh-opts label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); cursor: pointer; background: var(--glass); }
     .tangguh-opts label:has(input:checked) { border-color: var(--accent); background: rgba(255,181,71,.08); }
     .tangguh-opts small { display: block; color: var(--text-2); }
+    /* FASA 5: Rehat Kecemasan (penangguhan sementara) */
+    .badge-rehat { color: #fde68a; background: rgba(250,204,21,.14); border-color: rgba(250,204,21,.55); }
+    .court-card.status-paused { border-color: rgba(250, 204, 21, 0.75); box-shadow: 0 0 0 1px rgba(250,204,21,.2), 0 12px 40px rgba(250,204,21,.14); }
+    .court-card.status-paused::before { background: repeating-linear-gradient(90deg, #facc15 0 14px, transparent 14px 24px); }
+    .status-paused .court-letter { color: #facc15; border-color: rgba(250,204,21,.6); }
+    .status-paused .score-box { border-color: rgba(250,204,21,.55); }
+    .rehat-banner {
+      margin: 0 20px 10px; padding: 10px 12px; border-radius: var(--radius-sm);
+      border: 1px dashed rgba(250,204,21,.6); background: rgba(250,204,21,.08);
+      color: #fef3c7; font-size: .8rem; line-height: 1.45;
+    }
+    .rehat-banner strong { color: #fde68a; }
+    .lock-chip.rehat { color: #fde68a; background: rgba(250,204,21,.12); border-color: rgba(250,204,21,.5); }
+    .rehat-note { padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(250,204,21,.4); background: rgba(250,204,21,.07); font-size: .82rem; color: var(--text-1); margin: 10px 0; line-height: 1.5; }
 
     /* FASA 4: PEMBETULAN MARKAH (MASTER ADMIN) */
     .badge-fix { color: var(--accent); background: rgba(255,181,71,.12); border-color: rgba(255,181,71,.45); }
@@ -1239,6 +1253,45 @@
   </div>
 
   <!-- =========================================================
+       MODAL: REHAT KECEMASAN (FASA 5 - PENANGGUHAN SEMENTARA)
+       ========================================================= -->
+  <div class="modal-backdrop" id="rehatModal" role="dialog" aria-modal="true" aria-labelledby="rehatTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h3 id="rehatTitle">🚻 Rehat Kecemasan</h3>
+          <p id="rehatInfo">Perlawanan akan ditangguhkan sementara. Skor &amp; masa dibekukan.</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal="rehatModal" aria-label="Tutup">×</button>
+      </div>
+      <form id="rehatForm" autocomplete="off">
+        <div class="field">
+          <label for="rehatSebab">Sebab rehat kecemasan</label>
+          <select class="select" id="rehatSebab">
+            <option>Pengadil perlu ke tandas</option>
+            <option>Urusan kecemasan pengadil</option>
+            <option>Pengadil kurang sihat</option>
+            <option>Rawatan kecederaan pemain</option>
+            <option>Masalah peralatan / gelanggang</option>
+            <option>Lain-lain</option>
+          </select>
+        </div>
+        <div class="rehat-note">
+          ⏸ Skor, fasa &amp; masa perlawanan akan <strong>DIBEKUKAN</strong>. Tiada markah boleh diubah sehingga
+          <strong>▶ Sambung Perlawanan</strong> ditekan.<br>
+          🤝 Semasa rehat, pengadil lain boleh log masuk dan menekan <strong>Ambil Alih Gelanggang</strong> untuk
+          meneruskan perlawanan ini. Markah yang telah direkodkan kekal.
+        </div>
+        <div class="form-msg" id="rehatMsg"></div>
+        <div class="modal-foot">
+          <button type="button" class="btn" data-close-modal="rehatModal">Batal</button>
+          <button type="submit" class="btn btn-warn" id="btnRehatSubmit">⏸ Mula Rehat Kecemasan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
        MODAL: PEMBETULAN MARKAH (FASA 4 - MASTER ADMIN SAHAJA)
        ========================================================= -->
   <div class="modal-backdrop" id="correctionModal" role="dialog" aria-modal="true" aria-labelledby="correctionTitle">
@@ -1315,7 +1368,7 @@
     // dalam Tetapan Master Admin akan mengatasi nilai ini pada peranti tersebut.
     // PENTING: jika anda deploy dengan "New deployment" (URL baharu), tukar URL di bawah.
     // "Manage deployments > Edit > New version" mengekalkan URL yang sama.
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzBQq_BZ_kN_kE137kimHXgUuc9ZK4O4cmlms3HZDJNgQ1AL8oC0MSWb5-sUxepIyoh/exec';
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycby3Yaky1bgnTXy0WMXB5kTBME5D9YOO1iK2mtN79WQcwIGnwJkstec6oJpr7zT1V0in/exec';
     const ADMIN_KEY_STORAGE = 'FUTSAL_PK_KBB_ADMIN_KEY';
 
     const EVENTS = {
@@ -1669,6 +1722,8 @@
     let lockPollHandle = null;
     let lastHeartbeatAt = 0;
     let kickoffBusy = false;
+    let rehatCourtId = null;           // FASA 5: gelanggang dalam modal Rehat Kecemasan
+    let rehatBusy = false;             // FASA 5: permintaan rehat / ambil alih / sambung sedang berjalan
     let refSelectedCourt = null;       // gelanggang dipilih di Meja Pengadil (belum dikunci)
     const livePushTimers = {};
 
@@ -1712,6 +1767,7 @@
         if (!('dikunciPada' in c)) { c.dikunciPada = null; c.pengadil = null; c.pengadilId = null; }
         if (!('kunciBasi' in c)) c.kunciBasi = false;
         if (!('ditangguh' in c)) c.ditangguh = null;   // FASA 3
+        if (!('rehat' in c)) c.rehat = null;           // FASA 5: rehat kecemasan (penangguhan sementara)
       });
       state.matches.forEach(m => { if (legacyRef(m.pengadil)) m.pengadil = null; });
       if (state.session && state.session.peranan === 'PENGADIL' &&
@@ -2151,7 +2207,11 @@
       const nama = s.nama;
       if (s.peranan === 'PENGADIL') {
         const held = state.courts.find(c => c.pengadilId === s.userId) || null;
-        if (held && held.status === COURT_STATUS.LIVE &&
+        if (held && isCourtPaused(held)) {
+          if (!window.confirm(`${held.nama} sedang REHAT KECEMASAN.\n\nLog keluar akan melepaskan kunci anda. Perlawanan kekal dibekukan dan pengadil lain boleh log masuk & menekan "Ambil Alih Gelanggang". Teruskan?`)) {
+            return false;
+          }
+        } else if (held && held.status === COURT_STATUS.LIVE &&
             !window.confirm(`Anda masih mengawal perlawanan LIVE di ${held.nama}.
 
 Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil alih. Teruskan?`)) {
@@ -2161,7 +2221,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           // Hantar skor terakhir (jika ada) & tamatkan sesi di pelayan (lepaskan kunci)
           const token = s.token;
           if (held) clearTimeout(livePushTimers[held.id]);
-          const finalPush = held ? buildLivePayload(held.id, token, true) : null;
+          // FASA 5: semasa Rehat Kecemasan markah sudah disimpan & dibekukan -> tiada push akhir
+          const finalPush = held && !isCourtPaused(held) ? buildLivePayload(held.id, token, true) : null;
           (finalPush ? callGas(finalPush) : Promise.resolve())
             .then(() => callGas({ action: 'logKeluarPengadil', token }))
             .catch(err => console.warn('[logout pengadil]', err));
@@ -2336,13 +2397,27 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     /* ---------------------------------------------------------
        3.7 PAPAN PEMUKA GELANGGANG MASA NYATA
        --------------------------------------------------------- */
+    // FASA 5: perlawanan dibekukan sementara (Rehat Kecemasan)?
+    function isCourtPaused(court) {
+      return !!(court && court.rehat);
+    }
+
+    function rehatScore(court) {
+      const r = court && court.rehat;
+      if (!r) return { s1: 0, s2: 0 };
+      if (court.status === COURT_STATUS.LIVE) return { s1: Number(court.skorLiveP1) || 0, s2: Number(court.skorLiveP2) || 0 };
+      return { s1: Number(r.skorP1) || 0, s2: Number(r.skorP2) || 0 };
+    }
+
     function courtStatusClass(court) {
+      if (isCourtPaused(court)) return 'status-paused';
       if (court.status === COURT_STATUS.LIVE) return 'status-live';
       if (court.status === COURT_STATUS.TAMAT) return 'status-done';
       return 'status-ready';
     }
 
     function courtStatusBadge(court) {
+      if (isCourtPaused(court)) return '<span class="badge badge-rehat badge-dot">⏸ Rehat Kecemasan</span>';
       if (court.status === COURT_STATUS.LIVE) return '<span class="badge badge-live badge-dot">Live</span>';
       if (court.status === COURT_STATUS.TAMAT) return '<span class="badge badge-done badge-dot">Tamat · Tunggu Sah</span>';
       if (court.ditangguh) return '<span class="badge badge-tangguh badge-dot">Ditangguhkan</span>';
@@ -2350,6 +2425,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     function courtOverlayText(court, match) {
+      if (isCourtPaused(court)) return `⏸ Rehat Kecemasan · ${court.rehat.sebab || 'Ditangguhkan sementara'}`;
       if (!match) return 'Tiada perlawanan dijadualkan';
       if (court.status === COURT_STATUS.SEDIA && court.ditangguh) return `⏸ Ditangguhkan · ${court.ditangguh.sebab || ''}`;
       if (court.status === COURT_STATUS.SEDIA) {
@@ -2371,6 +2447,31 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       // Master Admin: paksa lepaskan kunci pengadil
       if (court.pengadilId && canManageSystem()) {
         parts.push(`<button type="button" class="btn btn-warn btn-sm" onclick="adminReleaseLock('${id}')" title="Lepaskan kunci ${escapeHtml(court.pengadil || '')}">🔓 Lepaskan Kunci</button>`);
+      }
+
+      // FASA 5: Rehat Kecemasan -> markah dibekukan. Hanya Sambung / Ambil Alih / Lepaskan.
+      if (isCourtPaused(court)) {
+        const mineLock = !!court.pengadilId && court.pengadilId === session.userId;
+        let rnote = '';
+        if (isRef && mineLock) {
+          parts.push(`<button type="button" class="btn btn-success btn-sm" onclick="resumeMatch('${id}')" ${rehatBusy ? 'disabled' : ''}>▶ Sambung Perlawanan</button>`);
+          parts.push(`<button type="button" class="btn btn-sm" onclick="refereeReleaseCourt()">🔓 Lepaskan untuk Pengadil Lain</button>`);
+          rnote = 'Markah dibekukan. Tekan Sambung Perlawanan bila sudah bersedia.';
+        } else if (isRef && refHoldsLiveElsewhere(id)) {
+          rnote = `Anda masih mengawal Gelanggang ${escapeHtml(session.aksesGelanggang)}. Lepaskan dahulu untuk mengambil alih.`;
+        } else if (isRef) {
+          parts.push(`<button type="button" class="btn btn-primary btn-sm" onclick="takeoverCourt('${id}')" ${rehatBusy ? 'disabled' : ''}>🤝 Ambil Alih Gelanggang</button>`);
+          rnote = court.pengadilId
+            ? `Perlawanan ditangguhkan sementara oleh ${escapeHtml(court.pengadil || 'pengadil lain')}. Anda boleh mengambil alih.`
+            : 'Tiada pengadil memegang gelanggang ini. Anda boleh mengambil alih & menyambung perlawanan.';
+        } else {
+          rnote = `⏸ Rehat Kecemasan · ${court.pengadilId ? 'Pengadil: ' + escapeHtml(court.pengadil || '-') : 'menunggu pengadil mengambil alih'}. Markah dibekukan.`;
+        }
+        if (canPostponeCourt(id)) {
+          parts.push(`<button type="button" class="btn btn-warn btn-sm" onclick="openPostpone('${id}')" title="Batalkan perlawanan ini & kembali Menunggu Giliran">⏸ Tangguh Perlawanan</button>`);
+        }
+        if (rnote) parts.push(`<span class="muted" style="font-size:.8rem;align-self:center;">${rnote}</span>`);
+        return `<div class="court-controls">${parts.join('')}</div>`;
       }
 
       if (!match) {
@@ -2418,6 +2519,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         );
       }
 
+      // FASA 5: Rehat Kecemasan (pengadil pemegang kunci)
+      if (canPauseCourt(id)) {
+        parts.push(`<button type="button" class="btn btn-warn btn-sm" onclick="openEmergencyPause('${id}')" title="Urusan kecemasan? Bekukan perlawanan sementara & benarkan pertukaran pengadil">🚻 Rehat Kecemasan</button>`);
+      }
+
       // Fasa 3: Tangguh perlawanan (pengadil pemegang kunci / Urusetia / Master Admin)
       if (court.status === COURT_STATUS.LIVE && canPostponeCourt(id)) {
         parts.push(`<button type="button" class="btn btn-warn btn-sm" onclick="openPostpone('${id}')" title="Salah tekan Sepak Mula? Tangguhkan & boleh tukar pengadil">⏸ Tangguh Perlawanan</button>`);
@@ -2452,21 +2558,34 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     function renderCourtCard(court) {
-      const match = getMatch(court.matchSemasa);
+      const paused = isCourtPaused(court);
+      const match = getMatch((paused && court.rehat.matchId) || court.matchSemasa) || getMatch(court.matchSemasa);
       const next = getMatch(court.matchSeterusnya);
       const overlay = courtOverlayText(court, match);
       const showLiveScore = court.status !== COURT_STATUS.SEDIA;
-      const s1 = showLiveScore ? court.skorLiveP1 : 0;
-      const s2 = showLiveScore ? court.skorLiveP2 : 0;
+      const rs = paused ? rehatScore(court) : null;
+      const s1 = paused ? rs.s1 : (showLiveScore ? court.skorLiveP1 : 0);
+      const s2 = paused ? rs.s2 : (showLiveScore ? court.skorLiveP2 : 0);
       const katBadge = court.kategori === 'SR'
         ? '<span class="badge badge-sr">Sek. Rendah</span>'
         : '<span class="badge badge-sm">Sek. Menengah</span>';
       const matchInfo = match
         ? `${escapeHtml(match.id)} · ${escapeHtml(match.peringkat)}${match.kumpulan && match.kumpulan !== '-' ? ' · Kump. ' + escapeHtml(match.kumpulan) : ''}`
         : 'Tiada perlawanan';
-      const fasaLabel = court.status === COURT_STATUS.LIVE
-        ? (COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa)
-        : (court.status === COURT_STATUS.TAMAT ? 'Tamat' : 'Sedia');
+      const fasaLabel = paused
+        ? `Rehat Kecemasan (${COURT_PHASE_LABELS[court.rehat.fasaSebelum] || court.rehat.fasaSebelum || '-'})`
+        : court.status === COURT_STATUS.LIVE
+          ? (COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa)
+          : (court.status === COURT_STATUS.TAMAT ? 'Tamat' : 'Sedia');
+      const rehatNote = paused
+        ? `<div class="rehat-banner">⏸ <strong>Ditangguhkan sementara</strong> sejak ${escapeHtml(formatTime(court.rehat.pada))}` +
+          ` oleh ${escapeHtml(court.rehat.oleh || '-')} · ${escapeHtml(court.rehat.sebab || '-')}<br>` +
+          `🔒 Markah dibekukan: <strong>${s1} - ${s2}</strong> · ` +
+          (court.pengadilId
+            ? `Pengadil semasa: <strong>${escapeHtml(court.pengadil || '-')}</strong>`
+            : '<strong>Menunggu pengadil mengambil alih</strong>') +
+          `</div>`
+        : '';
       const penaltiNote = match && match.pemenangPenalti && court.status !== COURT_STATUS.SEDIA
         ? `<div class="court-meta" style="padding-top:0;"><span>🥅 Menang penalti: <strong style="color:var(--text-0);">${escapeHtml(match.pemenangPenalti === 'P1' ? match.namaP1 : match.namaP2)}</strong></span></div>`
         : '';
@@ -2492,7 +2611,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
           <div class="pitch" aria-hidden="true">
             <span class="goal-l"></span><span class="goal-r"></span>
-            ${court.status === COURT_STATUS.LIVE ? '<span class="ball"></span>' : ''}
+            ${court.status === COURT_STATUS.LIVE && !paused ? '<span class="ball"></span>' : ''}
             ${overlay ? `<div class="pitch-overlay">${escapeHtml(overlay)}</div>` : ''}
           </div>
 
@@ -2514,6 +2633,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
             <span>${matchInfo}</span>
             <span>Fasa: <strong style="color:var(--text-0);">${escapeHtml(fasaLabel)}</strong> · <span class="court-timer" data-court-timer="${court.id}">00:00</span></span>
           </div>
+          ${rehatNote}
           ${penaltiNote}
           ${rejectNote}
           <div class="court-next">${nextText}</div>
@@ -2546,7 +2666,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       document.querySelectorAll('[data-court-timer]').forEach(el => {
         const court = getCourt(el.dataset.courtTimer);
         if (!court) return;
-        if (court.status === COURT_STATUS.LIVE && court.fasaMulaPada) {
+        if (isCourtPaused(court)) {
+          el.textContent = `${formatDuration(Number(court.rehat.elapsedMs) || 0)} ⏸`;
+        } else if (court.status === COURT_STATUS.LIVE && court.fasaMulaPada) {
           el.textContent = formatDuration(now - new Date(court.fasaMulaPada).getTime());
         } else if (court.status === COURT_STATUS.TAMAT) {
           el.textContent = 'FT';
@@ -2566,6 +2688,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
        --------------------------------------------------------- */
     function resetCourt(court) {
       court.ditangguh = null;
+      court.rehat = null;
       Object.assign(court, {
         matchSemasa: null,
         status: COURT_STATUS.SEDIA,
@@ -2609,6 +2732,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     function applyMatchStart(court, match) {
       const now = nowIso();
       court.ditangguh = null;
+      court.rehat = null;
       Object.assign(court, {
         status: COURT_STATUS.LIVE,
         skorLiveP1: 0,
@@ -2667,6 +2791,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         showToast('Skor hanya boleh dikemas kini semasa perlawanan LIVE.', 'warn');
         return false;
       }
+      if (isCourtPaused(court)) {
+        showToast('Perlawanan sedang Rehat Kecemasan. Markah dibekukan — tekan ▶ Sambung Perlawanan dahulu.', 'warn');
+        return false;
+      }
       const match = getMatch(court.matchSemasa);
       if (!match) {
         showToast('Tiada perlawanan aktif di gelanggang ini.', 'error');
@@ -2704,6 +2832,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         showToast('Fasa hanya boleh ditukar semasa perlawanan LIVE.', 'warn');
         return false;
       }
+      if (isCourtPaused(court)) {
+        showToast('Perlawanan sedang Rehat Kecemasan. Tekan ▶ Sambung Perlawanan dahulu.', 'warn');
+        return false;
+      }
       if (!COURT_PHASES.includes(phase)) {
         showToast('Fasa tidak sah.', 'error');
         return false;
@@ -2731,6 +2863,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const court = getCourt(courtId);
       if (!court || court.status !== COURT_STATUS.LIVE) {
         showToast('Tiada perlawanan LIVE untuk ditamatkan.', 'warn');
+        return false;
+      }
+      if (isCourtPaused(court)) {
+        showToast('Perlawanan sedang Rehat Kecemasan. Tekan ▶ Sambung Perlawanan sebelum menamatkan perlawanan.', 'warn');
         return false;
       }
       const match = getMatch(court.matchSemasa);
@@ -2946,6 +3082,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const mine = !!court.pengadilId && court.pengadilId === me;
       const lockedByOther = !!court.pengadilId && !mine;
       let lock;
+      // FASA 5: Rehat Kecemasan -> sentiasa boleh diambil alih (tanpa menunggu kunci tidak aktif)
+      if (isCourtPaused(court)) {
+        const rm = getMatch(court.rehat.matchId) || match;
+        const rlock = mine
+          ? { cls: 'mine', text: '⏸ Rehat · dikunci oleh anda' }
+          : { cls: 'rehat', text: court.pengadilId ? `⏸ Rehat · ${court.pengadil || 'pengadil lain'}` : '⏸ Rehat · tiada pengadil' };
+        return { court, match: rm, lock: rlock, can: true, reason: '', mine, resume: true, rehat: true };
+      }
       if (mine) lock = { cls: 'mine', text: '✅ Dikunci oleh anda' };
       else if (lockedByOther && court.kunciBasi) lock = { cls: 'stale', text: `⚠ ${court.pengadil || 'Pengadil'} (tidak aktif)` };
       else if (lockedByOther) lock = { cls: 'taken', text: `🔒 Dikunci: ${court.pengadil || 'pengadil lain'}` };
@@ -3007,6 +3151,21 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           Object.assign(c, next);
           changed = true;
         }
+        // FASA 5: status Rehat Kecemasan dikongsi semua peranti melalui Kunci_Gelanggang
+        const srvRehat = k && k.rehat ? k.rehat : null;
+        if (rehatSig(c.rehat) !== rehatSig(srvRehat)) {
+          if (srvRehat) {
+            c.rehat = Object.assign({}, srvRehat);
+          } else {
+            const tamatRehat = c.rehat;
+            c.rehat = null;
+            // Disambung di peranti lain: elak jam fasa bermula semula dari 00:00
+            if (tamatRehat && c.status === COURT_STATUS.LIVE && !c.fasaMulaPada) {
+              c.fasaMulaPada = new Date(Date.now() - (Number(tamatRehat.elapsedMs) || 0)).toISOString();
+            }
+          }
+          changed = true;
+        }
       });
 
       const s = state.session;
@@ -3043,6 +3202,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         if (restored) showToast(`Kawalan Gelanggang ${restored.id} dipulihkan.`, 'info');
       }
       return changed;
+    }
+
+    function rehatSig(r) {
+      return r ? `${r.pada || ''}|${r.matchId || ''}|${r.olehId || ''}|${r.diambilAlihOleh || ''}` : '';
     }
 
     // Sesi pelayan tamat / akaun digantung -> log keluar pengadil dalam peranti ini
@@ -3209,6 +3372,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         showToast(`Anda masih mengawal perlawanan LIVE di Gelanggang ${s0.aksesGelanggang}. Tamatkan atau lepaskan dahulu.`, 'warn', 4500);
         return false;
       }
+      // FASA 5: gelanggang dalam Rehat Kecemasan -> aliran Ambil Alih / Sambung
+      if (isCourtPaused(court)) {
+        return court.pengadilId === s0.userId ? resumeMatch(courtId) : takeoverCourt(courtId);
+      }
       const opt = refCourtOption(court);
       if (!opt.can) {
         showToast(opt.reason || 'Gelanggang ini tidak boleh dipilih.', 'error', 4500);
@@ -3323,16 +3490,19 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const court = getCourt(s.aksesGelanggang);
       if (!court) return false;
       const live = court.status === COURT_STATUS.LIVE;
-      const ok = window.confirm(live
-        ? `Perlawanan di ${court.nama} masih LIVE.\n\nLepaskan kunci? Pengadil lain akan boleh mengambil alih pemberian markah.`
-        : `Lepaskan ${court.nama}?`);
+      const rs = isCourtPaused(court) ? rehatScore(court) : null;
+      const ok = window.confirm(rs
+        ? `Lepaskan ${court.nama} semasa Rehat Kecemasan?\n\nPerlawanan kekal DIBEKUKAN (skor ${rs.s1} - ${rs.s2}). Pengadil lain boleh log masuk dan menekan "Ambil Alih Gelanggang" untuk menyambung perlawanan.`
+        : live
+          ? `Perlawanan di ${court.nama} masih LIVE.\n\nLepaskan kunci? Pengadil lain akan boleh mengambil alih pemberian markah.`
+          : `Lepaskan ${court.nama}?`);
       if (!ok) return false;
       const courtId = court.id;
       if (getGasUrl() && s.token) {
         if (livePushTimers[courtId]) {
           clearTimeout(livePushTimers[courtId]);
           delete livePushTimers[courtId];
-          await pushLiveNow(courtId);
+          if (!isCourtPaused(court)) await pushLiveNow(courtId);
         }
         const res = await callGas({ action: 'lepasGelanggang', token: s.token, gelanggang: courtId });
         if (!res.ok) {
@@ -3407,9 +3577,12 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       let body = '';
       if (held && held.pengadilId === s.userId) {
         const m = getMatch(held.matchSemasa);
-        const statusText = held.status === COURT_STATUS.LIVE
-          ? `LIVE · ${COURT_PHASE_LABELS[held.fasaMasa] || held.fasaMasa} · Skor ${held.skorLiveP1} - ${held.skorLiveP2}`
-          : (held.ditangguh ? `DITANGGUHKAN · ${held.ditangguh.sebab || ''} · Tekan Sepak Mula Semula bila bersedia` : held.status);
+        const heldPaused = isCourtPaused(held);
+        const statusText = heldPaused
+          ? `⏸ REHAT KECEMASAN · ${held.rehat.sebab || ''} · Skor dibekukan ${rehatScore(held).s1} - ${rehatScore(held).s2} · Tekan Sambung Perlawanan bila bersedia`
+          : held.status === COURT_STATUS.LIVE
+            ? `LIVE · ${COURT_PHASE_LABELS[held.fasaMasa] || held.fasaMasa} · Skor ${held.skorLiveP1} - ${held.skorLiveP2}`
+            : (held.ditangguh ? `DITANGGUHKAN · ${held.ditangguh.sebab || ''} · Tekan Sepak Mula Semula bila bersedia` : held.status);
         body = `
           <div class="ref-active">
             <div class="court-letter">${escapeHtml(held.id)}</div>
@@ -3421,10 +3594,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
             <div class="ref-active-actions">
               ${held.status === COURT_STATUS.SEDIA && m
                 ? `<button type="button" class="btn btn-primary btn-sm" onclick="refereeKickOff('${held.id}')" ${kickoffBusy ? 'disabled' : ''}>⚽ Sepak Mula Semula</button>` : ''}
-              ${held.status === COURT_STATUS.LIVE
+              ${heldPaused
+                ? `<button type="button" class="btn btn-success btn-sm" onclick="resumeMatch('${held.id}')" ${rehatBusy ? 'disabled' : ''}>▶ Sambung Perlawanan</button>` : ''}
+              ${held.status === COURT_STATUS.LIVE && !heldPaused
+                ? `<button type="button" class="btn btn-warn btn-sm" onclick="openEmergencyPause('${held.id}')">🚻 Rehat Kecemasan</button>` : ''}
+              ${held.status === COURT_STATUS.LIVE && !heldPaused
                 ? `<button type="button" class="btn btn-warn btn-sm" onclick="openPostpone('${held.id}')">⏸ Tangguh Perlawanan</button>` : ''}
               <button type="button" class="btn btn-sm" onclick="scrollToCourt('${held.id}')">📍 Ke Kad Gelanggang</button>
-              <button type="button" class="btn btn-danger btn-sm" onclick="refereeReleaseCourt()">🔓 ${held.status === COURT_STATUS.SEDIA ? 'Tukar Pengadil / Lepaskan' : 'Lepaskan Gelanggang'}</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="refereeReleaseCourt()">🔓 ${heldPaused ? 'Lepaskan untuk Pengadil Lain' : held.status === COURT_STATUS.SEDIA ? 'Tukar Pengadil / Lepaskan' : 'Lepaskan Gelanggang'}</button>
             </div>
           </div>`;
       } else {
@@ -3446,7 +3623,17 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
             </button>`;
         }).join('');
         const sel = opts.find(o => o.court.id === refSelectedCourt && o.can && o.match);
-        const bar = sel
+        const selRs = sel && sel.rehat ? rehatScore(sel.court) : null;
+        const bar = sel && sel.rehat
+          ? `<div class="kickoff-bar">
+               <div class="ko-info">
+                 <div class="ref-step" style="margin-bottom:4px;">Langkah 2 · Ambil alih perlawanan yang ditangguhkan</div>
+                 <strong>${escapeHtml(sel.court.nama)}</strong> · ${escapeHtml(sel.match.id)} — ${escapeHtml(sel.match.namaP1)} lwn ${escapeHtml(sel.match.namaP2)}
+                 <small>⏸ Rehat Kecemasan (${escapeHtml(sel.court.rehat.sebab || '-')}) · Skor dibekukan ${selRs.s1} - ${selRs.s2}. Markah sedia ada dikekalkan. Selepas ambil alih, tekan ▶ Sambung Perlawanan.</small>
+               </div>
+               <button type="button" class="btn btn-primary btn-kickoff" onclick="takeoverCourt('${sel.court.id}')" ${rehatBusy ? 'disabled' : ''}>${rehatBusy ? '⏳ Mengambil alih...' : '🤝 Ambil Alih'}</button>
+             </div>`
+          : sel
           ? `<div class="kickoff-bar">
                <div class="ko-info">
                  <div class="ref-step" style="margin-bottom:4px;">Langkah 2 · Sudah bersedia?</div>
@@ -3497,6 +3684,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const s = getSession();
       const court = getCourt(courtId);
       if (!s || !court || court.status !== COURT_STATUS.LIVE) return false;
+      // FASA 5: semasa Rehat Kecemasan hanya Master Admin boleh membatalkan (tangguh) perlawanan
+      if (isCourtPaused(court)) return canManageSystem();
       if (s.peranan === 'PENGADIL') return court.pengadilId === s.userId;
       if (canManageSystem()) return true;
       // Urusetia: hanya jika gelanggang tidak dikunci pengadil
@@ -3573,7 +3762,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         Object.assign(court, {
           status: COURT_STATUS.SEDIA, skorLiveP1: 0, skorLiveP2: 0, fasaMasa: 'SEDIA',
           fasaMulaPada: null, masaMula: null, kemaskiniTerakhir: now,
-          ditangguh: { pada: now, oleh: s.nama || ROLE_LABELS[s.peranan], sebab, pengadilLama }
+          ditangguh: { pada: now, oleh: s.nama || ROLE_LABELS[s.peranan], sebab, pengadilLama },
+          rehat: null   // FASA 5: tangguh membatalkan rehat kecemasan
         });
 
         // 2) Hantar ke Google Sheets
@@ -3584,7 +3774,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
               action: 'skorLive', token: s.token, gelanggang: courtId, matchId: match.id,
               tangguh: true, sebab, lepas: !!tukar, pasukan: `${match.namaP1} lwn ${match.namaP2}`
             });
-          } else if (!isRef && court.pengadilId && canManageSystem()) {
+          } else if (!isRef && (court.pengadilId || court.rehat) && canManageSystem()) {
             const adminKey = typeof ensureAdminKey === 'function' ? ensureAdminKey() : getAdminKey();
             res = await callGas({ action: 'tangguhAdmin', adminKey, gelanggang: courtId, matchId: match.id, sebab, pasukan: `${match.namaP1} lwn ${match.namaP2}` });
           } else if (!isRef && typeof syncToGoogleSheets === 'function') {
@@ -3622,6 +3812,377 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         return false;
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = '⏸ Tangguhkan'; }
+      }
+    }
+
+    /* ---------------------------------------------------------
+       3.8d FASA 5: REHAT KECEMASAN (PENANGGUHAN SEMENTARA) & AMBIL ALIH
+       - "🚻 Rehat Kecemasan": pengadil pemegang kunci membekukan perlawanan LIVE.
+         Skor terakhir disimpan ke Google Sheets DAHULU; jika gagal, rehat TIDAK
+         diaktifkan (elak pengadil lain mengambil alih dengan markah lama).
+       - "🤝 Ambil Alih Gelanggang": pengadil baharu (peranti sendiri atau peranti
+         yang sama selepas log masuk) mengambil alih kunci. Skor diambil daripada
+         Google Sheets (sumber sah), bukan daripada data lama peranti.
+       - "▶ Sambung Perlawanan": fasa & jam fasa disambung dari titik rehat.
+       --------------------------------------------------------- */
+    function canPauseCourt(courtId) {
+      const s = getSession();
+      const court = getCourt(courtId);
+      if (!s || !court || court.status !== COURT_STATUS.LIVE || isCourtPaused(court)) return false;
+      return s.peranan === 'PENGADIL' && court.pengadilId === s.userId && s.aksesGelanggang === courtId;
+    }
+
+    function srvScore(v) {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 0 && n <= 99 ? n : null;
+    }
+
+    function openEmergencyPause(courtId) {
+      if (!canPauseCourt(courtId)) {
+        showToast('Rehat Kecemasan hanya untuk pengadil yang sedang mengawal perlawanan LIVE di gelanggang ini.', 'error');
+        return;
+      }
+      const court = getCourt(courtId);
+      const match = getMatch(court.matchSemasa);
+      if (!match) return;
+      rehatCourtId = courtId;
+      const info = document.getElementById('rehatInfo');
+      if (info) {
+        const el = court.fasaMulaPada ? Date.now() - new Date(court.fasaMulaPada).getTime() : 0;
+        info.innerHTML = `<strong>${escapeHtml(court.nama)}</strong> · ${escapeHtml(match.id)} — ${escapeHtml(match.namaP1)} lwn ${escapeHtml(match.namaP2)}<br>` +
+          `Skor semasa <strong>${court.skorLiveP1} - ${court.skorLiveP2}</strong> · ${escapeHtml(COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa)} ${formatDuration(Math.max(0, el))}. ` +
+          `Skor ini akan disimpan &amp; dibekukan.`;
+      }
+      setFormMsg(document.getElementById('rehatMsg'), '', '');
+      openModal('rehatModal');
+    }
+
+    async function submitEmergencyPause(event) {
+      if (event) event.preventDefault();
+      const courtId = rehatCourtId;
+      if (!courtId || !canPauseCourt(courtId)) { closeModal('rehatModal'); return false; }
+      const sebab = (document.getElementById('rehatSebab') || {}).value || 'Kecemasan pengadil';
+      const ok = await emergencyPause(courtId, {
+        sebab, btn: document.getElementById('btnRehatSubmit'), msg: document.getElementById('rehatMsg')
+      });
+      if (ok) closeModal('rehatModal');
+      return ok;
+    }
+
+    async function emergencyPause(courtId, { sebab, btn, msg } = {}) {
+      if (rehatBusy) return false;
+      const s = getSession();
+      let court = getCourt(courtId);
+      const match = court ? getMatch(court.matchSemasa) : null;
+      if (!s || !court || !match || !canPauseCourt(courtId)) return false;
+      rehatBusy = true;
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan skor...'; }
+      lockEpoch += 1;
+      try {
+        // Batalkan push tertangguh: skor terkini dihantar terus bersama permintaan rehat
+        clearTimeout(livePushTimers[courtId]);
+        delete livePushTimers[courtId];
+        const nowMs = Date.now();
+        const skorP1 = Number(court.skorLiveP1) || 0;
+        const skorP2 = Number(court.skorLiveP2) || 0;
+        const fasaSebelum = COURT_PHASES.includes(court.fasaMasa) ? court.fasaMasa : 'SEPARUH 1';
+        const elapsedMs = court.fasaMulaPada ? Math.max(0, nowMs - new Date(court.fasaMulaPada).getTime()) : 0;
+        let rehat = {
+          pada: new Date(nowMs).toISOString(), sebab, olehId: s.userId, oleh: s.nama,
+          fasaSebelum, elapsedMs, skorP1, skorP2, matchId: match.id, diambilAlihOleh: ''
+        };
+        let res = null;
+        if (getGasUrl()) {
+          if (!s.token) {
+            setFormMsg(msg, 'Sesi anda belum disahkan oleh Google Sheets. Log keluar & log masuk semula ketika ada internet.', 'error');
+            return false;
+          }
+          res = await callGas({
+            action: 'rehatKecemasan', token: s.token, gelanggang: courtId, matchId: match.id,
+            skorP1, skorP2, fasaSebelum, elapsedMs, sebab
+          });
+          if (!res.ok) {
+            if (handleSesiError(res)) { closeModal('rehatModal'); return false; }
+            if (res.kunci) { lockEpoch += 1; applyServerLocks(res.kunci); updateAuthUI(); refreshAllViews(); }
+            setFormMsg(msg, res.networkError
+              ? 'Tiada sambungan ke Google Sheets. Rehat Kecemasan BELUM diaktifkan supaya markah tidak tercicir. Semak internet & cuba lagi.'
+              : `Google Sheets: ${res.error || 'gagal mengaktifkan rehat kecemasan.'}`, 'error');
+            return false;
+          }
+          if (res.rehat) rehat = Object.assign(rehat, res.rehat);
+        }
+
+        court = getCourt(courtId);
+        const m = getMatch(match.id);
+        if (m) { m.skorP1 = skorP1; m.skorP2 = skorP2; }
+        Object.assign(court, { rehat, kemaskiniTerakhir: nowIso() });
+        lockEpoch += 1;
+        if (res && res.kunci) applyServerLocks(res.kunci, { silent: true });
+        if (m) addApprovalLog(m, `REHAT KECEMASAN (${sebab}) · skor dibekukan ${skorP1}-${skorP2}`);
+        saveState();
+        updateAuthUI();
+        refreshAllViews();
+        fetchPublicLive();
+        showToast(`⏸ ${court.nama}: Rehat Kecemasan. Skor ${skorP1} - ${skorP2} disimpan & dibekukan. Anda atau pengadil lain boleh menyambung perlawanan.`, 'warn', 6000);
+        return true;
+      } catch (err) {
+        console.error('[emergencyPause]', err);
+        setFormMsg(msg, 'Ralat semasa mengaktifkan rehat kecemasan.', 'error');
+        return false;
+      } finally {
+        rehatBusy = false;
+        if (btn) { btn.disabled = false; btn.textContent = '⏸ Mula Rehat Kecemasan'; }
+        renderRefDesk();
+        renderCourts();
+      }
+    }
+
+    // Terapkan pengambilalihan ke dalam data peranti ini. Sumber markah:
+    // Google Sheets (jika ada) -> rekod rehat -> data tempatan. Pulangkan { ok } atau { error }.
+    function applyTakeoverLocal(courtId, rehat, srvMatch, s) {
+      const court = getCourt(courtId);
+      if (!court) return { error: 'Gelanggang tidak dijumpai.' };
+      const matchId = (srvMatch && srvMatch.id) || rehat.matchId || court.matchSemasa;
+      const match = getMatch(matchId);
+      if (!match) return { error: `Perlawanan ${matchId} tidak dijumpai dalam peranti ini.` };
+      if (match.status === MATCH_STATUS.SELESAI || match.status === MATCH_STATUS.TUNGGU_SAH) {
+        return { error: `${match.id} berstatus "${match.status}" dalam peranti ini. Muat semula data / hubungi Urusetia.` };
+      }
+      if (court.status === COURT_STATUS.LIVE && court.matchSemasa && court.matchSemasa !== matchId) {
+        return { error: `${court.nama} sedang memaparkan perlawanan lain (${court.matchSemasa}) dalam peranti ini.` };
+      }
+      const clash = state.courts.find(c => c.id !== courtId && c.matchSemasa === matchId);
+      if (clash && clash.status !== COURT_STATUS.SEDIA) {
+        return { error: `${matchId} sedang ${clash.status} di ${clash.nama} dalam peranti ini.` };
+      }
+
+      const a = srvMatch ? srvScore(srvMatch.skorP1) : null;
+      const b = srvMatch ? srvScore(srvMatch.skorP2) : null;
+      const s1 = a !== null ? a : (Number(rehat.skorP1) || 0);
+      const s2 = b !== null ? b : (Number(rehat.skorP2) || 0);
+      const now = nowIso();
+
+      if (srvMatch && !isMatchReady(match) && srvMatch.namaP1 && srvMatch.namaP2) {
+        match.namaP1 = srvMatch.namaP1;
+        match.namaP2 = srvMatch.namaP2;
+      }
+      Object.assign(match, {
+        status: MATCH_STATUS.LIVE,
+        skorP1: s1,
+        skorP2: s2,
+        masaMula: (srvMatch && srvMatch.masaMula) || match.masaMula || rehat.pada || now,
+        masaTamat: null,
+        pemenangPenalti: null,
+        pengadil: s.nama
+      });
+      state.courts.forEach(c => { if (c.id !== courtId && c.pengadilId === s.userId) clearCourtLock(c); });
+      Object.assign(court, {
+        matchSemasa: matchId,
+        status: COURT_STATUS.LIVE,
+        skorLiveP1: s1,
+        skorLiveP2: s2,
+        fasaMasa: COURT_PHASES.includes(rehat.fasaSebelum) ? rehat.fasaSebelum : 'SEPARUH 1',
+        fasaMulaPada: null,
+        masaMula: match.masaMula,
+        ditangguh: null,
+        rehat: Object.assign({}, rehat, { skorP1: s1, skorP2: s2, matchId }),
+        pengadil: s.nama,
+        pengadilId: s.userId,
+        dikunciPada: now,
+        kunciBasi: false,
+        kemaskiniTerakhir: now
+      });
+      if (clash) { resetCourt(clash); autoAssignCourts(clash.id, { silent: true }); }
+      state.session.aksesGelanggang = courtId;
+      state.session.aksesEvent = court.eventId;
+      return { ok: true, s1, s2, match };
+    }
+
+    // 🤝 AMBIL ALIH: pengadil baharu mengambil alih gelanggang yang sedang Rehat Kecemasan
+    async function takeoverCourt(courtId) {
+      const s0 = getSession();
+      if (!s0 || s0.peranan !== 'PENGADIL') {
+        showToast('Hanya pengadil yang telah log masuk boleh mengambil alih gelanggang.', 'error');
+        return false;
+      }
+      if (rehatBusy || kickoffBusy) return false;
+      const court0 = getCourt(courtId);
+      if (!court0 || !isCourtPaused(court0)) {
+        showToast('Gelanggang ini tidak dalam status Rehat Kecemasan.', 'warn');
+        return false;
+      }
+      if (court0.pengadilId === s0.userId) {
+        showToast(`Anda sudah memegang ${court0.nama}. Tekan ▶ Sambung Perlawanan bila bersedia.`, 'info');
+        return true;
+      }
+      if (refHoldsLiveElsewhere(courtId)) {
+        showToast(`Anda masih mengawal perlawanan di Gelanggang ${s0.aksesGelanggang}. Lepaskan dahulu.`, 'warn', 4500);
+        return false;
+      }
+      const r0 = court0.rehat;
+      const m0 = getMatch(r0.matchId) || getMatch(court0.matchSemasa);
+      const rs0 = rehatScore(court0);
+      const ok = window.confirm(
+        `🤝 Ambil alih ${court0.nama}?\n\n` +
+        (m0 ? `${m0.id} · ${m0.namaP1} lwn ${m0.namaP2}\n` : '') +
+        `Skor dibekukan: ${rs0.s1} - ${rs0.s2} · ${COURT_PHASE_LABELS[r0.fasaSebelum] || r0.fasaSebelum || '-'}\n` +
+        `Ditangguhkan oleh ${r0.oleh || '-'} (${r0.sebab || '-'}).\n\n` +
+        `Anda akan menjadi pengadil gelanggang ini. Markah yang telah direkodkan TIDAK akan diubah. ` +
+        `Tekan "▶ Sambung Perlawanan" selepas ini untuk meneruskan.`
+      );
+      if (!ok) return false;
+
+      rehatBusy = true;
+      lockEpoch += 1;
+      renderRefDesk();
+      try {
+        const url = getGasUrl();
+        let res = null;
+        let rehat = Object.assign({}, r0);
+        let srvMatch = null;
+        let lama = court0.pengadil || r0.oleh || '';
+        if (url) {
+          if (!s0.token) {
+            showToast('Sesi anda belum disahkan oleh Google Sheets. Log keluar & log masuk semula ketika ada internet.', 'error', 6000);
+            return false;
+          }
+          res = await callGas({ action: 'ambilAlihGelanggang', token: s0.token, gelanggang: courtId });
+          if (!res.ok) {
+            if (handleSesiError(res)) return false;
+            if (res.kunci) { lockEpoch += 1; applyServerLocks(res.kunci, { silent: true }); }
+            showToast(res.networkError
+              ? 'Tidak dapat menghubungi Google Sheets untuk mengambil alih. Semak internet & cuba lagi.'
+              : (res.error || 'Gagal mengambil alih gelanggang.'), 'error', 6000);
+            updateAuthUI();
+            refreshAllViews();
+            return false;
+          }
+          if (res.rehat) rehat = Object.assign(rehat, res.rehat);
+          srvMatch = res.perlawanan || null;
+          lama = res.diambilAlihDaripada || lama;
+        } else {
+          rehat.diambilAlihOleh = s0.nama;
+        }
+
+        const s = getSession();
+        if (!s) return false;
+        const applied = applyTakeoverLocal(courtId, rehat, srvMatch, s);
+        if (!applied.ok) {
+          showToast(`Ambil alih dibatalkan: ${applied.error}`, 'error', 6500);
+          // Pulangkan kunci (status rehat & markah kekal di pelayan)
+          if (url && s.token) callGas({ action: 'lepasGelanggang', token: s.token, gelanggang: courtId });
+          return false;
+        }
+        lockEpoch += 1;
+        if (res && res.kunci) applyServerLocks(res.kunci, { silent: true });
+        lastHeartbeatAt = Date.now();
+        refSelectedCourt = null;
+        addApprovalLog(applied.match, `AMBIL ALIH PENGADIL${lama ? ' daripada ' + lama : ''} · skor ${applied.s1}-${applied.s2} dikekalkan`);
+        saveState();
+        updateAuthUI();
+        refreshAllViews();
+        fetchPublicLive();
+        showToast(`🤝 Anda kini pengadil ${getCourt(courtId).nama}. Skor ${applied.s1} - ${applied.s2} dikekalkan. Tekan ▶ Sambung Perlawanan bila bersedia.`, 'success', 6500);
+        setTimeout(() => scrollToCourt(courtId), 200);
+        return true;
+      } finally {
+        rehatBusy = false;
+        renderRefDesk();
+        renderCourts();
+      }
+    }
+
+    // ▶ SAMBUNG PERLAWANAN: pemegang kunci meneruskan perlawanan selepas Rehat Kecemasan
+    async function resumeMatch(courtId) {
+      const s0 = getSession();
+      if (!s0 || s0.peranan !== 'PENGADIL') {
+        showToast('Hanya pengadil yang memegang gelanggang boleh menyambung perlawanan.', 'error');
+        return false;
+      }
+      if (rehatBusy) return false;
+      const court0 = getCourt(courtId);
+      if (!court0 || !isCourtPaused(court0)) {
+        showToast('Gelanggang ini tidak dalam status Rehat Kecemasan.', 'warn');
+        return false;
+      }
+      if (court0.pengadilId !== s0.userId) {
+        showToast('Tekan "🤝 Ambil Alih Gelanggang" dahulu sebelum menyambung perlawanan.', 'warn', 4500);
+        return false;
+      }
+      const r0 = court0.rehat;
+      const rs0 = rehatScore(court0);
+      const ok = window.confirm(
+        `▶ Sambung perlawanan di ${court0.nama}?\n\n` +
+        `Skor: ${rs0.s1} - ${rs0.s2}\n` +
+        `Fasa: ${COURT_PHASE_LABELS[r0.fasaSebelum] || r0.fasaSebelum || '-'} · jam bersambung dari ${formatDuration(Number(r0.elapsedMs) || 0)}`
+      );
+      if (!ok) return false;
+
+      rehatBusy = true;
+      lockEpoch += 1;
+      renderRefDesk();
+      try {
+        const url = getGasUrl();
+        let res = null;
+        let rehat = Object.assign({}, r0);
+        let srvMatch = null;
+        if (url) {
+          if (!s0.token) {
+            showToast('Sesi anda belum disahkan oleh Google Sheets. Log keluar & log masuk semula ketika ada internet.', 'error', 6000);
+            return false;
+          }
+          res = await callGas({ action: 'sambungPerlawanan', token: s0.token, gelanggang: courtId, matchId: r0.matchId || court0.matchSemasa });
+          if (!res.ok) {
+            if (handleSesiError(res)) return false;
+            if (res.kunci) { lockEpoch += 1; applyServerLocks(res.kunci); updateAuthUI(); refreshAllViews(); }
+            showToast(res.networkError
+              ? 'Tidak dapat menghubungi Google Sheets. Perlawanan masih dibekukan — cuba lagi.'
+              : (res.error || 'Gagal menyambung perlawanan.'), 'error', 6000);
+            return false;
+          }
+          if (res.rehat) rehat = Object.assign(rehat, res.rehat);
+          srvMatch = res.perlawanan || null;
+        }
+
+        const court = getCourt(courtId);
+        const s = getSession();
+        if (!court || !s) return false;
+        const match = getMatch(rehat.matchId || court.matchSemasa);
+        const localS1 = Number(court.skorLiveP1) || 0;
+        const localS2 = Number(court.skorLiveP2) || 0;
+        const a = srvMatch ? srvScore(srvMatch.skorP1) : null;
+        const b = srvMatch ? srvScore(srvMatch.skorP2) : null;
+        const s1 = a !== null ? a : localS1;
+        const s2 = b !== null ? b : localS2;
+        const nowMs = Date.now();
+        Object.assign(court, {
+          rehat: null,
+          status: COURT_STATUS.LIVE,
+          fasaMasa: COURT_PHASES.includes(rehat.fasaSebelum) ? rehat.fasaSebelum : 'SEPARUH 1',
+          fasaMulaPada: new Date(nowMs - (Number(rehat.elapsedMs) || 0)).toISOString(),
+          skorLiveP1: s1,
+          skorLiveP2: s2,
+          kemaskiniTerakhir: new Date(nowMs).toISOString()
+        });
+        if (match) {
+          Object.assign(match, { skorP1: s1, skorP2: s2, pengadil: s.nama, status: MATCH_STATUS.LIVE });
+          addApprovalLog(match, `SAMBUNG PERLAWANAN · ${s.nama} · skor ${s1}-${s2}`);
+        }
+        lockEpoch += 1;
+        if (res && res.kunci) applyServerLocks(res.kunci, { silent: true });
+        lastHeartbeatAt = nowMs;
+        saveState();
+        updateAuthUI();
+        refreshAllViews();
+        fetchPublicLive();
+        const adjusted = (s1 !== localS1 || s2 !== localS2) ? ` (diselaraskan dengan Google Sheets daripada ${localS1} - ${localS2})` : '';
+        showToast(`▶ Perlawanan disambung di ${court.nama}. Skor ${s1} - ${s2}${adjusted}.`, adjusted ? 'warn' : 'success', 5500);
+        return true;
+      } finally {
+        rehatBusy = false;
+        renderRefDesk();
+        renderCourts();
       }
     }
 
@@ -3678,8 +4239,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         fasa: court.status === COURT_STATUS.LIVE ? (COURT_PHASE_LABELS[court.fasaMasa] || court.fasaMasa) : '',
         masaMula: court.masaMula || (m && m.masaMula) || null,
         fasaMulaPada: court.fasaMulaPada || null,
-        pengadil: court.pengadil || (court.status === COURT_STATUS.LIVE && m ? m.pengadil : '') || '',
+        pengadil: court.pengadil || (court.status === COURT_STATUS.LIVE && m && !court.rehat ? m.pengadil : '') || '',
         pengadilBasi: !!court.kunciBasi,
+        rehat: court.status === COURT_STATUS.LIVE && !!court.rehat,      // FASA 5
+        rehatSebab: court.rehat ? court.rehat.sebab : '',
+        rehatPada: court.rehat ? court.rehat.pada : null,
         kemaskini: court.kemaskiniTerakhir || null
       };
       const srv = publicLive.data && publicLive.data[court.id];
@@ -3705,6 +4269,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         fasaMulaPada: null,
         pengadil: srv.pengadil || '',
         pengadilBasi: srv.pengadil ? !srv.pengadilAktif && st === 'LIVE' : false,
+        rehat: !!srv.rehat,                    // FASA 5
+        rehatSebab: srv.rehatSebab || '',
+        rehatPada: srv.rehatPada || null,
         kemaskini: srv.kemaskini
       };
     }
@@ -3713,7 +4280,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const el = document.getElementById('liveBoard');
       if (!el) return;
       const entries = state.courts.map(c => ({ court: c, e: boardEntry(c) }));
-      const liveCount = entries.filter(x => x.e.live).length;
+      const liveCount = entries.filter(x => x.e.live && !x.e.rehat).length;
       const url = getGasUrl();
       const syncText = !url
         ? 'Paparan peranti ini sahaja'
@@ -3723,14 +4290,15 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
       const flashes = [];
       const cards = entries.map(({ court, e }) => {
-        const cls = e.live ? 'lb-live' : e.ditangguh ? 'lb-tangguh' : e.done ? 'lb-done' : '';
+        const cls = e.rehat ? 'lb-tangguh' : e.live ? 'lb-live' : e.ditangguh ? 'lb-tangguh' : e.done ? 'lb-done' : '';
         if (e.live && e.matchId && boardSeenLive[court.id] !== e.matchId) {
           if (boardReady) flashes.push({ court, e });
           boardSeenLive[court.id] = e.matchId;
         } else if (!e.live) {
           delete boardSeenLive[court.id];
         }
-        const badge = e.live ? '<span class="badge badge-live badge-dot">Live</span>'
+        const badge = e.rehat ? '<span class="badge badge-rehat badge-dot">⏸ Rehat Kecemasan</span>'
+          : e.live ? '<span class="badge badge-live badge-dot">Live</span>'
           : e.ditangguh ? '<span class="badge badge-tangguh badge-dot">Ditangguhkan</span>'
           : e.done ? '<span class="badge badge-done badge-dot">Tamat</span>'
           : '<span class="badge badge-ready badge-dot">Sedia</span>';
@@ -3739,7 +4307,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           ? `<div class="lb-teams"><span>${escapeHtml(e.namaP1)}</span><span class="lb-score">${escapeHtml(score)}</span><span>${escapeHtml(e.namaP2)}</span></div>`
           : '<div class="muted" style="font-size:.82rem;">Tiada perlawanan</div>';
         let meta = '';
-        if (e.live) {
+        if (e.rehat) {
+          meta = `<span>⏸ Ditangguhkan sementara${e.rehatPada ? ' sejak ' + formatTime(e.rehatPada) : ''}</span>` +
+            (e.rehatSebab ? `<span>${escapeHtml(e.rehatSebab)}</span>` : '');
+        } else if (e.live) {
           meta = `<span>⚽ Bermula ${e.masaMula ? formatTime(e.masaMula) : '-'}</span>` +
             (e.fasa ? `<span>⏱ ${escapeHtml(e.fasa)}</span>` : '') +
             (e.masaMula ? `<span data-board-timer="${escapeHtml(e.masaMula)}"></span>` : '');
@@ -3752,7 +4323,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         }
         const ref = e.pengadil
           ? `<div class="lb-ref">🧑‍⚖️ Pengadil: <strong>${escapeHtml(e.pengadil)}</strong>${e.pengadilBasi ? ' <span class="muted">(tidak aktif)</span>' : ''}</div>`
-          : `<div class="lb-ref none">🧑‍⚖️ Pengadil: ${e.live ? 'belum ditetapkan' : '—'}</div>`;
+          : `<div class="lb-ref none">🧑‍⚖️ Pengadil: ${e.rehat ? 'menunggu pengadil mengambil alih' : e.live ? 'belum ditetapkan' : '—'}</div>`;
         return `<div class="lb-card ${cls}" data-board-court="${court.id}">
             <div class="lb-top"><strong>Gelanggang ${escapeHtml(court.id)}</strong>${badge}</div>
             <div class="lb-top"><span>${e.matchId ? escapeHtml(e.matchId) : ''}</span><span>${escapeHtml(court.kategoriNama || court.kategori || '')}</span></div>
@@ -6090,6 +6661,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       startPublicLiveSync();
       const tf = document.getElementById('tangguhForm');
       if (tf) tf.addEventListener('submit', submitPostpone);
+      const rf = document.getElementById('rehatForm');   // FASA 5
+      if (rf) rf.addEventListener('submit', submitEmergencyPause);
       if (isShareView()) showToast('Mod tontonan langsung. Paparan dikemas kini automatik.', 'info', 4000);
     }
 

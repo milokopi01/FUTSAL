@@ -41,6 +41,18 @@
  *                - simpanPengadil / syncPengadil memaksa tulisan (flush) & mengesahkan
  *                  rekod benar-benar wujud dalam tab Senarai_Pengadil sebelum memulangkan ok.
  *
+ *              + FASA 5 - REHAT KECEMASAN (PENANGGUHAN SEMENTARA) & AMBIL ALIH PENGADIL:
+ *                { action: 'rehatKecemasan', token, gelanggang, matchId, skorP1, skorP2,
+ *                  fasaSebelum, elapsedMs, sebab }      -> pengadil pemegang kunci sahaja
+ *                { action: 'ambilAlihGelanggang', token, gelanggang } -> pengadil baharu
+ *                { action: 'sambungPerlawanan', token, gelanggang, matchId } -> pemegang kunci
+ *                - Perlawanan kekal LIVE; Fasa Masa = "Rehat Kecemasan". Skor DIBEKUKAN:
+ *                  skorLive / syncAll / updateMatch tidak boleh mengubah markah semasa rehat.
+ *                - Semasa rehat, kunci boleh dilepaskan / diambil alih oleh pengadil lain
+ *                  (tanpa menunggu 15 minit). Status rehat KEKAL walaupun kunci dilepaskan.
+ *                - Sambung Perlawanan: skor diambil daripada Jadual_Perlawanan (sumber sah),
+ *                  fasa & masa fasa disambung. Semua tindakan dicatat dalam Log_Tangguh.
+ *
  *  Lajur dikesan melalui NAMA TAJUK (baris 1), jadi susunan lajur Bahagian 1
  *  boleh dikekalkan. Lajur yang tiada akan ditambah automatik di hujung.
  * =========================================================
@@ -58,8 +70,8 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.4.1';
-const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan'];
+const API_VERSI = '1.5.0';
+const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan'];
 // Tindakan perlawanan yang sah (selain PENGADIL_ACTIONS)
 const MATCH_ACTIONS = ['', 'syncall', 'updatematch', 'updatematches'];
 
@@ -87,14 +99,22 @@ const PENGADIL_ACTIONS = [
   // Fasa 3: tangguh oleh Master Admin / Urusetia
   'tangguhadmin',
   // Fasa 4: pembetulan markah (Master Admin sahaja)
-  'pembetulanskor', 'logpembetulan'
+  'pembetulanskor', 'logpembetulan',
+  // Fasa 5: rehat kecemasan & ambil alih pengadil
+  'rehatkecemasan', 'ambilalihgelanggang', 'sambungperlawanan'
 ];
 const PENGADIL_LOGIN_MAX_GAGAL = 5;        // cubaan gagal sebelum dikunci
 const PENGADIL_LOGIN_KUNCI_SAAT = 300;     // tempoh kunci (5 minit)
 
 /* ---------- FASA 2: SESI PENGADIL & KUNCI GELANGGANG ---------- */
 const GELANGGANG_SAH = ['A', 'B', 'C', 'D'];
-const KUNCI_HEADER = ['Gelanggang', 'ID Pengadil', 'Nama Pengadil', 'ID Match', 'Dikunci Pada', 'Aktiviti Terakhir'];
+const KUNCI_HEADER = ['Gelanggang', 'ID Pengadil', 'Nama Pengadil', 'ID Match', 'Dikunci Pada', 'Aktiviti Terakhir',
+  'Status Kunci', 'Data Rehat'];   // FASA 5: lajur 7 & 8 (Rehat Kecemasan)
+const KUNCI_STATUS_REHAT = 'REHAT KECEMASAN';
+const FASA_REHAT_LABEL = 'Rehat Kecemasan';
+// Fasa yang boleh disambung selepas rehat kecemasan (kod aplikasi -> label Sheets)
+const FASA_SAMBUNG = { 'SEPARUH 1': 'Separuh 1', 'REHAT': 'Rehat', 'SEPARUH 2': 'Separuh 2' };
+const REHAT_MAX_MS = 3 * 3600 * 1000;   // had masa fasa yang direkod (3 jam)
 // Kunci dianggap "tidak aktif" jika tiada aktiviti / isyarat daripada peranti pengadil
 // selama tempoh ini. Hanya kunci tidak aktif boleh diambil alih oleh pengadil lain.
 const KUNCI_BASI_SAAT = 900;               // 15 minit
@@ -166,7 +186,8 @@ const PENGESAHAN_MAP = { 'MENUNGGU': 'MENUNGGU', 'DISAHKAN': 'DISAHKAN', 'DITOLA
 const FASA_MASA_MAP = {
   'SEPARUH1': 'Separuh 1', 'REHAT': 'Rehat', 'SEPARUH2': 'Separuh 2',
   'TAMAT': 'Tamat', 'SEDIA': 'Belum Bermula', 'BELUMBERMULA': 'Belum Bermula',
-  'DITANGGUHKAN': 'Ditangguhkan', 'TANGGUH': 'Ditangguhkan'
+  'DITANGGUHKAN': 'Ditangguhkan', 'TANGGUH': 'Ditangguhkan',
+  'REHATKECEMASAN': 'Rehat Kecemasan'
 };
 
 /* =========================================================
@@ -474,6 +495,10 @@ function handlePengadil_(action, body) {
     case 'lepasgelanggang':   return lepasGelanggang_(body);
     case 'skorlive':          return skorLive_(body);
     case 'tangguhadmin':      return tangguhAdmin_(body);
+    // FASA 5
+    case 'rehatkecemasan':      return rehatKecemasan_(body);
+    case 'ambilalihgelanggang': return ambilAlihGelanggang_(body);
+    case 'sambungperlawanan':   return sambungPerlawanan_(body);
   }
 
   // FASA 4: sekat cubaan meneka PIN Master Admin
@@ -771,14 +796,19 @@ function getKunciSheet_() {
   if (first.join('') === '') {
     sheet.getRange(1, 1, 1, KUNCI_HEADER.length).setValues([KUNCI_HEADER]).setFontWeight('bold');
     sheet.setFrozenRows(1);
+  } else if (first.slice(6).join('') === '') {
+    // FASA 5: tab lama (6 lajur) -> tambah tajuk Status Kunci & Data Rehat
+    sheet.getRange(1, 7, 1, KUNCI_HEADER.length - 6).setValues([KUNCI_HEADER.slice(6)]).setFontWeight('bold');
   }
+  // Data Rehat (JSON) sebagai teks biasa
+  sheet.getRange(1, 8, sheet.getMaxRows(), 1).setNumberFormat('@');
   const last = sheet.getLastRow();
   const ada = last >= 2
     ? sheet.getRange(2, 1, last - 1, 1).getValues().map(function (r) { return String(r[0]).trim().toUpperCase(); })
     : [];
   const tambah = GELANGGANG_SAH
     .filter(function (g) { return ada.indexOf(g) < 0; })
-    .map(function (g) { return [g, '', '', '', '', '']; });
+    .map(function (g) { return [g, '', '', '', '', '', '', '']; });
   if (tambah.length) {
     sheet.getRange(Math.max(last, 1) + 1, 1, tambah.length, KUNCI_HEADER.length).setValues(tambah);
   }
@@ -800,7 +830,8 @@ function readKunci_() {
         nama: String(r[2] || '').trim(),
         matchId: String(r[3] || '').trim().toUpperCase(),
         dikunciPada: toIso_(r[4]),
-        aktiviti: toIso_(r[5])
+        aktiviti: toIso_(r[5]),
+        rehat: bacaRehat_(r[6], r[7], String(r[3] || '').trim().toUpperCase())   // FASA 5
       };
     });
   }
@@ -808,15 +839,43 @@ function readKunci_() {
 }
 
 function tulisKunci_(sheet, k) {
+  sheet.getRange(k.row, 8, 1, 1).setNumberFormat('@');
   sheet.getRange(k.row, 1, 1, KUNCI_HEADER.length).setValues([[
-    k.gelanggang, k.pengadilId || '', k.nama || '', k.matchId || '', toDate_(k.dikunciPada), toDate_(k.aktiviti)
+    k.gelanggang, k.pengadilId || '', k.nama || '', k.matchId || '', toDate_(k.dikunciPada), toDate_(k.aktiviti),
+    k.rehat ? KUNCI_STATUS_REHAT : (k.pengadilId ? 'AKTIF' : ''),
+    k.rehat ? JSON.stringify(k.rehat) : ''
   ]]);
   sheet.getRange(k.row, 5, 1, 2).setNumberFormat('dd/MM/yyyy HH:mm:ss');
 }
 
-function kosongKunci_(sheet, k) {
-  k.pengadilId = ''; k.nama = ''; k.matchId = ''; k.dikunciPada = null; k.aktiviti = null;
+// Lepaskan kunci pengadil.
+// FASA 5: jika gelanggang dalam REHAT KECEMASAN, status rehat & ID Match DIKEKALKAN
+// (markah kekal dibekukan & pengadil lain boleh mengambil alih). penuh = true -> kosongkan semua.
+function kosongKunci_(sheet, k, penuh) {
+  const kekalRehat = !penuh && !!k.rehat;
+  k.pengadilId = ''; k.nama = ''; k.dikunciPada = null; k.aktiviti = null;
+  if (!kekalRehat) { k.matchId = ''; k.rehat = null; }
   tulisKunci_(sheet, k);
+}
+
+// FASA 5: baca lajur Status Kunci + Data Rehat -> objek rehat atau null
+function bacaRehat_(status, json, matchId) {
+  if (String(status || '').trim().toUpperCase() !== KUNCI_STATUS_REHAT) return null;
+  let v = null;
+  try { v = JSON.parse(String(json || '')); } catch (err) { v = null; }
+  if (!v || typeof v !== 'object') v = {};
+  return {
+    pada: v.pada || null,
+    sebab: String(v.sebab || ''),
+    olehId: String(v.olehId || ''),
+    oleh: String(v.oleh || ''),
+    fasaSebelum: FASA_SAMBUNG[v.fasaSebelum] ? v.fasaSebelum : 'SEPARUH 1',
+    elapsedMs: Math.max(0, Math.min(REHAT_MAX_MS, Number(v.elapsedMs) || 0)),
+    skorP1: skorInt_(v.skorP1) === null ? 0 : skorInt_(v.skorP1),
+    skorP2: skorInt_(v.skorP2) === null ? 0 : skorInt_(v.skorP2),
+    matchId: normMatchId_(v.matchId) || matchId || '',
+    diambilAlihOleh: String(v.diambilAlihOleh || '')
+  };
 }
 
 function isKunciBasi_(k, nowMs) {
@@ -827,10 +886,11 @@ function isKunciBasi_(k, nowMs) {
 
 // Maklumat kunci untuk dipaparkan kepada semua peranti (tiada token / kata laluan)
 function kunciAwam_(k, nowMs) {
-  if (!k || !k.pengadilId) return null;
+  if (!k || (!k.pengadilId && !k.rehat)) return null;
   return {
-    pengadilId: k.pengadilId, nama: k.nama, matchId: k.matchId || null,
-    dikunciPada: k.dikunciPada, aktivitiTerakhir: k.aktiviti, basi: isKunciBasi_(k, nowMs)
+    pengadilId: k.pengadilId || null, nama: k.nama || null, matchId: k.matchId || null,
+    dikunciPada: k.dikunciPada, aktivitiTerakhir: k.aktiviti, basi: isKunciBasi_(k, nowMs),
+    rehat: k.rehat || null   // FASA 5 (tiada data sulit)
   };
 }
 
@@ -850,6 +910,8 @@ function lockedMatchIds_() {
     GELANGGANG_SAH.forEach(function (g) {
       const k = db.map[g];
       if (k && k.pengadilId && k.matchId) out[k.matchId] = k.nama;
+      // FASA 5: perlawanan dalam Rehat Kecemasan kekal dilindungi walaupun tiada pengadil
+      else if (k && k.rehat && k.matchId) out[k.matchId] = 'Rehat Kecemasan (menunggu pengadil)';
     });
   } catch (err) {
     console.warn('lockedMatchIds_', err);
@@ -892,6 +954,15 @@ function kunciGelanggang_(body) {
   const nowMs = now.getTime();
   const perbaharui = body.perbaharui === true || body.perbaharui === 'true';
 
+  // FASA 5: gelanggang dalam Rehat Kecemasan hanya boleh diambil alih melalui ambilAlihGelanggang
+  if (!perbaharui && k.rehat && k.pengadilId !== ref.id) {
+    return {
+      ok: false, kod: 'REHAT',
+      error: 'Gelanggang ' + g + ' sedang Rehat Kecemasan. Gunakan butang "Ambil Alih Gelanggang" untuk meneruskan perlawanan ini.',
+      kunci: statusKunci_(db)
+    };
+  }
+
   if (k.pengadilId && k.pengadilId !== ref.id) {
     if (perbaharui) {
       return { ok: false, kod: 'HILANG', error: 'Kawalan Gelanggang ' + g + ' kini dipegang oleh ' + k.nama + '.', kunci: statusKunci_(db) };
@@ -920,7 +991,7 @@ function kunciGelanggang_(body) {
   const matchId = normMatchId_(body.matchId);
   k.pengadilId = ref.id;
   k.nama = ref.nama;
-  if (matchId) k.matchId = matchId;
+  if (matchId && !k.rehat) k.matchId = matchId;   // FASA 5: perlawanan dibekukan tidak boleh ditukar
   if (!sediaAda) k.dikunciPada = now.toISOString();
   k.aktiviti = now.toISOString();
   tulisKunci_(db.sheet, k);
@@ -980,6 +1051,14 @@ function skorLive_(body) {
   if (k.matchId && k.matchId !== id) {
     return { ok: false, error: 'Perlawanan ' + id + ' tidak sepadan dengan kunci Gelanggang ' + g + ' (' + k.matchId + ').' };
   }
+  // FASA 5: markah DIBEKUKAN semasa Rehat Kecemasan
+  if (k.rehat) {
+    return {
+      ok: false, kod: 'REHAT',
+      error: 'Perlawanan ' + id + ' sedang Rehat Kecemasan. Markah dibekukan - tekan "Sambung Perlawanan" dahulu.',
+      kunci: statusKunci_(db)
+    };
+  }
 
   const tangguh = body.tangguh === true || body.tangguh === 'true';
   const data = { id: id, pengadil: ref.nama, gelanggang: g };
@@ -1002,7 +1081,7 @@ function skorLive_(body) {
       sebab: body.sebab || '', tindakan: lepas ? 'TANGGUH + TUKAR PENGADIL' : 'TANGGUH (pengadil kekal)', oleh: ref.nama });
   }
   if (lepas) {
-    kosongKunci_(db.sheet, k);
+    kosongKunci_(db.sheet, k, true);
   } else {
     k.matchId = id;
     k.aktiviti = new Date().toISOString();
@@ -1042,7 +1121,7 @@ function tangguhAdmin_(body) {
   const db = readKunci_();
   const k = db.map[g];
   const pengadilLama = k && k.nama ? k.nama : '';
-  if (k && k.pengadilId) kosongKunci_(db.sheet, k);
+  if (k && (k.pengadilId || k.rehat)) kosongKunci_(db.sheet, k, true);   // FASA 5: batal rehat juga
   upsertMatches_([{
     id: id, gelanggang: g, status: 'MENUNGGU GILIRAN', fasaMasa: 'Ditangguhkan', skorP1: '', skorP2: '',
     masaMula: '', masaTamat: '', pengesahan: 'MENUNGGU', pemenangPenalti: '', pengadil: '',
@@ -1074,6 +1153,7 @@ function papanLive_() {
       m = calon[0] || m;
     }
     const pegang = k && k.pengadilId ? k : null;
+    const rehat = k && k.rehat && m && String(m.id).toUpperCase() === String(k.matchId).toUpperCase() ? k.rehat : null;
     out[g] = {
       gelanggang: g,
       matchId: m ? m.id : null,
@@ -1083,12 +1163,196 @@ function papanLive_() {
       masaMula: m ? m.masaMula : null,
       ditangguh: !!(m && String(m.fasaMasa) === 'Ditangguhkan' && String(m.status).toUpperCase() !== 'LIVE'),
       catatan: m && String(m.fasaMasa) === 'Ditangguhkan' ? String(m.catatan || '') : '',
-      pengadil: pegang ? pegang.nama : (m && String(m.status).toUpperCase() === 'LIVE' ? String(m.pengadil || '') : ''),
+      pengadil: pegang ? pegang.nama : (rehat ? '' : (m && String(m.status).toUpperCase() === 'LIVE' ? String(m.pengadil || '') : '')),
       pengadilAktif: pegang ? !isKunciBasi_(pegang, nowMs) : false,
+      // FASA 5: penangguhan sementara (rehat kecemasan)
+      rehat: !!rehat,
+      rehatSebab: rehat ? rehat.sebab : '',
+      rehatPada: rehat ? rehat.pada : null,
       kemaskini: m ? m.kemaskini : null
     };
   });
   return { ok: true, masa: new Date().toISOString(), gelanggang: out };
+}
+
+/* =========================================================
+   FASA 5: REHAT KECEMASAN (PENANGGUHAN SEMENTARA) & AMBIL ALIH PENGADIL
+   Aliran: Pengadil A (pemegang kunci) tekan "Rehat Kecemasan" -> skor semasa
+           disimpan & DIBEKUKAN, Fasa Masa = "Rehat Kecemasan" (status kekal LIVE).
+           -> Pengadil B log masuk -> "Ambil Alih Gelanggang" (kunci bertukar kepada B,
+              status rehat kekal) -> "Sambung Perlawanan" -> fasa & masa disambung,
+              skor diambil daripada Jadual_Perlawanan (tiada markah hilang / ditulis ganti).
+           -> Pengadil A juga boleh menekan "Sambung Perlawanan" sendiri.
+   - Semua tindakan berjalan di bawah LockService (doPost).
+   ========================================================= */
+function cariPerlawanan_(id) {
+  const table = readTable_(getJadualSheet_());
+  const rec = table.rows.find(function (r) { return String(r.data.id).toUpperCase() === id; });
+  return rec ? rec.data : null;
+}
+
+// Data perlawanan untuk peranti pengadil (tiada data sulit)
+function perlawananAwam_(d) {
+  if (!d) return null;
+  return {
+    id: String(d.id || ''), kategori: String(d.kategori || ''), peringkat: String(d.peringkat || ''),
+    namaP1: String(d.namaP1 || ''), namaP2: String(d.namaP2 || ''), kodP1: String(d.kodP1 || ''), kodP2: String(d.kodP2 || ''),
+    skorP1: skorInt_(d.skorP1), skorP2: skorInt_(d.skorP2),
+    status: String(d.status || ''), pengesahan: String(d.pengesahan || ''), fasaMasa: String(d.fasaMasa || ''),
+    masaMula: d.masaMula || null, pengadil: String(d.pengadil || ''), gelanggang: String(d.gelanggang || '')
+  };
+}
+
+function normFasaKod_(v) {
+  const k = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (k === 'SEPARUH1') return 'SEPARUH 1';
+  if (k === 'SEPARUH2') return 'SEPARUH 2';
+  if (k === 'REHAT') return 'REHAT';
+  return 'SEPARUH 1';
+}
+
+function sesiDanKunci_(body) {
+  const g = normGelanggang_(body.gelanggang);
+  if (!g) return { ralat: { ok: false, error: 'Gelanggang tidak sah.' } };
+  const sesi = sahkanSesi_(body.token);
+  if (!sesi.ok) return { ralat: sesi };
+  const db = readKunci_();
+  return { g: g, ref: sesi.ref, db: db, k: db.map[g] };
+}
+
+// 1) REHAT KECEMASAN: pengadil pemegang kunci membekukan perlawanan LIVE
+function rehatKecemasan_(body) {
+  const c = sesiDanKunci_(body);
+  if (c.ralat) return c.ralat;
+  const g = c.g, ref = c.ref, db = c.db, k = c.k;
+  if (!k.pengadilId) {
+    return { ok: false, kod: 'TIADA_KUNCI', error: 'Gelanggang ' + g + ' belum dikunci. Tekan "Sepak Mula" dahulu.', kunci: statusKunci_(db) };
+  }
+  if (k.pengadilId !== ref.id) {
+    return { ok: false, kod: 'HILANG', error: 'Gelanggang ' + g + ' dikunci oleh ' + k.nama + '. Anda tidak boleh menangguhkannya.', kunci: statusKunci_(db) };
+  }
+  const id = normMatchId_(body.matchId);
+  if (!id) return { ok: false, error: 'ID perlawanan tidak sah.' };
+  if (k.matchId && k.matchId !== id) {
+    return { ok: false, error: 'Perlawanan ' + id + ' tidak sepadan dengan kunci Gelanggang ' + g + ' (' + k.matchId + ').' };
+  }
+  if (k.rehat) {
+    // Idempotent: permintaan berulang (cth: internet lambat) tidak mengubah apa-apa
+    return { ok: true, sudahRehat: true, rehat: k.rehat, kunci: statusKunci_(db) };
+  }
+  const d = cariPerlawanan_(id);
+  if (!d) return { ok: false, error: 'Perlawanan ' + id + ' tidak dijumpai dalam ' + SHEET_JADUAL + '.' };
+  if (String(d.status || '').toUpperCase() !== 'LIVE') {
+    return { ok: false, kod: 'BUKAN_LIVE', error: 'Rehat Kecemasan hanya dibenarkan semasa perlawanan LIVE (status semasa: ' + d.status + ').' };
+  }
+  const s1 = skorInt_(body.skorP1), s2 = skorInt_(body.skorP2);
+  if (s1 === null || s2 === null) return { ok: false, error: 'Skor semasa tidak sah (mesti 0 hingga 99).' };
+  const sebab = String(body.sebab || 'Kecemasan pengadil').replace(/\s+/g, ' ').trim().slice(0, 200);
+  const now = new Date();
+
+  // Simpan skor terakhir pengadil (sumber sah) & bekukan fasa. Status kekal LIVE.
+  upsertMatches_([{ id: id, gelanggang: g, pengadil: ref.nama, skorP1: s1, skorP2: s2, fasaMasa: FASA_REHAT_LABEL }], { abaikanKunci: true });
+
+  k.matchId = id;
+  k.aktiviti = now.toISOString();
+  k.rehat = {
+    pada: now.toISOString(), sebab: sebab, olehId: ref.id, oleh: ref.nama,
+    fasaSebelum: normFasaKod_(body.fasaSebelum),
+    elapsedMs: Math.max(0, Math.min(REHAT_MAX_MS, Math.round(Number(body.elapsedMs) || 0))),
+    skorP1: s1, skorP2: s2, matchId: id, diambilAlihOleh: ''
+  };
+  tulisKunci_(db.sheet, k);
+  logTangguh_({ gelanggang: g, matchId: id, pasukan: String(d.namaP1) + ' lwn ' + String(d.namaP2), pengadil: ref.nama,
+    sebab: sebab + ' (skor ' + s1 + ' - ' + s2 + ')', tindakan: 'REHAT KECEMASAN (DIGANTUNG SEMENTARA)', oleh: ref.nama });
+  return { ok: true, rehat: k.rehat, kunci: statusKunci_(db), masa: now.toISOString() };
+}
+
+// 2) AMBIL ALIH: pengadil baharu mengambil alih gelanggang yang sedang Rehat Kecemasan
+function ambilAlihGelanggang_(body) {
+  const c = sesiDanKunci_(body);
+  if (c.ralat) return c.ralat;
+  const g = c.g, ref = c.ref, db = c.db, k = c.k;
+  if (!k.rehat) {
+    return {
+      ok: false, kod: 'BUKAN_REHAT',
+      error: 'Gelanggang ' + g + ' tidak dalam status Rehat Kecemasan. Ambil alih hanya dibenarkan semasa perlawanan ditangguhkan sementara.',
+      kunci: statusKunci_(db)
+    };
+  }
+  // Pengadil ini tidak boleh sedang memegang perlawanan di gelanggang lain
+  for (let i = 0; i < GELANGGANG_SAH.length; i++) {
+    const o = GELANGGANG_SAH[i];
+    const x = db.map[o];
+    if (o === g || !x || x.pengadilId !== ref.id) continue;
+    if (x.matchId || x.rehat) {
+      return { ok: false, kod: 'PEGANG_LAIN', error: 'Anda masih memegang Gelanggang ' + o + '. Lepaskan gelanggang tersebut dahulu.', kunci: statusKunci_(db) };
+    }
+    kosongKunci_(db.sheet, x);
+  }
+  const id = k.rehat.matchId || k.matchId;
+  const d = cariPerlawanan_(id);
+  if (!d || String(d.status || '').toUpperCase() !== 'LIVE') {
+    return { ok: false, kod: 'BUKAN_LIVE', error: 'Perlawanan ' + id + ' tidak lagi LIVE. Hubungi Urusetia / Master Admin.', kunci: statusKunci_(db) };
+  }
+  const now = new Date();
+  const sama = k.pengadilId === ref.id;
+  const lama = sama ? '' : (k.nama || k.rehat.oleh || '');
+  k.pengadilId = ref.id;
+  k.nama = ref.nama;
+  k.matchId = id;
+  if (!sama) k.dikunciPada = now.toISOString();
+  k.aktiviti = now.toISOString();
+  if (!sama) k.rehat.diambilAlihOleh = ref.nama;
+  tulisKunci_(db.sheet, k);
+  // Hanya nama pengadil dikemas kini. Skor, status & fasa TIDAK disentuh.
+  upsertMatches_([{ id: id, pengadil: ref.nama }], { abaikanKunci: true });
+  if (!sama) {
+    logTangguh_({ gelanggang: g, matchId: id, pasukan: String(d.namaP1) + ' lwn ' + String(d.namaP2), pengadil: lama || '-',
+      sebab: 'Ambil alih semasa Rehat Kecemasan (skor ' + d.skorP1 + ' - ' + d.skorP2 + ')', tindakan: 'AMBIL ALIH (TUKAR PENGADIL)', oleh: ref.nama });
+  }
+  return {
+    ok: true, gelanggang: g, diambilAlihDaripada: lama || null, rehat: k.rehat,
+    perlawanan: perlawananAwam_(cariPerlawanan_(id)), kunci: statusKunci_(db), masa: now.toISOString()
+  };
+}
+
+// 3) SAMBUNG PERLAWANAN: pemegang kunci (pengadil asal / baharu) meneruskan perlawanan
+function sambungPerlawanan_(body) {
+  const c = sesiDanKunci_(body);
+  if (c.ralat) return c.ralat;
+  const g = c.g, ref = c.ref, db = c.db, k = c.k;
+  if (!k.pengadilId) {
+    return { ok: false, kod: 'TIADA_KUNCI', error: 'Gelanggang ' + g + ' tiada pengadil. Tekan "Ambil Alih Gelanggang" dahulu.', kunci: statusKunci_(db) };
+  }
+  if (k.pengadilId !== ref.id) {
+    return { ok: false, kod: 'HILANG', error: 'Gelanggang ' + g + ' kini dipegang oleh ' + k.nama + '.', kunci: statusKunci_(db) };
+  }
+  const reqId = normMatchId_(body.matchId);
+  if (!k.rehat) {
+    // Idempotent: sudah disambung
+    return { ok: true, sudahSambung: true, perlawanan: perlawananAwam_(k.matchId ? cariPerlawanan_(k.matchId) : null), kunci: statusKunci_(db) };
+  }
+  const id = k.rehat.matchId || k.matchId;
+  if (reqId && reqId !== id) {
+    return { ok: false, error: 'Perlawanan ' + reqId + ' tidak sepadan dengan perlawanan yang ditangguhkan di Gelanggang ' + g + ' (' + id + ').', kunci: statusKunci_(db) };
+  }
+  const d = cariPerlawanan_(id);
+  if (!d || String(d.status || '').toUpperCase() !== 'LIVE') {
+    return { ok: false, kod: 'BUKAN_LIVE', error: 'Perlawanan ' + id + ' tidak lagi LIVE. Hubungi Urusetia / Master Admin.', kunci: statusKunci_(db) };
+  }
+  const rehat = k.rehat;
+  const now = new Date();
+  // Skor TIDAK dihantar / ditulis: hanya fasa dipulihkan & nama pengadil semasa.
+  upsertMatches_([{ id: id, pengadil: ref.nama, fasaMasa: FASA_SAMBUNG[rehat.fasaSebelum] || 'Separuh 1' }], { abaikanKunci: true });
+  k.rehat = null;
+  k.matchId = id;
+  k.aktiviti = now.toISOString();
+  tulisKunci_(db.sheet, k);
+  const minit = rehat.pada ? Math.max(0, Math.round((now.getTime() - new Date(rehat.pada).getTime()) / 60000)) : 0;
+  logTangguh_({ gelanggang: g, matchId: id, pasukan: String(d.namaP1) + ' lwn ' + String(d.namaP2), pengadil: ref.nama,
+    sebab: 'Rehat ' + minit + ' minit (' + rehat.sebab + ') · skor ' + d.skorP1 + ' - ' + d.skorP2,
+    tindakan: 'SAMBUNG PERLAWANAN' + (rehat.olehId && rehat.olehId !== ref.id ? ' (PENGADIL BAHARU)' : ''), oleh: ref.nama });
+  return { ok: true, rehat: rehat, perlawanan: perlawananAwam_(cariPerlawanan_(id)), kunci: statusKunci_(db), masa: now.toISOString() };
 }
 
 /* =========================================================
@@ -1562,4 +1826,30 @@ function testPembetulan() {
   console.log('syncAll tanpa admin:', call({ action: 'updateMatch', id: 'SR-01', skorP1: 9, skorP2: 9 }));                                         // dimuktamad: 1
   console.log('Master Admin      :', call({ action: 'pembetulanSkor', adminKey: key, matchId: 'SR-01', skorP1: 3, skorP2: 0, sebab: 'Ujian pembetulan', mod: 'MAIN_SEMULA' }));
   call({ action: 'logKeluarPengadil', token: a.token });
+}
+
+// 8) Ujian Rehat Kecemasan & Ambil Alih (Fasa 5).
+//    Pastikan SM-01 belum bermula (MENUNGGU GILIRAN) dalam Jadual_Perlawanan & Gelanggang A kosong.
+function testRehatKecemasan() {
+  const key = getMasterAdminKey_();
+  const call = function (obj) {
+    return JSON.parse(doPost({ postData: { contents: JSON.stringify(obj) } }).getContent());
+  };
+  call({ action: 'simpanPengadil', adminKey: key, pengadil: { nama: 'Ujian Satu', password: 'uji1111' } });
+  call({ action: 'simpanPengadil', adminKey: key, pengadil: { nama: 'Ujian Dua', password: 'uji2222' } });
+  const a = call({ action: 'loginPengadil', nama: 'Ujian Satu', password: 'uji1111' });
+  const b = call({ action: 'loginPengadil', nama: 'Ujian Dua', password: 'uji2222' });
+  console.log('A kunci      :', call({ action: 'kunciGelanggang', token: a.token, gelanggang: 'A', matchId: 'SM-01' }).ok);
+  console.log('A skor 2-1   :', call({ action: 'skorLive', token: a.token, gelanggang: 'A', matchId: 'SM-01', skorP1: 2, skorP2: 1, status: 'LIVE', fasaMasa: 'Separuh 1' }).ok);
+  console.log('A rehat      :', call({ action: 'rehatKecemasan', token: a.token, gelanggang: 'A', matchId: 'SM-01', skorP1: 2, skorP2: 1, fasaSebelum: 'SEPARUH 1', elapsedMs: 420000, sebab: 'Ujian tandas' }).ok);
+  console.log('A skor (beku):', call({ action: 'skorLive', token: a.token, gelanggang: 'A', matchId: 'SM-01', skorP1: 5 }).kod);          // REHAT
+  console.log('Sync (beku)  :', call({ action: 'updateMatch', id: 'SM-01', skorP1: 9, skorP2: 9 }).dilindungi);                         // 1
+  console.log('B ambil alih :', call({ action: 'ambilAlihGelanggang', token: b.token, gelanggang: 'A' }));
+  console.log('A sambung    :', call({ action: 'sambungPerlawanan', token: a.token, gelanggang: 'A' }).kod);                            // HILANG
+  const sam = call({ action: 'sambungPerlawanan', token: b.token, gelanggang: 'A', matchId: 'SM-01' });
+  console.log('B sambung    :', sam.ok, 'skor', sam.perlawanan && sam.perlawanan.skorP1, '-', sam.perlawanan && sam.perlawanan.skorP2); // true 2 - 1
+  console.log('B skor 3-1   :', call({ action: 'skorLive', token: b.token, gelanggang: 'A', matchId: 'SM-01', skorP1: 3, skorP2: 1, status: 'LIVE', fasaMasa: 'Separuh 1' }).ok);
+  call({ action: 'tangguhAdmin', adminKey: key, gelanggang: 'A', matchId: 'SM-01', sebab: 'Tamat ujian' });
+  call({ action: 'logKeluarPengadil', token: a.token });
+  call({ action: 'logKeluarPengadil', token: b.token });
 }
