@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxU2Zj20SF5lEhJH0Qv2l_My-KXyDSyUyyBTT8m0qlB2bewAthAlKJciFDCtDr6rmQy/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -7392,11 +7392,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         parts.push(`<button type="button" class="btn btn-warn btn-sm" onclick="openPostpone('${id}')" title="Salah tekan Sepak Mula? Tangguhkan & boleh tukar pengadil">⏸ Tangguh Perlawanan</button>`);
       }
 
-      // Urusetia / Master Admin: Sahkan / Tolak
-      if (court.status === COURT_STATUS.TAMAT && canApprove() && match.status === MATCH_STATUS.TUNGGU_SAH) {
-        parts.push(`<button type="button" class="btn btn-success btn-sm" onclick="approveMatch('${match.id}')">✔ Sahkan Keputusan</button>`);
-        parts.push(`<button type="button" class="btn btn-sm" onclick="rejectMatch('${match.id}')">✖ Tolak &amp; Minta Semak</button>`);
-      }
+      // Pengesahan dipaparkan berasingan mengikut perlawanan pada kad,
+      // bukan matchSemasa tempatan yang mungkin sudah beralih ke giliran seterusnya.
 
       // Nota maklumat mengikut peranan & status kunci
       let note = '';
@@ -7418,6 +7415,73 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if (note) parts.push(`<span class="muted" style="font-size:.8rem;align-self:center;">${note}</span>`);
 
       return parts.length ? `<div class="court-controls">${parts.join('')}</div>` : '';
+    }
+
+    // v1.14.5: pengesahan terus daripada kad yang urusetia sedang lihat.
+    const dashboardApprovalBusy = new Set();
+
+    function renderDashboardApproval(court, match) {
+      if (!canApprove() || !match || court.status !== COURT_STATUS.TAMAT) return '';
+      const busy = dashboardApprovalBusy.has(match.id);
+      return `<div class="court-controls"><button type="button" class="btn btn-success btn-sm" onclick="approveDashboardMatch('${escapeHtml(court.id)}', '${escapeHtml(match.id)}')" ${busy ? 'disabled' : ''}>${busy ? '⏳ Menyemak / Mengesahkan…' : '✔ Semak & Sahkan Keputusan'}</button></div>`;
+    }
+
+    async function approveDashboardMatch(courtId, matchId) {
+      if (!canApprove()) {
+        showToast('Hanya Urusetia atau Master Admin boleh mengesahkan keputusan.', 'error');
+        return false;
+      }
+      if (dashboardApprovalBusy.has(matchId)) return false;
+      dashboardApprovalBusy.add(matchId);
+      renderCourts();
+      try {
+        // Baca keputusan rasmi dahulu. Jangan mengesahkan skor paparan lama
+        // atau menukar perlawanan LIVE menjadi keputusan dihantar.
+        if (getGasUrl() && !(await pullMatchesFromSheet({ manual: true, silent: true }))) {
+          showToast('Keputusan belum dapat disemak. Cuba lagi apabila sambungan pulih.', 'error');
+          return false;
+        }
+        const match = getMatch(matchId);
+        if (!match || match.gelanggang !== courtId) {
+          showToast('Perlawanan pada kad ini tidak sepadan dengan rekod gelanggang.', 'error');
+          return false;
+        }
+        if (match.status === MATCH_STATUS.SELESAI) {
+          showToast(`${match.id} sudah disahkan.`, 'info');
+          return false;
+        }
+        if (match.status !== MATCH_STATUS.TUNGGU_SAH) {
+          showToast(`${match.id}: keputusan pengadil belum diterima. Minta pengadil hantar semula; skor paparan tidak disahkan.`, 'warn', 6500);
+          return false;
+        }
+        const s1 = srvScore(match.skorP1), s2 = srvScore(match.skorP2);
+        if (s1 === null || s2 === null || s1 < 0 || s2 < 0) {
+          showToast('Skor keputusan tidak lengkap. Minta pengadil semak semula.', 'error');
+          return false;
+        }
+        const penalti = match.pemenangPenalti;
+        if (isKnockout(match) && s1 === s2 && penalti !== 'P1' && penalti !== 'P2') {
+          showToast('Pemenang penalti belum direkodkan. Minta pengadil semak semula.', 'warn');
+          return false;
+        }
+        const penText = penalti ? `\nMenang penalti: ${penalti === 'P1' ? match.namaP1 : match.namaP2}` : '';
+        if (!(await uiConfirm(`Sahkan keputusan ${match.id} · Gelanggang ${courtId}?\n\n${match.namaP1}  ${s1} - ${s2}  ${match.namaP2}${penText}`))) return false;
+        if (!approveMatch(matchId, { silent: true })) return false;
+        const res = getGasUrl() ? await pushDecisions([matchId]) : null;
+        if (getGasUrl() && (!res || !res.ok)) {
+          showToast('Pengesahan belum berjaya dihantar ke Google Sheets. Semak sambungan sebelum meneruskan.', 'error', 6500);
+          return false;
+        }
+        // Jangan padam paparan jika gelanggang sudah memainkan perlawanan lain.
+        if (publicLive.data && publicLive.data[courtId] && publicLive.data[courtId].matchId === matchId) {
+          delete publicLive.data[courtId];
+        }
+        showToast(`${matchId} disahkan${getGasUrl() ? ' di Google Sheets' : ' dalam peranti ini'}.`, 'success', 4200);
+        return true;
+      } finally {
+        dashboardApprovalBusy.delete(matchId);
+        refreshAllViews();
+      }
     }
 
     function renderCourtCard(realCourt) {
@@ -7504,6 +7568,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           ${penaltiNote}
           ${rejectNote}
           <div class="court-next">${nextText}</div>
+          ${renderDashboardApproval(court, match)}
           ${renderCourtControls(realCourt, realMatch)}
         </article>`;
     }
