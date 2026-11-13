@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbwfVPuIWj4Wv9Yomw7_TFKG7BkYOb05tIF2iALMdHNvrJ487FUVRNqMTre-rFkC_Gbc/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -9955,12 +9955,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     // lama dalam storan pelayar) dikosongkan bila Google Sheets boleh dihubungi. Keputusan
     // perlawanan KEKAL dalam Peti Kelulusan Urusetia - hanya paparan gelanggang dibebaskan.
     function healStuckCourts() {
-      if (!getGasUrl() || !publicLiveFresh()) return false;
-      const s = getSession();
+      // v1.14.4: tidak lagi bergantung pada sambungan Google Sheets. Keputusan sudah disimpan
+      // dalam perlawanan (Peti Kelulusan), jadi gelanggang TAMAT sentiasa boleh dibebaskan.
       let changed = false;
       state.courts.forEach(c => {
         if (c.status !== COURT_STATUS.TAMAT) return;
-        if (s && s.peranan === 'PENGADIL' && c.pengadilId === s.userId) return;
         const t = c.kemaskiniTerakhir ? new Date(c.kemaskiniTerakhir).getTime() : 0;
         if (t && Date.now() - t < BOARD_LOCAL_GRACE_MS) return;
         resetCourt(c);
@@ -9984,7 +9983,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       clearTimeout(publicPollHandle);
       publicPollHandle = setTimeout(async () => {
         const proj = document.body.classList.contains('projection-on');
-        try { if (!document.hidden || proj) await fetchPublicLive(); } finally { schedulePublicPoll(); }
+        try { if (!document.hidden || proj) await fetchPublicLive(); } finally {
+          try { if (healStuckCourts()) renderLiveViews(); } catch (e) { /* abaikan */ }
+          schedulePublicPoll();
+        }
       }, publicPollDelay());
     }
 

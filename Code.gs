@@ -120,7 +120,7 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.9.4';
+const API_VERSI = '1.9.5';
 const GILIRAN_MAX = 6;                     // bil. perlawanan seterusnya dipaparkan per gelanggang
 const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus', 'papanPintar', 'keputusanLewat', 'papanSegera'];
 // v1.9.0: Papan live disimpan dalam CacheService supaya ?action=live sangat pantas
@@ -380,7 +380,11 @@ function doPost(e) {
     const result = upsertMatches_(list, { admin: admin });
     // v1.9.4: perlawanan yang telah DISAHKAN -> lepaskan kunci gelanggang supaya
     // gelanggang boleh terus ke perlawanan seterusnya.
-    try { lepasKunciMuktamad_(); } catch (errK) { console.warn('lepasKunciMuktamad_', errK); }
+    // v1.9.5: hanya bila ada keputusan DISAHKAN dalam penghantaran ini (elak bacaan jadual setiap gol)
+    const adaSah = Array.isArray(body.matches) && body.matches.some(function (x) {
+      return x && String(x.pengesahan || '').toUpperCase() === 'DISAHKAN';
+    });
+    if (adaSah) { try { lepasKunciMuktamad_(); } catch (errK) { console.warn('lepasKunciMuktamad_', errK); } }
 
     // Carta Liga dikira semula DI PELAYAN daripada Jadual_Perlawanan (bukan dipercayai
     // bulat-bulat daripada peranti) supaya peranti dengan data lama tidak merosakkan carta.
