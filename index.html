@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbwUkzTaw8xPr8St6h4k812n0b1fpc7KdxsA8MXZ4xtqCVHwgKGKepXoqoK1JQAVAP4/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -843,40 +843,60 @@
     /* FASA 7: Papan live digabung ke kad gelanggang + Makluman Standby */
     .live-board.compact { padding: 12px 18px; }
     .live-board.compact .live-board-head { margin-bottom: 0; }
-    .standby-board { margin-top: 18px; padding: 16px 18px; }
-    .sb-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
-    .sb-head h3 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; }
-    .sb-head p { margin: 4px 0 0; color: var(--text-2); font-size: .8rem; max-width: 640px; line-height: 1.45; }
-    .sb-find { display: flex; flex-direction: column; gap: 4px; font-size: .76rem; color: var(--text-2); min-width: 240px; }
-    .sb-find select { background: var(--glass); color: var(--text-0); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 9px 10px; font: inherit; font-size: .85rem; }
-    .sb-find select option { background: #0f172a; color: #e5e7eb; }
-    .sb-result { margin: 0 0 12px; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass); font-size: .88rem; line-height: 1.5; color: var(--text-0); }
-    .sb-result.is-standby { border-color: rgba(255,181,71,.7); background: rgba(255,181,71,.12); }
-    .sb-result.is-now { border-color: rgba(34,197,94,.7); background: rgba(34,197,94,.12); }
-    .sb-result.is-live { border-color: rgba(239,68,68,.6); background: var(--court-live-bg); }
-    .sb-result small { display: block; color: var(--text-2); font-size: .76rem; }
-    .sb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-    .sb-card { border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 12px; background: var(--glass); display: flex; flex-direction: column; gap: 8px; }
-    .sb-card-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-    .sb-card-top strong { font-family: var(--font-display); font-size: .95rem; color: var(--text-0); }
-    .sb-card-top span { font-size: .72rem; color: var(--text-2); }
-    .sb-label { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); font-weight: 700; }
-    .sb-now { font-size: .8rem; color: var(--text-1); }
-    .sb-now .sb-tag { font-size: .68rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--glass-border); margin-left: 4px; }
-    .sb-tag.t-live { color: #ff8a8a; border-color: rgba(239,68,68,.5); }
-    .sb-tag.t-done { color: #93c5fd; border-color: rgba(147,197,253,.5); }
-    .sb-tag.t-ready { color: #86efac; border-color: rgba(134,239,172,.5); }
-    .sb-standby { border: 1px solid rgba(255,181,71,.6); background: rgba(255,181,71,.1); border-radius: var(--radius-sm); padding: 9px 10px; }
-    .sb-standby .sb-label { color: var(--accent); }
-    .sb-match { font-weight: 700; font-size: .86rem; color: var(--text-0); line-height: 1.35; }
-    .sb-match .mono { font-family: var(--font-mono); font-size: .74rem; color: var(--text-2); font-weight: 400; margin-right: 4px; }
-    .sb-hint { font-size: .74rem; color: var(--text-1); margin-top: 3px; }
-    .sb-later { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .78rem; color: var(--text-1); }
-    .sb-later li { line-height: 1.4; }
-    .sb-card .mono { font-family: var(--font-mono); font-size: .72rem; color: var(--text-2); margin-right: 6px; }
-    .sb-later .mono { font-family: var(--font-mono); color: var(--text-2); font-size: .72rem; }
-    .sb-mine { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
-    .sb-empty { font-size: .78rem; color: var(--text-2); }
+    /* Papan giliran: warna semantik untuk arahan, semasa dan giliran akan datang. */
+    .standby-board {
+      --sb-ready: oklch(.84 .15 85); --sb-ready-soft: oklch(.84 .15 85 / .09);
+      --sb-now: oklch(.8 .13 175); --sb-now-soft: oklch(.8 .13 175 / .07);
+      --sb-line: oklch(.72 .02 240 / .22); --sb-surface: oklch(.22 .025 250);
+      --sb-focus: oklch(.84 .15 85 / .5);
+      margin-top: 28px; padding: 26px 0; background: none; border: none;
+      border-top: 1px solid var(--sb-line); border-radius: 0; box-shadow: none; backdrop-filter: none;
+    }
+    .sb-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; }
+    .sb-head h3 { margin: 0; font-family: var(--font-display); font-size: 1.35rem; letter-spacing: 0; }
+    .sb-head p { margin: 6px 0 0; color: var(--text-1); font-size: .85rem; line-height: 1.5; }
+    .sb-eyebrow { display: block; margin-bottom: 6px; color: var(--sb-now); font-size: .72rem; font-weight: 800; }
+    .sb-find { display: flex; flex-direction: column; gap: 7px; font-size: .78rem; color: var(--text-1); width: 280px; max-width: 100%; }
+    .sb-find input, .sb-find select { width: 100%; background: var(--sb-surface); color: var(--text-0); border: 1px solid var(--sb-line); border-radius: 6px; padding: 10px 12px; font: inherit; font-size: .85rem; }
+    .sb-find input:focus-visible, .sb-find select:focus-visible, .sb-later-toggle:focus-visible { outline: 2px solid var(--sb-ready); outline-offset: 3px; }
+    .sb-find select option { background: var(--bg-2); color: var(--text-0); }
+    .sb-result { margin: 0 0 20px; padding: 16px 18px; border-radius: 6px; border-left: 4px solid var(--sb-now); background: var(--sb-now-soft); font-size: .95rem; line-height: 1.6; color: var(--text-0); }
+    .sb-result.is-standby { border-color: var(--sb-ready); background: var(--sb-ready-soft); }
+    .sb-result.is-live { border-color: var(--court-live); background: var(--court-live-bg); }
+    .sb-result small { display: block; color: var(--text-1); font-size: .8rem; }
+    .sb-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; align-items: start; }
+    .sb-card { border: 1px solid var(--sb-line); border-radius: 8px; background: var(--sb-surface); overflow: hidden; min-width: 0; animation: sb-enter .3s ease both; }
+    .sb-card-top { display: flex; align-items: center; gap: 12px; padding: 18px 16px; border-bottom: 1px solid var(--sb-line); }
+    .sb-court-letter { display: grid; place-items: center; flex: 0 0 42px; height: 42px; background: var(--sb-now-soft); border: 1px solid var(--sb-line); border-radius: 6px; color: var(--sb-now); font: 800 1.4rem var(--font-display); }
+    .sb-card-top strong { display: block; font-family: var(--font-display); font-size: 1rem; color: var(--text-0); }
+    .sb-category { display: block; margin-top: 3px; font-size: .66rem; color: var(--text-2); }
+    .sb-stage { padding: 16px; }
+    .sb-stage-current { border-bottom: 1px solid var(--sb-line); }
+    .sb-label { display: flex; align-items: center; gap: 7px; font-size: .7rem; letter-spacing: 0; color: var(--sb-now); font-weight: 800; margin-bottom: 9px; }
+    .sb-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .sb-now { font-size: .85rem; color: var(--text-1); }
+    .sb-tag { display: inline-block; font-size: .69rem; font-weight: 700; margin-top: 10px; color: var(--sb-now); }
+    .sb-tag.t-live { color: var(--court-live); }
+    .sb-tag.t-done { color: var(--info); }
+    .sb-standby { background: var(--sb-ready-soft); border-bottom: 1px solid var(--sb-line); border-left: 3px solid var(--sb-ready); }
+    .sb-standby .sb-label { color: var(--sb-ready); }
+    .sb-match { font-weight: 700; font-size: .9rem; color: var(--text-0); line-height: 1.45; overflow-wrap: anywhere; }
+    .sb-match-id { font: 500 .68rem var(--font-mono); color: var(--text-2); margin-bottom: 7px; }
+    .sb-team-name { display: block; }
+    .sb-versus { display: block; color: var(--text-2); font: 500 .65rem var(--font-mono); margin: 3px 0; }
+    .sb-hint { color: var(--sb-ready); font-size: .76rem; font-weight: 700; margin-top: 12px; }
+    .sb-later-toggle { padding: 13px 16px; cursor: pointer; font-size: .74rem; font-weight: 700; color: var(--text-1); }
+    .sb-later-toggle:hover { color: var(--sb-now); }
+    .sb-later { list-style: none; margin: 0; padding: 0 16px 16px; display: grid; gap: 12px; font-size: .78rem; color: var(--text-1); }
+    .sb-later li { display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 8px; padding-top: 12px; border-top: 1px solid var(--sb-line); }
+    .sb-queue-number { color: var(--text-2); font: 700 .78rem var(--font-mono); }
+    .sb-mine { box-shadow: inset 0 0 0 2px var(--sb-focus); }
+    .sb-empty { font-size: .8rem; color: var(--text-2); line-height: 1.5; }
+    .sb-match-note { display: inline-block; margin-top: 5px; font-size: .66rem; color: var(--text-2); }
+    @keyframes sb-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @media(max-width: 1100px) { .sb-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+    @media(max-width: 600px) { .sb-grid { grid-template-columns: minmax(0,1fr); } .sb-find { width: 100%; } .sb-head h3 { font-size: 1.18rem; } }
+    @media(prefers-reduced-motion: reduce) { .sb-card { animation: none; } }
 
     /* FASA 5: Rehat Kecemasan (penangguhan sementara) */
     .badge-rehat { color: #fde68a; background: rgba(250,204,21,.14); border-color: rgba(250,204,21,.55); }
@@ -1174,11 +1194,13 @@
         <div class="card glass standby-board" id="standbyBoard" aria-live="polite">
           <div class="sb-head">
             <div>
-              <h3>📣 Makluman Pengurus Pasukan · Sila Bersedia</h3>
-              <p>Pasukan berstatus <strong>STANDBY</strong> diminta bersedia di tepi gelanggang yang ditetapkan. Paparan ini dikemas kini secara automatik — tidak perlu bertanya urusetia.</p>
+              <span class="sb-eyebrow">📣 MAKLUMAN PASUKAN</span>
+              <h3>Giliran anda, gelanggang anda.</h3>
+              <p><strong>Pasukan seterusnya:</strong> sila bersedia di tepi gelanggang yang ditetapkan.</p>
             </div>
             <label class="sb-find">
-              <span>🔎 Cari pasukan anda</span>
+              <span>🔎 Pasukan anda</span>
+              <input id="sbSearch" type="search" placeholder="Cari nama sekolah…" aria-label="Cari nama sekolah" oninput="filterStandbySchools(this.value)" />
               <select id="sbTeam" onchange="setStandbyTeam(this.value)">
                 <option value="">— Pilih sekolah —</option>
               </select>
@@ -5645,10 +5667,20 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       renderStandby();
     }
 
+    function filterStandbySchools(query) {
+      const select = document.getElementById('sbTeam');
+      if (!select) return;
+      const current = getStandbyTeam();
+      const normalized = String(query || '').trim().toUpperCase();
+      Array.from(select.options).forEach(option => {
+        option.hidden = !!option.value && option.value !== current && !option.text.toUpperCase().includes(normalized);
+      });
+    }
+
     function sbMatchLine(m) {
       if (!m) return '';
       const ready = isMatchReady(m);
-      return `<span class="mono">${escapeHtml(m.id)}</span>${ready ? `${escapeHtml(m.namaP1)} <span class="muted">lwn</span> ${escapeHtml(m.namaP2)}` : '<span class="muted">Pasukan belum ditentukan</span>'}`;
+      return `<div class="sb-match-id">${escapeHtml(m.id)}</div>${ready ? `<span class="sb-team-name">${escapeHtml(m.namaP1)}</span><span class="sb-versus">LAWAN</span><span class="sb-team-name">${escapeHtml(m.namaP2)}</span>` : '<span class="sb-empty">Pasukan belum ditentukan</span>'}`;
     }
 
     function renderStandby() {
@@ -5683,6 +5715,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         sel.dataset.sig = sig;
       }
       if (sel.value !== team) sel.value = team;
+      filterStandbySchools(document.getElementById('sbSearch')?.value || '');
+      const openCourts = new Set(Array.from(grid.querySelectorAll('details[open]')).map(el => el.dataset.court));
 
       // Kad setiap gelanggang
       grid.innerHTML = rows.map(({ court, d }) => {
@@ -5698,22 +5732,24 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         const hint = !cur || v.status === COURT_STATUS.TAMAT
           ? `Sila bersedia di tepi Gelanggang ${escapeHtml(court.id)} — akan dipanggil masuk sebentar lagi.`
           : `Sila bersedia di tepi Gelanggang ${escapeHtml(court.id)} sekarang.`;
+        const courtId = escapeHtml(court.id);
         return `
-          <div class="sb-card">
-            <div class="sb-card-top"><strong>Gelanggang ${escapeHtml(court.id)}</strong><span>${escapeHtml(court.kategoriNama || court.kategori || '')}</span></div>
-            <div>
-              <div class="sb-label">Di gelanggang</div>
-              <div class="sb-now ${isMine(cur) ? 'sb-mine' : ''}">${cur ? sbMatchLine(cur) + curTag : '<span class="sb-empty">Tiada perlawanan</span>'}</div>
+          <article class="sb-card" aria-label="Giliran Gelanggang ${courtId}">
+            <div class="sb-card-top"><span class="sb-court-letter" aria-hidden="true">${courtId}</span><div><strong>Gelanggang ${courtId}</strong><span class="sb-category">${escapeHtml(court.kategoriNama || court.kategori || '')}</span></div></div>
+            <div class="sb-stage sb-stage-current ${isMine(cur) ? 'sb-mine' : ''}">
+              <div class="sb-label"><span class="sb-status-dot"></span>SEKARANG · DI GELANGGANG</div>
+              <div class="sb-match">${cur ? sbMatchLine(cur) : '<span class="sb-empty">Tiada perlawanan</span>'}</div>
+              ${cur ? curTag : ''}
             </div>
-            <div class="sb-standby ${isMine(sb) ? 'sb-mine' : ''}">
-              <div class="sb-label">🟡 Standby · Seterusnya</div>
-              ${sb ? `<div class="sb-match">${sbMatchLine(sb)}</div><div class="sb-hint">${hint}</div>` : '<div class="sb-empty">Tiada perlawanan seterusnya</div>'}
+            <div class="sb-stage sb-standby ${isMine(sb) ? 'sb-mine' : ''}">
+              <div class="sb-label"><span class="sb-status-dot"></span>SETERUSNYA · SILA BERSEDIA</div>
+              ${sb ? `<div class="sb-match">${sbMatchLine(sb)}</div><div class="sb-hint">↗ Bersedia di tepi Gelanggang ${courtId}</div>${!isMatchReady(sb) ? '<span class="sb-match-note">Menunggu penetapan pasukan</span>' : ''}` : '<div class="sb-empty">Tiada perlawanan seterusnya</div>'}
             </div>
-            ${later.length ? `<div>
-              <div class="sb-label">Selepas itu</div>
-              <ul class="sb-later">${later.map(m => `<li class="${isMine(m) ? 'sb-mine' : ''}">${sbMatchLine(m)}</li>`).join('')}</ul>
-            </div>` : ''}
-          </div>`;
+            ${later.length ? `<details data-court="${courtId}" ${openCourts.has(court.id) ? 'open' : ''}>
+              <summary class="sb-later-toggle">Giliran selepas ini (${later.length})</summary>
+              <ol class="sb-later">${later.map((m,i) => `<li class="${isMine(m) ? 'sb-mine' : ''}"><span class="sb-queue-number">${i+2}</span><div>${sbMatchLine(m)}</div></li>`).join('')}</ol>
+            </details>` : '<div class="sb-stage sb-empty">Tiada giliran tambahan</div>'}
+          </article>`;
       }).join('') || '<div class="sb-empty">Tiada gelanggang untuk kategori ini.</div>';
 
       // Keputusan carian pasukan
