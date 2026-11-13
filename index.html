@@ -522,6 +522,56 @@
     /* =========================================================
        7. CARTA LIGA & JADUAL (JADUAL DATA)
        ========================================================= */
+    /* Carta liga: dua peringkat berasingan, tanpa mengubah kiraan mata. */
+    #standingsSR, #standingsSM { display: block; }
+    .league-round {
+      --round-accent: oklch(0.79 0.12 220);
+      --round-soft: oklch(0.79 0.12 220 / .09);
+      --round-line: oklch(0.79 0.12 220 / .32);
+      margin-bottom: 30px;
+    }
+    .league-round.round-two {
+      --round-accent: oklch(0.83 0.15 85);
+      --round-soft: oklch(0.83 0.15 85 / .09);
+      --round-line: oklch(0.83 0.15 85 / .32);
+      padding-top: 24px; border-top: 1px dashed var(--round-line);
+    }
+    .league-round-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .league-round-number {
+      flex: 0 0 52px; height: 52px; display: grid; place-items: center;
+      font: 800 1.35rem var(--font-mono); color: var(--round-accent);
+      background: var(--round-soft); border: 1px solid var(--round-line); border-radius: 8px;
+    }
+    .league-round-heading { min-width: 0; flex: 1; }
+    .league-round-heading h4 { font-size: 1.12rem; letter-spacing: 0; color: var(--text-0); }
+    .league-round-heading p { margin-top: 3px; font-size: .76rem; color: var(--round-accent); }
+    .league-round-progress { text-align: right; color: var(--text-2); font-size: .72rem; }
+    .league-round-progress strong { display: block; color: var(--round-accent); font: 700 .95rem var(--font-mono); }
+    .league-round-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+    #standingsSR .league-round .group-card, #standingsSM .league-round .group-card {
+      border-color: var(--round-line); border-radius: 8px; margin: 0;
+    }
+    .league-round .group-head { background: var(--round-soft); border-bottom-color: var(--round-line); }
+    .league-round .group-head h3 { display: flex; align-items: center; gap: 10px; }
+    .league-group-letter { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0;
+      border-radius: 6px; background: var(--round-soft); color: var(--round-accent); font-family: var(--font-mono); }
+    .league-round .data-table .pts { color: var(--round-accent); background: var(--round-soft); }
+    .league-round .data-table tr.qualify td:first-child { box-shadow: inset 3px 0 0 var(--round-accent); }
+    .league-round .table-wrap { scrollbar-width: thin; }
+    @media(max-width: 760px) {
+      .league-round-grid { grid-template-columns: minmax(0, 1fr); }
+      .league-round-head { gap: 10px; flex-wrap: wrap; }
+      .league-round-number { flex-basis: 44px; height: 44px; font-size: 1.1rem; }
+      .league-round-heading h4 { font-size: 1rem; }
+      .league-round-heading { flex-basis: calc(100% - 54px); }
+      .league-round-progress { flex-basis: calc(100% - 54px); margin-left: 54px; text-align: left; }
+      .league-round-progress strong { display: inline; margin-right: 6px; }
+      .league-round .group-head { padding: 12px; }
+      .league-round .data-table { font-size: .76rem; }
+      .league-round .data-table td, .league-round .data-table th { padding: 9px 8px; }
+    }
+    @media(prefers-reduced-motion: reduce) { .league-round, .league-round * { animation: none; transition: none; } }
+
     .standings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 18px; }
     .group-card { padding: 0; overflow: hidden; }
     /* Aksen warna pada kad kumpulan ikut kategori */
@@ -5916,9 +5966,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
     function renderGroupCard(kategori, kumpulan) {
       const st = computeGroupStandings(kategori, kumpulan);
-      const label = kumpulan === 'X' || kumpulan === 'Y'
-        ? `Kumpulan ${kumpulan} <small class="muted">(Pusingan Kedua)</small>`
-        : `Kumpulan ${kumpulan}`;
+      const label = `<span class="league-group-letter">${escapeHtml(kumpulan)}</span>Kumpulan ${escapeHtml(kumpulan)}`;
       const status = st.complete
         ? '<span class="badge badge-ok">Lengkap</span>'
         : `<span class="badge badge-pending">${st.played}/${st.total} disahkan</span>`;
@@ -5967,7 +6015,25 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         const show = categoryVisible(kat);
         if (grid) {
           grid.classList.toggle('hidden', !show);
-          if (show) grid.innerHTML = STANDING_GROUPS[kat].map(g => renderGroupCard(kat, g)).join('');
+          if (show) {
+            const rounds = [
+              { number: '01', title: 'Pusingan Pertama', stage: 'PERINGKAT KUMPULAN', cls: 'round-one', groups: STANDING_GROUPS[kat].filter(g => !['X', 'Y'].includes(g)) },
+              { number: '02', title: 'Pusingan Kedua', stage: 'PUSINGAN KEDUA', cls: 'round-two', groups: STANDING_GROUPS[kat].filter(g => ['X', 'Y'].includes(g)) }
+            ].filter(round => round.groups.length);
+            grid.innerHTML = rounds.map(round => {
+              const matches = state.matches.filter(m => m.kategori === kat && m.peringkat === round.stage);
+              const approved = matches.filter(isApproved).length;
+              const groupLabel = round.groups.map(g => escapeHtml(g)).join(' · ');
+              return `<section class="league-round ${round.cls}" aria-label="${round.title}">
+                <div class="league-round-head">
+                  <span class="league-round-number" aria-hidden="true">${round.number}</span>
+                  <div class="league-round-heading"><h4>${round.title}</h4><p>Kumpulan ${groupLabel}</p></div>
+                  <div class="league-round-progress"><strong>${approved} / ${matches.length}</strong>perlawanan disahkan</div>
+                </div>
+                <div class="league-round-grid">${round.groups.map(g => renderGroupCard(kat, g)).join('')}</div>
+              </section>`;
+            }).join('');
+          }
         }
         if (title) title.classList.toggle('hidden', !show);
       });
