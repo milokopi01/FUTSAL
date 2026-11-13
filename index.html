@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxe-8q0zJpfoDGwIeFHkRedOBrWXIGUalMEywIiLmlFMqLP3UvznUUl8I2sg-360PBN/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -6183,7 +6183,7 @@ void main() {
       'https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec',
       'https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec'
     ];
-    const GAS_MIN_VERSI = '1.9.6';   // versi Code.gs dengan papan live pantas (CacheService)
+    const GAS_MIN_VERSI = '1.9.7';   // versi Code.gs dengan papan live pantas (CacheService)
     const ADMIN_KEY_STORAGE = 'FUTSAL_PK_KBB_ADMIN_KEY';
 
     const EVENTS = {
@@ -7590,7 +7590,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
           <div class="court-meta">
             <span>${matchInfo}</span>
-            <span>Fasa: <strong style="color:var(--text-0);">${escapeHtml(fasaLabel)}</strong> · <span class="court-timer" data-court-timer="${court.id}"${view.source === 'server' && court.status === COURT_STATUS.LIVE && !paused && court.masaMula ? ` data-srv-start="${escapeHtml(court.masaMula)}"` : ''}>00:00</span></span>
+            <span>Fasa: <strong style="color:var(--text-0);">${escapeHtml(fasaLabel)}</strong> · <span class="court-timer" data-court-timer="${court.id}"${paused ? ` data-paused-ms="${Number(rs && court.rehat.elapsedMs) || 0}"` : ''}${view.source === 'server' && court.status === COURT_STATUS.LIVE && !paused && court.masaMula ? ` data-srv-start="${escapeHtml(court.fasaMulaPada || court.masaMula)}"` : ''}>00:00</span></span>
           </div>
           ${rehatNote}
           ${penaltiNote}
@@ -7631,9 +7631,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       document.querySelectorAll('[data-court-timer]').forEach(el => {
         const court = getCourt(el.dataset.courtTimer);
         if (!court) return;
-        if (el.dataset.srvStart) {
+        if (el.dataset.pausedMs !== undefined) {
+          el.textContent = `${formatDuration(Number(el.dataset.pausedMs) || 0)} ⏸`;
+        } else if (el.dataset.srvStart) {
           const t = new Date(el.dataset.srvStart).getTime();
-          el.textContent = isNaN(t) ? '--:--' : formatDuration(Math.max(0, now - t));
+          el.textContent = isNaN(t) ? '--:--' : formatDuration(Math.max(0, now + (publicLive.offsetMs || 0) - t));
         } else if (isCourtPaused(court)) {
           el.textContent = `${formatDuration(Number(court.rehat.elapsedMs) || 0)} ⏸`;
         } else if (court.status === COURT_STATUS.LIVE && court.fasaMulaPada) {
@@ -8255,12 +8257,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       updateApprovalSyncInfo();
       try {
         const sep = url.includes('?') ? '&' : '?';
-        const res = await fetch(`${url}${sep}action=read&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        const text = await withTimeout(fetch(`${url}${sep}action=read&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' }).then(r => r.text()), PUBLIC_FETCH_TIMEOUT_MS);
         let data = null;
-        try { data = JSON.parse(await res.text()); } catch (err) { data = null; }
+        try { data = JSON.parse(text); } catch (err) { data = null; }
         if (!data || !data.ok || !Array.isArray(data.matches)) {
           throw new Error((data && data.error) || 'Respons Google Sheets tidak sah. Pastikan Code.gs telah di-deploy.');
         }
+        if (url !== getGasUrl()) return false;
         const count = { baharu: 0, disahkan: 0, ditolak: 0 };
         const baru = [];
         data.matches.forEach(row => {
@@ -8521,14 +8524,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const epoch = lockEpoch;
       try {
         const sep = url.includes('?') ? '&' : '?';
-        const res = await fetch(`${url}${sep}action=kunci&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        const text = await withTimeout(fetch(`${url}${sep}action=kunci&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' }).then(r => r.text()), PUBLIC_FETCH_TIMEOUT_MS);
         let data = null;
-        try { data = JSON.parse(await res.text()); } catch (err) { data = null; }
+        try { data = JSON.parse(text); } catch (err) { data = null; }
         if (!data || !data.ok || !data.kunci) {
           throw new Error((data && data.error) || 'Respons tidak sah. Pastikan Code.gs Fasa 2 telah di-deploy.');
         }
         // Abaikan jika kunci tempatan berubah semasa permintaan berjalan
-        if (epoch !== lockEpoch || kickoffBusy) return false;
+        if (epoch !== lockEpoch || kickoffBusy || url !== getGasUrl()) return false;
         const changed = applyServerLocks(data.kunci, opts);
         if (changed) { updateAuthUI(); refreshAllViews(); } else { renderRefDesk(); }
         return true;
@@ -8599,6 +8602,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         pengesahan: match.pengesahan,
         pemenangPenalti: match.pemenangPenalti ? (match.pemenangPenalti === 'P1' ? match.namaP1 : match.namaP2) : '',
         masaMula: match.masaMula,
+        fasaMulaPada: court.fasaMulaPada,
         masaTamat: match.masaTamat,
         lepas: !!lepas,
         sahkan: !!sahkan   // FASA 6: pengadil mengesahkan keputusan (nama direkod oleh pelayan)
@@ -8651,6 +8655,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const res = await callGas(payload);
       if (res.ok) {
         lastHeartbeatAt = Date.now();
+        requestFreshPublicLive();
         if (!lepas && livePushRetry[courtId] > 0) showToast('✅ Skor berjaya dihantar ke Google Sheets.', 'success', 2500);
         if (!lepas) livePushRetry[courtId] = 0;
         return res;
@@ -10036,6 +10041,36 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return Promise.race([promise, timeout]).then(v => { clearTimeout(t); return v; }, e => { clearTimeout(t); throw e; });
     }
 
+    function requestFreshPublicLive() {
+      // Abaikan bacaan sebelum penulisan; baca semula sebaik permintaan aktif selesai.
+      publicLive.refreshQueued = true;
+      if (publicLive.busy) publicLive.seq += 1;
+      else fetchPublicLive();
+    }
+
+    function restoreOwnedCourtFromLive() {
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL') return;
+      const c = state.courts.find(x => x.pengadilId === s.userId);
+      const srv = c && publicLive.data && publicLive.data[c.id];
+      if (!c || !srv || !srv.matchId || boardStatusUpper(srv.status) !== 'LIVE') return;
+      // Jangan tulis ganti gol yang belum disahkan / sedang dihantar.
+      if (livePushTimers[c.id] || livePushChain[c.id] || livePushRetry[c.id] > 0) return;
+      if (c.kemaskiniTerakhir && Date.now() - new Date(c.kemaskiniTerakhir).getTime() < BOARD_LOCAL_GRACE_MS) return;
+      const m = getMatch(srv.matchId);
+      if (!m) return;
+      Object.assign(c, { matchSemasa: srv.matchId, status: COURT_STATUS.LIVE,
+        skorLiveP1: Number(srv.skorP1) || 0, skorLiveP2: Number(srv.skorP2) || 0,
+        fasaMasa: phaseKeyFromLabel(srv.fasaMasa), fasaMulaPada: srv.fasaMulaPada || srv.masaMula || null,
+        masaMula: srv.masaMula || null, kemaskiniTerakhir: srv.kemaskini || null });
+      Object.assign(m, { skorP1: c.skorLiveP1, skorP2: c.skorLiveP2, status: MATCH_STATUS.LIVE,
+        masaMula: c.masaMula, pengadil: srv.pengadil || c.pengadil,
+        namaP1: srv.namaP1 || m.namaP1, namaP2: srv.namaP2 || m.namaP2 });
+      saveState();
+      renderRefDesk();
+      return true;
+    }
+
     async function fetchPublicLive() {
       const url = getGasUrl();
       if (!url) return false;
@@ -10046,6 +10081,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       publicLive.seq = seq;
       publicLive.busy = true;
       publicLive.busySince = Date.now();
+      publicLive.refreshQueued = false;
       const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
       try {
         const sep = url.includes('?') ? '&' : '?';
@@ -10055,13 +10091,21 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           });
           return res.text();
         })(), PUBLIC_FETCH_TIMEOUT_MS, () => { if (ctrl) ctrl.abort(); });
-        if (seq !== publicLive.seq) return false;   // respons lama tiba selepas permintaan baharu
+        if (seq !== publicLive.seq || url !== getGasUrl()) return false;   // respons lama tiba selepas permintaan baharu
         let data = null;
         try { data = JSON.parse(text); } catch (err) { data = null; }
         if (!data || !data.ok || !data.gelanggang) throw new Error((data && data.error) || 'Pastikan Code.gs Fasa 3 telah di-deploy.');
         // Beza jam peranti & pelayan (elak data tempatan "lebih baharu" kerana jam peranti laju)
         const srvMs = data.masa ? new Date(data.masa).getTime() : NaN;
         if (!isNaN(srvMs)) publicLive.offsetMs = srvMs - Date.now();
+        // Masa respons baharu tidak bermakna salinan cache juga baharu.
+        const built = Number(data.dibina);
+        const age = Number.isFinite(built) && built > 0 && Number.isFinite(srvMs) ? Math.max(0, srvMs - built) : 0;
+        if (age > BOARD_SRV_FRESH_MS) throw new Error('Salinan papan live pelayan sudah lapuk');
+        if (data.versi) {
+          Object.assign(gasHealth, { versi: data.versi, url, lama: cmpVersi(data.versi, GAS_MIN_VERSI) < 0 });
+          if (!gasHealth.lama) gasHealth.dimaklum = false;
+        }
         const sig = JSON.stringify(data.gelanggang);
         const changed = sig !== publicLive.sig || !!publicLive.error;
         publicLive.data = data.gelanggang;
@@ -10069,10 +10113,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         publicLive.lastOk = nowIso();
         publicLive.error = '';
         publicLive.fails = 0;
+        const restoredCourt = restoreOwnedCourtFromLive();
         const healed = healStuckCourts();
         // Lukis semula kad gelanggang bila data berubah. Paparan projektor & standby juga
         // dilukis semula berkala supaya peraturan berasaskan masa sentiasa terpakai.
-        if (changed || healed) {
+        if (changed || healed || restoredCourt) {
           renderLiveViews();
           publicLive.renderAt = Date.now();
         } else {
@@ -10085,7 +10130,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         }
         return true;
       } catch (err) {
-        if (seq !== publicLive.seq) return false;
+        if (seq !== publicLive.seq || url !== getGasUrl()) return false;
         publicLive.fails += 1;
         publicLive.error = err && err.name === 'AbortError'
           ? 'Google Sheets lambat bertindak balas'
@@ -10094,7 +10139,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         updateProjectionStatus();
         return false;
       } finally {
-        if (seq === publicLive.seq) publicLive.busy = false;
+        if (seq === publicLive.seq || publicLive.refreshQueued) publicLive.busy = false;
+        if (publicLive.refreshQueued) {
+          publicLive.refreshQueued = false;
+          fetchPublicLive();
+        }
       }
     }
 
@@ -10156,15 +10205,16 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return Math.min(PUBLIC_POLL_MAX_MS, base * Math.pow(2, Math.min(publicLive.fails, 3)));
     }
 
-    function schedulePublicPoll() {
+    function schedulePublicPoll(delay = publicPollDelay()) {
       clearTimeout(publicPollHandle);
       publicPollHandle = setTimeout(async () => {
+        const started = Date.now();
         const proj = document.body.classList.contains('projection-on');
         try { if (!document.hidden || proj) await fetchPublicLive(); } finally {
           try { if (healStuckCourts()) renderLiveViews(); } catch (e) { /* abaikan */ }
-          schedulePublicPoll();
+          schedulePublicPoll(Math.max(250, publicPollDelay() - (Date.now() - started)));
         }
-      }, publicPollDelay());
+      }, delay);
     }
 
     function startPublicLiveSync() {
@@ -10222,7 +10272,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       // v1.14.2: Pelayan menyatakan gelanggang KOSONG (tiada perlawanan LIVE / ditangguh).
       // Dahulu data tempatan sentiasa dipakai di sini -> projektor tersekat pada keputusan lama.
       if (!srv.matchId) {
-        if (!fresh || (localBusy && localRecent)) return local;
+        if (!fresh) return local;
         return {
           source: 'server', idle: true, matchId: null, namaP1: '', namaP2: '', skorP1: null, skorP2: null,
           live: false, done: false, ditangguh: false, sebab: '', fasa: '', masaMula: null, fasaMulaPada: null,
@@ -10233,10 +10283,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       // Perlawanan sama: data tempatan dipakai hanya jika ia lebih baharu DAN baru berlaku
       // (atau pelayan tidak dapat dihubungi). Perlawanan berbeza: pelayan sentiasa menang bila terkini.
       const sameMatch = !!local.matchId && local.matchId === srv.matchId;
-      if (fresh) {
-        if (sameMatch && localAct && localNewer && localRecent) return local;
-        if (!sameMatch && localBusy && localRecent && localNewer) return local;
-      } else if (localNewer) {
+      if (!fresh && localNewer) {
         return local;
       }
       const st = boardStatusUpper(srv.status);
@@ -10252,12 +10299,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         sebab: String(srv.catatan || '').replace(/^Ditangguhkan[^:]*:\s*/, ''),
         fasa: st === 'LIVE' ? (srv.fasaMasa || '') : '',
         masaMula: srv.masaMula || null,
-        fasaMulaPada: null,
+        fasaMulaPada: srv.fasaMulaPada || srv.masaMula || null,
         pengadil: srv.pengadil || '',
         pengadilBasi: srv.pengadil ? !srv.pengadilAktif && st === 'LIVE' : false,
         rehat: !!srv.rehat,                    // FASA 5
         rehatSebab: srv.rehatSebab || '',
         rehatPada: srv.rehatPada || null,
+        rehatElapsedMs: Number(srv.rehatElapsedMs) || 0,
+        rehatFasaSebelum: srv.rehatFasaSebelum || '',
         kemaskini: srv.kemaskini
       };
     }
@@ -10707,7 +10756,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         // keputusan itu berada dalam Peti Kelulusan -> gelanggang dipaparkan bebas.
         const srvIdle = !!e.idle || (!e.live && !e.rehat && !e.ditangguh &&
           (e.done || boardStatusUpper(srv && srv.status) === 'SELESAI'));
-        if (srvIdle && court.status !== COURT_STATUS.SEDIA) {
+        if (srvIdle) {
           // v1.14.2: data peranti ini masih LIVE / TAMAT tetapi Google Sheets menyatakan gelanggang
           // kosong -> paparkan perlawanan seterusnya (bukan keputusan lama yang tersekat).
           const q = (srvQueue && srvQueue.length) ? srvQueue : localCourtQueue(court.id, null);
@@ -10722,19 +10771,19 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           });
         } else if (!srvIdle) {
           source = 'server';
-          match = srvMatchLike({ id: e.matchId, namaP1: e.namaP1, namaP2: e.namaP2 });
+          match = srvMatchLike(Object.assign({}, srv || {}, { id: e.matchId, namaP1: e.namaP1, namaP2: e.namaP2 }));
           Object.assign(v, {
             matchSemasa: e.matchId,
             status: (e.live || e.rehat) ? COURT_STATUS.LIVE : e.done ? COURT_STATUS.TAMAT : COURT_STATUS.SEDIA,
             skorLiveP1: Number(e.skorP1) || 0,
             skorLiveP2: Number(e.skorP2) || 0,
             ditangguh: e.ditangguh ? { sebab: e.sebab } : null,
-            rehat: e.rehat ? { sebab: e.rehatSebab, pada: e.rehatPada, matchId: e.matchId, fasaSebelum: '', oleh: '', elapsedMs: 0, skorP1: e.skorP1, skorP2: e.skorP2 } : null,
+            rehat: e.rehat ? { sebab: e.rehatSebab, pada: e.rehatPada, matchId: e.matchId, fasaSebelum: e.rehatFasaSebelum, oleh: '', elapsedMs: e.rehatElapsedMs, skorP1: e.skorP1, skorP2: e.skorP2 } : null,
             pengadil: e.pengadil || null,
             pengadilId: e.pengadil ? (court.pengadilId || 'SRV') : null,
             kunciBasi: !!e.pengadilBasi,
             fasaMasa: e.live ? phaseKeyFromLabel(e.fasa) : 'SEDIA',
-            fasaMulaPada: null,
+            fasaMulaPada: e.fasaMulaPada,
             masaMula: e.masaMula || null
           });
         }
@@ -10763,7 +10812,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         }
       }
       const curId = match ? match.id : null;
-      const queue = (publicViewer && srvQueue)
+      const queue = (source === 'server' && srvQueue)
         ? srvQueue.filter(m => m.id !== curId)
         : localCourtQueue(court.id, curId);
       return { v, match, queue, source };
@@ -11897,9 +11946,15 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         return false;
       }
       state.settings.gasUrl = url;
+      Object.assign(gasHealth, { versi: null, url: null, lama: false, dimaklum: false });
+      publicLive.seq += 1;
+      Object.assign(publicLive, { data: null, sig: '', lastOk: null, busy: false, error: '', fails: 0 });
+      lockEpoch += 1;
       saveState();
       renderAdminExtras();
+      startPublicLiveSync();
       startLockSync();
+      autoPickGasUrl();
       showToast(url ? 'URL Google Apps Script disimpan.' : 'URL Google Apps Script dikosongkan.', 'success');
       return true;
     }
@@ -12186,7 +12241,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           { method: 'GET', redirect: 'follow', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
         const data = JSON.parse(await res.text());
         if (!data || !data.ok) return null;
-        return { url, versi: data.versi || '0', ms: Date.now() - t0 };
+        if (!data.versi) return null;
+        return { url, versi: data.versi, ms: Date.now() - t0 };
       } catch (err) {
         return null;
       } finally {
@@ -12194,47 +12250,27 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
     }
 
-    // v1.15.0: Peranti memilih deployment Code.gs paling baharu secara automatik.
-    // URL tersuai (bukan dalam senarai) yang disimpan Master Admin dihormati - hanya disemak versinya.
+    // Semak pautan yang dipilih sahaja. Jangan tukar deployment / sesi secara automatik.
     async function autoPickGasUrl() {
-      const cur = getGasUrl();
-      if (!cur || !navigator.onLine) return;
-      const custom = cur && !KNOWN_GAS_URLS.includes(cur);
-      const SS_KEY = 'fpk_gas_pick_v1';
-      let picked = null;
-      try {
-        const c = JSON.parse(sessionStorage.getItem(SS_KEY) || 'null');
-        if (c && Date.now() - c.at < 10 * 60 * 1000 && (custom ? c.url === cur : KNOWN_GAS_URLS.includes(c.url))) picked = c;
-      } catch (e) { picked = null; }
-      if (!picked) {
-        const list = custom ? [cur] : KNOWN_GAS_URLS;
-        const results = (await Promise.all(list.map(u => pingGasUrl(u)))).filter(Boolean);
-        if (!results.length) return;
-        results.sort((a, b) => cmpVersi(b.versi, a.versi) || (a.ms - b.ms));
-        picked = { url: results[0].url, versi: results[0].versi, at: Date.now() };
-        try { sessionStorage.setItem(SS_KEY, JSON.stringify(picked)); } catch (e) { /* abaikan */ }
-      }
+      const url = getGasUrl();
+      if (!url || !navigator.onLine) return;
+      const picked = await pingGasUrl(url);
+      if (!picked || url !== getGasUrl()) return;
       gasHealth.versi = picked.versi;
-      gasHealth.url = picked.url;
+      gasHealth.url = url;
       gasHealth.lama = cmpVersi(picked.versi, GAS_MIN_VERSI) < 0;
-      if (!custom && picked.url !== cur) {
-        state.settings.gasUrl = picked.url === DEFAULT_GAS_URL ? '' : picked.url;
-        saveState();
-        console.info('[GAS] Bertukar ke deployment lebih baharu:', picked.versi);
-        startPublicLiveSync();
-        startLockSync();
-      }
+      if (!gasHealth.lama) gasHealth.dimaklum = false;
       warnOldGas();
     }
 
     function warnOldGas() {
-      if (!gasHealth.lama) return;
+      if (!gasHealth.lama || gasHealth.url !== getGasUrl()) return;
       console.warn(`[GAS] Code.gs v${gasHealth.versi} masih lama. Perlu v${GAS_MIN_VERSI}+ untuk sambungan pantas.`);
       let urus = false;
       try { urus = canApprove() || canManageSystem(); } catch (e) { urus = false; }
       if (!urus || gasHealth.dimaklum) return;
       gasHealth.dimaklum = true;
-      showToast(`⚠ Google Sheets masih menjalankan Code.gs LAMA (v${gasHealth.versi}) - sebab sambungan perlahan. ` +
+      showToast(`⚠ Google Sheets masih menjalankan Code.gs LAMA (v${gasHealth.versi}). Pautan semasa belum menjalankan versi terkini. ` +
         'Master Admin: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy.', 'warn', 15000);
     }
 
@@ -12250,9 +12286,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         const sep = url.includes('?') ? '&' : '?';
         const res = await fetch(`${url}${sep}action=ping&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' });
         const data = JSON.parse(await res.text());
+        if (url !== getGasUrl()) return false;
+        if (data && data.ok && data.versi) {
+          Object.assign(gasHealth, { versi: data.versi, url, lama: cmpVersi(data.versi, GAS_MIN_VERSI) < 0, dimaklum: false });
+        }
         if (!data || !data.ok) msg = `⚠ Google Sheets membalas ralat: ${(data && data.error) || 'tidak diketahui'}`;
         else if (!data.versi) msg = '⚠ ' + GAS_OLD_MSG;
-        else if (cmpVersi(data.versi, GAS_MIN_VERSI) < 0) msg = `⚠ Bersambung, tetapi Code.gs v${data.versi} masih LAMA dan perlahan. Perlu v${GAS_MIN_VERSI} atau lebih baharu: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy.`;
+        else if (cmpVersi(data.versi, GAS_MIN_VERSI) < 0) msg = `⚠ Bersambung, tetapi Code.gs v${data.versi} belum versi terkini. Perlu v${GAS_MIN_VERSI} atau lebih baharu: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy.`;
         else { ok = true; msg = `✅ Bersambung ke Google Sheets (Code.gs v${data.versi}).`; }
       } catch (err) {
         msg = '⚠ Tidak dapat menghubungi URL Google Apps Script. Semak URL & akses deployment ("Anyone").';
@@ -12275,14 +12315,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
       const timer = ctrl ? setTimeout(() => ctrl.abort(), 30000) : null;
       try {
-        const res = await fetch(url, {
+        const text = await withTimeout(fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload),
           redirect: 'follow',
           signal: ctrl ? ctrl.signal : undefined
-        });
-        const text = await res.text();
+        }).then(res => res.text()), 30000, () => { if (ctrl) ctrl.abort(); });
         try {
           const data = JSON.parse(text);
           // FASA 4.1: Code.gs lama tidak mengenali tindakan pengadil -> mesej yang jelas
@@ -13565,23 +13604,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       initApp();
     }
 
-    // Service Worker (PWA). Tambah ?sw=off pada URL untuk membuang SW & cache.
-    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
-      const swOff = new URLSearchParams(location.search).get('sw') === 'off';
-      window.addEventListener('load', () => {
-        if (swOff) {
-          navigator.serviceWorker.getRegistrations()
-            .then(regs => Promise.all(regs.map(r => r.unregister())))
-            .then(() => (window.caches ? caches.keys() : []))
-            .then(keys => Promise.all(keys.filter(k => k.startsWith('futsal-pk-kbb-')).map(k => caches.delete(k))))
-            .then(() => console.info('[SW] Dibuang (sw=off).'));
-          return;
-        }
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
-          .then(reg => console.info('[SW] Didaftarkan:', reg.scope))
-          .catch(err => console.info('[SW] Gagal didaftarkan:', err && err.message));
-      });
-    }
+    // Sokongan ikon telefon dikekalkan; tiada cache halaman / pendaftaran SW baharu.
+    // sw.js dihantar sebagai pembersih untuk pelawat yang pernah memasang versi lama.
   </script>
 </body>
 </html>

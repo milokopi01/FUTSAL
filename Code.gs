@@ -120,13 +120,13 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.9.6';
+const API_VERSI = '1.9.7';
 const GILIRAN_MAX = 6;                     // bil. perlawanan seterusnya dipaparkan per gelanggang
 const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus', 'papanPintar', 'keputusanLewat', 'papanSegera'];
 // v1.9.0: Papan live disimpan dalam CacheService supaya ?action=live sangat pantas
 // (paparan dashboard boleh disegerak setiap beberapa saat). Cache dibuang serta-merta
 // setiap kali ada penulisan (doPost), jadi data tidak pernah ketinggalan lebih ~1 tinjauan.
-const PAPAN_CACHE_KEY = 'PAPAN_LIVE_V19';
+const PAPAN_CACHE_KEY = 'PAPAN_LIVE_V197';
 const PAPAN_CACHE_VER = 'PAPAN_LIVE_VER';
 const PAPAN_CACHE_SAAT = 30;               // v1.9.3: umur 'segar' cache (suntingan manual di Sheets muncul dalam <= 30 s)
 const PAPAN_CACHE_MAX_SAAT = 600;          // v1.9.3: salinan terakhir disimpan untuk dipakai semasa dibina semula
@@ -189,13 +189,13 @@ const KUNCI_BASI_SAAT = 900;               // 15 minit
 const SESI_PREFIX = 'SESI_';               // Script Properties: SESI_<token>
 const SESI_TEMPOH_JAM = 24;                // sesi log masuk pengadil sah selama 24 jam
 // Medan markah yang HANYA boleh diubah oleh pengadil pemegang kunci gelanggang
-const LOCK_PROTECTED_FIELDS = ['skorP1', 'skorP2', 'fasaMasa', 'status', 'pengesahan', 'pengadil', 'pemenangPenalti', 'masaTamat',
+const LOCK_PROTECTED_FIELDS = ['fasaMulaPada', 'skorP1', 'skorP2', 'fasaMasa', 'status', 'pengesahan', 'pengadil', 'pemenangPenalti', 'masaTamat',
   'sahPengadil', 'sahPengadilPada'];
 
 /* ---------- FASA 4: PEMBETULAN MARKAH ---------- */
 // Medan keputusan yang DIKUNCI selepas perlawanan DISAHKAN (SELESAI).
 // Hanya Master Admin (adminKey sah) boleh mengubahnya.
-const FINAL_PROTECTED_FIELDS = ['skorP1', 'skorP2', 'pemenangPenalti', 'status', 'pengesahan', 'namaP1', 'namaP2', 'kodP1', 'kodP2'];
+const FINAL_PROTECTED_FIELDS = ['fasaMulaPada', 'skorP1', 'skorP2', 'pemenangPenalti', 'status', 'pengesahan', 'namaP1', 'namaP2', 'kodP1', 'kodP2'];
 const GROUP_STAGES = ['PERINGKAT KUMPULAN', 'PUSINGAN KEDUA'];
 const KNOCKOUT_STAGES = ['SUKU AKHIR', 'SEPARUH AKHIR', 'TEMPAT 3/4', 'AKHIR'];
 // Medan perlawanan susulan yang boleh dihantar bersama pembetulan (hasil rombakan aplikasi)
@@ -223,6 +223,7 @@ const FIELDS = {
   gelanggang:      ['Gelanggang', 'gelanggang', 'gel', 'court'],
   fasa:            ['Fasa', 'fasa', 'fasakejohanan'],
   fasaMasa:        ['Fasa Masa', 'fasamasa', 'separuh', 'masaperlawanan'],
+  fasaMulaPada:    ['Masa Mula Fasa', 'fasamulapada'],
   status:          ['Status Perlawanan', 'status', 'statusperlawanan', 'statusmatch'],
   pengesahan:      ['Status Pengesahan', 'pengesahan', 'statuspengesahan', 'pengesahanurusetia'],
   pengadil:        ['Nama Pengadil', 'pengadil', 'namapengadil'],
@@ -243,10 +244,10 @@ const FIELDS = {
 // Medan yang dibenarkan dikemas kini oleh doPost (selain medan pengenalan)
 const UPDATABLE = [
   'kategori', 'no', 'peringkat', 'kumpulan', 'kodP1', 'namaP1', 'skorP1', 'skorP2', 'namaP2', 'kodP2',
-  'gelanggang', 'fasa', 'fasaMasa', 'status', 'pengesahan', 'pengadil', 'pemenangPenalti',
+  'gelanggang', 'fasa', 'fasaMasa', 'fasaMulaPada', 'status', 'pengesahan', 'pengadil', 'pemenangPenalti',
   'masaMula', 'masaTamat', 'disahkanOleh', 'disahkanPada', 'catatan', 'sahPengadil', 'sahPengadilPada'
 ];
-const DATE_FIELDS = ['masaMula', 'masaTamat', 'disahkanPada', 'kemaskini', 'sahPengadilPada'];
+const DATE_FIELDS = ['fasaMulaPada', 'masaMula', 'masaTamat', 'disahkanPada', 'kemaskini', 'sahPengadilPada'];
 
 const STATUS_MAP = {
   'BELUMBERMULA': 'MENUNGGU GILIRAN', 'MENUNGGU': 'MENUNGGU GILIRAN', 'MENUNGGUGILIRAN': 'MENUNGGU GILIRAN',
@@ -412,8 +413,8 @@ function doPost(e) {
     return output_({ ok: false, error: String(err && err.message || err) });
   } finally {
     // v1.9.3: papan dibina semula terus ke cache -> dashboard / projektor nampak gol serta-merta
-    if (ubahPapan) segarkanPapan_();
-    lock.releaseLock();
+    try { if (ubahPapan) segarkanPapan_(); }
+    finally { lock.releaseLock(); }
   }
 }
 
@@ -1162,7 +1163,7 @@ function kunciGelanggang_(body) {
         normGelanggang_(m.gelanggang) === g && !isNamaPlaceholder_(m.namaP1) && !isNamaPlaceholder_(m.namaP2)) {
       upsertMatches_([{
         id: matchId, gelanggang: g, status: 'LIVE', skorP1: 0, skorP2: 0, fasaMasa: 'Separuh 1',
-        masaMula: now.toISOString(), masaTamat: '', pengesahan: 'MENUNGGU', pemenangPenalti: '',
+        masaMula: now.toISOString(), fasaMulaPada: now.toISOString(), masaTamat: '', pengesahan: 'MENUNGGU', pemenangPenalti: '',
         pengadil: ref.nama, catatan: ''
       }], { abaikanKunci: true });
       dimulakan = true;
@@ -1244,14 +1245,14 @@ function skorLive_(body) {
 
   const tangguh = body.tangguh === true || body.tangguh === 'true';
   const data = { id: id, pengadil: ref.nama, gelanggang: g };
-  ['skorP1', 'skorP2', 'fasaMasa', 'status', 'pengesahan', 'pemenangPenalti', 'masaMula', 'masaTamat', 'catatan'].forEach(function (f) {
+  ['skorP1', 'skorP2', 'fasaMasa', 'fasaMulaPada', 'status', 'pengesahan', 'pemenangPenalti', 'masaMula', 'masaTamat', 'catatan'].forEach(function (f) {
     if (f in body && body[f] !== undefined) data[f] = body[f];
   });
   if (tangguh) {
     // Tangguh: perlawanan kembali menunggu giliran, skor & masa mula dikosongkan
     data.status = 'MENUNGGU GILIRAN';
     data.fasaMasa = 'Ditangguhkan';
-    data.skorP1 = ''; data.skorP2 = ''; data.masaMula = ''; data.masaTamat = '';
+    data.skorP1 = ''; data.skorP2 = ''; data.masaMula = ''; data.fasaMulaPada = ''; data.masaTamat = '';
     data.pengesahan = 'MENUNGGU'; data.pemenangPenalti = '';
     data.catatan = 'Ditangguhkan: ' + String(body.sebab || 'Sepak mula terlalu awal').slice(0, 200);
     data.sahPengadil = ''; data.sahPengadilPada = '';
@@ -1323,7 +1324,7 @@ function keputusanLewat_(body, g, id, ref, db) {
       (m.pengadil || '-') + '). Sila hubungi Urusetia.' };
   }
   const data = { id: id, pengadil: ref.nama, gelanggang: g };
-  ['skorP1', 'skorP2', 'fasaMasa', 'status', 'pengesahan', 'pemenangPenalti', 'masaMula', 'masaTamat', 'catatan'].forEach(function (f) {
+  ['skorP1', 'skorP2', 'fasaMasa', 'fasaMulaPada', 'status', 'pengesahan', 'pemenangPenalti', 'masaMula', 'masaTamat', 'catatan'].forEach(function (f) {
     if (f in body && body[f] !== undefined) data[f] = body[f];
   });
   data.status = 'TAMAT - TUNGGU SAH';
@@ -1389,7 +1390,7 @@ function tangguhAdmin_(body) {
   if (k && (k.pengadilId || k.rehat)) kosongKunci_(db.sheet, k, true);   // FASA 5: batal rehat juga
   upsertMatches_([{
     id: id, gelanggang: g, status: 'MENUNGGU GILIRAN', fasaMasa: 'Ditangguhkan', skorP1: '', skorP2: '',
-    masaMula: '', masaTamat: '', pengesahan: 'MENUNGGU', pemenangPenalti: '', pengadil: '',
+    masaMula: '', fasaMulaPada: '', masaTamat: '', pengesahan: 'MENUNGGU', pemenangPenalti: '', pengadil: '',
     catatan: 'Ditangguhkan (Master Admin): ' + String(body.sebab || '-').slice(0, 200)
   }], { abaikanKunci: true, admin: true });
   logTangguh_({ gelanggang: g, matchId: id, pasukan: body.pasukan || '', pengadil: pengadilLama,
@@ -1443,7 +1444,7 @@ function papanLiveCached_() {
   if (lama) {
     // Salinan lama wujud: hanya satu permintaan membina semula, yang lain terus dilayan
     let kunci = null;
-    try { kunci = LockService.getDocumentLock() || LockService.getUserLock(); } catch (err) { kunci = null; }
+    try { kunci = LockService.getScriptLock(); } catch (err) { kunci = null; }
     if (!kunci || !kunci.tryLock(0)) return papanAwam_(lama, true);
     try {
       return papanAwam_(binaPapanCache_(cache), false);
@@ -1453,11 +1454,15 @@ function papanLiveCached_() {
       try { kunci.releaseLock(); } catch (err) { /* abaikan */ }
     }
   }
-  return papanAwam_(binaPapanCache_(cache), false);
+  const kunci = LockService.getScriptLock();
+  if (!kunci.tryLock(1000)) return { ok: false, error: 'Pelayan sedang mengemas kini papan. Cuba lagi.' };
+  try { return papanAwam_(binaPapanCache_(cache), false); }
+  finally { kunci.releaseLock(); }
 }
 
 // v1.9.3: dipanggil oleh doPost (masih di bawah LockService) selepas penulisan
 function segarkanPapan_() {
+  SpreadsheetApp.flush();
   let cache = null;
   try { cache = CacheService.getScriptCache(); } catch (err) { cache = null; }
   if (!cache) return;
@@ -1575,6 +1580,8 @@ function papanLive_() {
       skorP1: m ? m.skorP1 : null, skorP2: m ? m.skorP2 : null,
       status: m ? (stM || m.status) : '', fasaMasa: m ? m.fasaMasa : '',
       masaMula: m ? toIso_(m.masaMula) : null,
+      fasaMulaPada: m ? toIso_(m.fasaMulaPada) : null,
+      peringkat: m ? m.peringkat : '', kumpulan: m ? m.kumpulan : '', kategori: m ? m.kategori : '',
       ditangguh: ditangguh,
       catatan: ditangguh ? String(m.catatan || '') : '',
       pengadil: pegang ? pegang.nama : (rehat ? '' : (stM === 'LIVE' ? String(m.pengadil || '') : '')),
@@ -1583,6 +1590,8 @@ function papanLive_() {
       rehat: !!rehat,
       rehatSebab: rehat ? rehat.sebab : '',
       rehatPada: rehat ? rehat.pada : null,
+      rehatElapsedMs: rehat ? Number(rehat.elapsedMs) || 0 : 0,
+      rehatFasaSebelum: rehat ? rehat.fasaSebelum : '',
       sahPengadil: m ? String(m.sahPengadil || '') : '',   // FASA 6
       kemaskini: m ? toIso_(m.kemaskini) : null
     };
@@ -1759,7 +1768,8 @@ function sambungPerlawanan_(body) {
   const rehat = k.rehat;
   const now = new Date();
   // Skor TIDAK dihantar / ditulis: hanya fasa dipulihkan & nama pengadil semasa.
-  upsertMatches_([{ id: id, pengadil: ref.nama, fasaMasa: FASA_SAMBUNG[rehat.fasaSebelum] || 'Separuh 1' }], { abaikanKunci: true });
+  upsertMatches_([{ id: id, pengadil: ref.nama, fasaMasa: FASA_SAMBUNG[rehat.fasaSebelum] || 'Separuh 1',
+    fasaMulaPada: new Date(now.getTime() - (Number(rehat.elapsedMs) || 0)).toISOString() }], { abaikanKunci: true });
   k.rehat = null;
   k.matchId = id;
   k.aktiviti = now.toISOString();
