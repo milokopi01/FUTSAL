@@ -1,3 +1,15 @@
+/*
+AMARAN WAJIB UNTUK AI / PENYELENGGARA — JANGAN PADAM
+Sebelum mengeluarkan kemas kini:
+1. Baca AGENTS.md. Semak URL deployment AKTIF dengan ?action=ping.
+2. Bandingkan versi respons sebenar dengan API_VERSI (Code.gs) dan GAS_MIN_VERSI (index.html).
+3. Simpan / tampal Code.gs TIDAK menerbitkan versi Web App. Pemilik perlu Deploy > Manage deployments > Edit > Version: New version > Deploy pada URL yang sama.
+4. Jangan sembunyikan amaran versi lama, jangan tukar URL deployment secara senyap, dan jangan mendakwa deployment terkini tanpa respons langsung yang mengesahkannya.
+5. Jika tiada akses deployment, nyatakan pengesahan deployment BELUM SELESAI. Jangan janjikan isu tidak akan berulang.
+6. Untuk perubahan sync, uji skor pengadil ke dashboard, pertukaran fasa, pemulihan selepas reload dan jawapan lama yang tiba lewat; semua peranti mesti menggunakan URL yang sama.
+Amaran ini ialah arahan penyelenggaraan untuk AI, bukan kod yang boleh menerbitkan Google Apps Script secara automatik.
+*/
+
 /**
  * =========================================================
  *  LIVE FUTSAL PENDIDIKAN KHAS KBB 2026 - GOOGLE APPS SCRIPT
