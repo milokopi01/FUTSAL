@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbwC9F1kCjJJYsNK0I33z1x49Smhq_3LzlbZgHPHtrDxIGq9bPOl13xNx58CqMyB-VMw/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -3310,10 +3310,16 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         released = true;
       }
 
+      // Gelanggang terus dikosongkan & diisi perlawanan seterusnya. Keputusan
+      // kekal dalam Peti Kelulusan Urusetia (tidak perlu menunggu pengesahan).
+      clearCourtLock(court);
+      resetCourt(court);
+      const nextAssigned = autoAssignCourts(courtId, { silent: true });
+
       saveState();
       updateAuthUI();
       refreshAllViews();
-      showToast(`Keputusan ${match.id} dihantar. Status: TAMAT - TUNGGU SAH.${released ? ` Gelanggang ${courtId} dilepaskan.` : ''}`, 'warn', 4200);
+      showToast(`Keputusan ${match.id} dihantar ke Urusetia.${released ? ` Gelanggang ${courtId} dilepaskan.` : ''}${nextAssigned.length ? ` Perlawanan seterusnya: ${nextAssigned[0].matchId}.` : ''}`, 'warn', 4200);
       return true;
     }
 
@@ -3387,6 +3393,24 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return count;
     }
 
+    // Keputusan ditolak: kembalikan perlawanan ke gelanggangnya untuk disemak pengadil
+    function returnRejectedToCourt(match) {
+      let court = state.courts.find(c => c.matchSemasa === match.id);
+      if (!court) {
+        const g = getCourt(match.gelanggang);
+        if (g && g.status !== COURT_STATUS.LIVE) { court = g; resetCourt(court); court.matchSemasa = match.id; }
+      }
+      if (court) {
+        const now = nowIso();
+        Object.assign(court, {
+          status: COURT_STATUS.LIVE, skorLiveP1: Number(match.skorP1) || 0, skorLiveP2: Number(match.skorP2) || 0,
+          fasaMasa: 'SEPARUH 2', fasaMulaPada: now, kemaskiniTerakhir: now
+        });
+        autoAssignCourts(court.id, { silent: true });
+      }
+      return court;
+    }
+
     // Urusetia: tolak keputusan -> kembali LIVE untuk disemak pengadil
     function rejectMatch(matchId) {
       if (!canApprove()) {
@@ -3410,17 +3434,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         pemenangPenalti: null,
         sahPengadil: null, sahPengadilId: null, sahPengadilPada: null   // FASA 6: perlu disahkan semula
       });
-      const court = state.courts.find(c => c.matchSemasa === match.id);
-      if (court) {
-        Object.assign(court, {
-          status: COURT_STATUS.LIVE,
-          skorLiveP1: Number(match.skorP1) || 0,
-          skorLiveP2: Number(match.skorP2) || 0,
-          fasaMasa: 'SEPARUH 2',
-          fasaMulaPada: now,
-          kemaskiniTerakhir: now
-        });
-      }
+      returnRejectedToCourt(match);
       addApprovalLog(match, `DITOLAK: ${match.catatan}`);
       markDecision(match.id);
       pushDecisions([match.id]);
@@ -3519,26 +3533,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           sahPengadil: row.sahPengadil || null,
           sahPengadilPada: row.sahPengadilPada || null
         });
-        let court = findCourt();
-        if (!court) {
-          const g = getCourt(match.gelanggang);
-          const cur = g ? getMatch(g.matchSemasa) : null;
-          if (g && g.status !== COURT_STATUS.LIVE && g.status !== COURT_STATUS.TAMAT &&
-              (!cur || cur.status === MATCH_STATUS.MENUNGGU || cur.status === MATCH_STATUS.SELESAI)) {
-            court = g;
-            court.matchSemasa = match.id;
-          }
-        }
-        if (court) {
-          Object.assign(court, {
-            status: COURT_STATUS.TAMAT,
-            fasaMasa: 'TAMAT',
-            fasaMulaPada: null,
-            skorLiveP1: Number(match.skorP1) || 0,
-            skorLiveP2: Number(match.skorP2) || 0,
-            kemaskiniTerakhir: nowIso()
-          });
-        }
+        const court = findCourt();
+        if (court) { clearCourtLock(court); resetCourt(court); autoAssignCourts(court.id, { silent: true }); }
         addApprovalLog(match, `DITERIMA DARIPADA PENGADIL${match.sahPengadil ? ' (' + match.sahPengadil + ')' : ''}`);
         return 'baharu';
       }
@@ -3570,8 +3566,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           catatan: row.catatan || match.catatan || 'Skor perlu disemak semula',
           masaTamat: null, pemenangPenalti: null, sahPengadil: null, sahPengadilId: null, sahPengadilPada: null
         });
-        const court = findCourt();
-        if (court) Object.assign(court, { status: COURT_STATUS.LIVE, fasaMasa: 'SEPARUH 2', fasaMulaPada: nowIso(), kemaskiniTerakhir: nowIso() });
+        returnRejectedToCourt(match);
         return 'ditolak';
       }
       return null;
@@ -3580,7 +3575,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     // Baca Jadual_Perlawanan daripada Google Sheets & kemas kini Peti Kelulusan
     async function pullMatchesFromSheet(opts = {}) {
       const url = getGasUrl();
-      if (!canApprove() || !url || isShareView()) { updateApprovalSyncInfo(); return false; }
+      if (!getSession() || !url || isShareView()) { updateApprovalSyncInfo(); return false; }
       if (resultSync.busy) return false;
       if (!opts.manual && !opts.silent && Date.now() - resultSync.lastPullAt < 5000) return false;
       if (!navigator.onLine) {
@@ -3614,7 +3609,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         if (changed) {
           saveState();
           refreshAllViews();
-          if (!opts.silent && count.baharu) {
+          if (!opts.silent && count.baharu && canApprove()) {
             showToast(`📥 ${count.baharu} keputusan baharu daripada pengadil (${baru.join(', ')}) menunggu pengesahan anda.`, 'warn', 6000);
           }
         }
@@ -3894,7 +3889,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if (!s || !getGasUrl()) return;
       if (document.hidden && !force) return;
       refreshCourtLocks();
-      if (canApprove()) pullMatchesFromSheet();
+      pullMatchesFromSheet();
       if (s.peranan === 'PENGADIL' && s.aksesGelanggang &&
           (force || Date.now() - lastHeartbeatAt >= LOCK_HEARTBEAT_MS)) {
         sendHeartbeat();

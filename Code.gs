@@ -1227,12 +1227,15 @@ function papanLive_() {
   GELANGGANG_SAH.forEach(function (g) {
     const k = kunci.map[g];
     let m = k && k.matchId ? byId[k.matchId] : null;
-    if (!m || String(m.status).toUpperCase() === 'SELESAI') {
+    const stM = m ? String(m.status).toUpperCase() : '';
+    if (!m || stM === 'SELESAI' || stM === 'TAMAT - TUNGGU SAH') {
+      // Keputusan dihantar pengadil -> gelanggang bebas untuk perlawanan seterusnya
+      if (m && stM !== 'LIVE') m = null;
       // Perlawanan LIVE / ditangguh terkini di gelanggang ini
       const calon = table.rows.map(function (r) { return r.data; }).filter(function (d) {
         if (String(d.gelanggang || '').toUpperCase() !== g) return false;
         const st = String(d.status || '').toUpperCase();
-        return st === 'LIVE' || st === 'TAMAT - TUNGGU SAH' || String(d.fasaMasa) === 'Ditangguhkan';
+        return st === 'LIVE' || String(d.fasaMasa) === 'Ditangguhkan';
       }).sort(function (a, b) { return String(b.kemaskini || '').localeCompare(String(a.kemaskini || '')); });
       m = calon[0] || m;
     }
