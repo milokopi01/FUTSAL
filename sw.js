@@ -7,7 +7,7 @@
    Naikkan CACHE_VERSION setiap kali anda mengemas kini fail di GitHub.
    ========================================================= */
 const CACHE_PREFIX = 'futsal-pk-kbb-';
-const CACHE_VERSION = 'v1.14.9';
+const CACHE_VERSION = 'v1.15.0';
 const STATIC_CACHE = `${CACHE_PREFIX}static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 

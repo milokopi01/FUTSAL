@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxS4CwOfK1wI1pXRD8w-GIOPKOZVa2Xqt6cs8rFBfMAjIlYi6tZOVuYBqYB3zqTcjFh/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -6176,7 +6176,14 @@ void main() {
     // dalam Tetapan Master Admin akan mengatasi nilai ini pada peranti tersebut.
     // PENTING: jika anda deploy dengan "New deployment" (URL baharu), tukar URL di bawah.
     // "Manage deployments > Edit > New version" mengekalkan URL yang sama.
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec';
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec';
+    // v1.15.0: semua deployment Code.gs yang diketahui (spreadsheet yang sama). Peranti memilih
+    // secara automatik deployment yang menjalankan Code.gs PALING BAHARU (paling pantas).
+    const KNOWN_GAS_URLS = [
+      'https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec',
+      'https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec'
+    ];
+    const GAS_MIN_VERSI = '1.9.6';   // versi Code.gs dengan papan live pantas (CacheService)
     const ADMIN_KEY_STORAGE = 'FUTSAL_PK_KBB_ADMIN_KEY';
 
     const EVENTS = {
@@ -7270,6 +7277,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
       updateApprovalBadge();
       renderRefMobile();   // FASA 6: mod pengadil telefon
+      try { warnOldGas(); } catch (e) { /* abaikan */ }   // v1.15.0
     }
 
     /* ---------------------------------------------------------
@@ -9475,6 +9483,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
          dibaca daripada cache pelayan; telefon pengadil setiap 8 saat).
        --------------------------------------------------------- */
     const PUBLIC_POLL_MS = 3000;           // v1.9: dashboard disegerak setiap 3 saat
+    const PUBLIC_POLL_PUBLIC_MS = 4000;    // v1.15.0: telefon penonton awam (kurangkan kesesakan pelayan)
     const PUBLIC_POLL_REF_MS = 8000;       // telefon pengadil (jimat bateri & data)
     const PUBLIC_POLL_MAX_MS = 20000;      // had backoff bila rangkaian bermasalah
     const PUBLIC_FETCH_TIMEOUT_MS = 15000; // v1.14.3: permintaan tergantung dibatalkan (Apps Script kadang-kadang > 10 s)
@@ -10138,7 +10147,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
     function publicPollDelay() {
       const s = getSession();
-      const base = s && s.peranan === 'PENGADIL' ? PUBLIC_POLL_REF_MS : PUBLIC_POLL_MS;
+      const proj = document.body.classList.contains('projection-on');
+      const base = s && s.peranan === 'PENGADIL' ? PUBLIC_POLL_REF_MS
+        : (proj || s ? PUBLIC_POLL_MS : PUBLIC_POLL_PUBLIC_MS);
       if (!publicLive.fails) return base;
       // Projektor: cuba semula cepat (data paparan utama); peranti lain: backoff biasa
       if (document.body.classList.contains('projection-on')) return Math.min(8000, base * (1 + publicLive.fails));
@@ -12152,6 +12163,81 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
     }
 
+    // v1.15.0: bandingkan versi Code.gs ('1.9.6' > '1.8.0')
+    function cmpVersi(a, b) {
+      const pa = String(a || '0').split('.').map(n => parseInt(n, 10) || 0);
+      const pb = String(b || '0').split('.').map(n => parseInt(n, 10) || 0);
+      for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+        const d = (pa[i] || 0) - (pb[i] || 0);
+        if (d) return d > 0 ? 1 : -1;
+      }
+      return 0;
+    }
+
+    const gasHealth = { versi: null, url: null, lama: false, dimaklum: false };
+
+    async function pingGasUrl(url, ms = 12000) {
+      const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+      const t = setTimeout(() => { if (ctrl) ctrl.abort(); }, ms);
+      const t0 = Date.now();
+      try {
+        const sep = url.includes('?') ? '&' : '?';
+        const res = await fetch(`${url}${sep}action=ping&_=${Date.now()}`,
+          { method: 'GET', redirect: 'follow', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+        const data = JSON.parse(await res.text());
+        if (!data || !data.ok) return null;
+        return { url, versi: data.versi || '0', ms: Date.now() - t0 };
+      } catch (err) {
+        return null;
+      } finally {
+        clearTimeout(t);
+      }
+    }
+
+    // v1.15.0: Peranti memilih deployment Code.gs paling baharu secara automatik.
+    // URL tersuai (bukan dalam senarai) yang disimpan Master Admin dihormati - hanya disemak versinya.
+    async function autoPickGasUrl() {
+      const cur = getGasUrl();
+      if (!cur || !navigator.onLine) return;
+      const custom = cur && !KNOWN_GAS_URLS.includes(cur);
+      const SS_KEY = 'fpk_gas_pick_v1';
+      let picked = null;
+      try {
+        const c = JSON.parse(sessionStorage.getItem(SS_KEY) || 'null');
+        if (c && Date.now() - c.at < 10 * 60 * 1000 && (custom ? c.url === cur : KNOWN_GAS_URLS.includes(c.url))) picked = c;
+      } catch (e) { picked = null; }
+      if (!picked) {
+        const list = custom ? [cur] : KNOWN_GAS_URLS;
+        const results = (await Promise.all(list.map(u => pingGasUrl(u)))).filter(Boolean);
+        if (!results.length) return;
+        results.sort((a, b) => cmpVersi(b.versi, a.versi) || (a.ms - b.ms));
+        picked = { url: results[0].url, versi: results[0].versi, at: Date.now() };
+        try { sessionStorage.setItem(SS_KEY, JSON.stringify(picked)); } catch (e) { /* abaikan */ }
+      }
+      gasHealth.versi = picked.versi;
+      gasHealth.url = picked.url;
+      gasHealth.lama = cmpVersi(picked.versi, GAS_MIN_VERSI) < 0;
+      if (!custom && picked.url !== cur) {
+        state.settings.gasUrl = picked.url === DEFAULT_GAS_URL ? '' : picked.url;
+        saveState();
+        console.info('[GAS] Bertukar ke deployment lebih baharu:', picked.versi);
+        startPublicLiveSync();
+        startLockSync();
+      }
+      warnOldGas();
+    }
+
+    function warnOldGas() {
+      if (!gasHealth.lama) return;
+      console.warn(`[GAS] Code.gs v${gasHealth.versi} masih lama. Perlu v${GAS_MIN_VERSI}+ untuk sambungan pantas.`);
+      let urus = false;
+      try { urus = canApprove() || canManageSystem(); } catch (e) { urus = false; }
+      if (!urus || gasHealth.dimaklum) return;
+      gasHealth.dimaklum = true;
+      showToast(`⚠ Google Sheets masih menjalankan Code.gs LAMA (v${gasHealth.versi}) - sebab sambungan perlahan. ` +
+        'Master Admin: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy.', 'warn', 15000);
+    }
+
     // Semak URL & versi Code.gs yang di-deploy
     async function checkGasConnection() {
       const url = getGasUrl();
@@ -12166,6 +12252,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         const data = JSON.parse(await res.text());
         if (!data || !data.ok) msg = `⚠ Google Sheets membalas ralat: ${(data && data.error) || 'tidak diketahui'}`;
         else if (!data.versi) msg = '⚠ ' + GAS_OLD_MSG;
+        else if (cmpVersi(data.versi, GAS_MIN_VERSI) < 0) msg = `⚠ Bersambung, tetapi Code.gs v${data.versi} masih LAMA dan perlahan. Perlu v${GAS_MIN_VERSI} atau lebih baharu: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy.`;
         else { ok = true; msg = `✅ Bersambung ke Google Sheets (Code.gs v${data.versi}).`; }
       } catch (err) {
         msg = '⚠ Tidak dapat menghubungi URL Google Apps Script. Semak URL & akses deployment ("Anyone").';
@@ -13464,6 +13551,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       startCourtTimerLoop();
       startLockSync();
       startPublicLiveSync();
+      setTimeout(() => { autoPickGasUrl().catch(() => {}); }, 400);   // v1.15.0
       const tf = document.getElementById('tangguhForm');
       if (tf) tf.addEventListener('submit', submitPostpone);
       const rf = document.getElementById('rehatForm');   // FASA 5
