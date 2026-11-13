@@ -120,7 +120,7 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.9.3';
+const API_VERSI = '1.9.4';
 const GILIRAN_MAX = 6;                     // bil. perlawanan seterusnya dipaparkan per gelanggang
 const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus', 'papanPintar', 'keputusanLewat', 'papanSegera'];
 // v1.9.0: Papan live disimpan dalam CacheService supaya ?action=live sangat pantas
@@ -378,6 +378,9 @@ function doPost(e) {
     // FASA 4: hanya kunci Master Admin yang sah boleh mengubah keputusan DISAHKAN
     const admin = isMasterAdmin_(body);
     const result = upsertMatches_(list, { admin: admin });
+    // v1.9.4: perlawanan yang telah DISAHKAN -> lepaskan kunci gelanggang supaya
+    // gelanggang boleh terus ke perlawanan seterusnya.
+    try { lepasKunciMuktamad_(); } catch (errK) { console.warn('lepasKunciMuktamad_', errK); }
 
     // Carta Liga dikira semula DI PELAYAN daripada Jadual_Perlawanan (bukan dipercayai
     // bulat-bulat daripada peranti) supaya peranti dengan data lama tidak merosakkan carta.
@@ -448,7 +451,10 @@ function upsertMatches_(list, opts) {
       updated++;
     }
     const row = values[rowIdx];
-    const dikunci = !!lockedMatches[id];
+    // v1.9.4: keputusan telah dihantar pengadil (TAMAT - TUNGGU SAH) -> kunci gelanggang
+    // tidak lagi melindungi baris supaya Sahkan / Tolak Urusetia benar-benar ditulis.
+    const sudahDihantar = String(row[colOf.status] || '').toUpperCase() === 'TAMAT - TUNGGU SAH';
+    const dikunci = !!lockedMatches[id] && !sudahDihantar;
     let dilindungi = false;
     // FASA 4: keputusan DISAHKAN dikunci; versi pembetulan menghalang data peranti lama
     const muktamad = isRowFinal_(row, colOf);
@@ -1043,6 +1049,24 @@ function lockedMatchIds_() {
     console.warn('lockedMatchIds_', err);
   }
   return out;
+}
+
+// v1.9.4: kosongkan kunci gelanggang bagi perlawanan yang telah DISAHKAN (SELESAI)
+function lepasKunciMuktamad_() {
+  const db = readKunci_();
+  const table = readTable_(getJadualSheet_());
+  const muktamad = {};
+  table.rows.forEach(function (r) {
+    const st = String(r.data.status || '').toUpperCase();
+    const sah = String(r.data.pengesahan || '').toUpperCase();
+    if (st === 'SELESAI' && sah === 'DISAHKAN') muktamad[String(r.data.id).toUpperCase()] = true;
+  });
+  let n = 0;
+  GELANGGANG_SAH.forEach(function (g) {
+    const k = db.map[g];
+    if (k && k.matchId && muktamad[String(k.matchId).toUpperCase()]) { kosongKunci_(db.sheet, k, true); n++; }
+  });
+  return n;
 }
 
 function lepasKunciPengadil_(refId) {
