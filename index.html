@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -21,6 +21,49 @@
     /* =========================================================
        1. TOKEN REKA BENTUK (DARK MODE / GLASSMORPHISM)
        ========================================================= */
+
+    /* ===== POPUP BERGAYA (ganti confirm/prompt pelayar) ===== */
+    .ux-ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;padding:16px;
+      background:radial-gradient(120% 80% at 50% 100%,rgba(46,230,166,.18),rgba(7,11,22,.82) 60%);backdrop-filter:blur(10px);
+      opacity:0;transition:opacity .22s ease}
+    @media(min-width:640px){.ux-ov{align-items:center}}
+    .ux-ov.show{opacity:1}
+    .ux-box{position:relative;width:100%;max-width:440px;border-radius:26px;padding:26px 22px 18px;color:var(--text-0);
+      background:linear-gradient(160deg,rgba(17,26,48,.97),rgba(7,11,22,.98));border:1px solid var(--glass-border-strong);
+      box-shadow:0 30px 80px -20px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04) inset,0 0 60px -10px var(--ux-glow,var(--brand-glow));
+      transform:translateY(40px) scale(.94);transition:transform .38s cubic-bezier(.2,1.4,.4,1);overflow:hidden}
+    .ux-ov.show .ux-box{transform:none}
+    .ux-box::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--ux-c,var(--brand)),var(--brand-2),var(--ux-c,var(--brand)));background-size:200% 100%;animation:uxBar 3s linear infinite}
+    @keyframes uxBar{to{background-position:200% 0}}
+    .ux-ic{width:60px;height:60px;margin:0 auto 12px;border-radius:20px;display:grid;place-items:center;font-size:1.8rem;
+      background:color-mix(in srgb,var(--ux-c,var(--brand)) 16%,transparent);border:1px solid color-mix(in srgb,var(--ux-c,var(--brand)) 45%,transparent);
+      box-shadow:0 0 30px -4px var(--ux-c,var(--brand));animation:uxPop .5s cubic-bezier(.2,1.6,.4,1) .08s both,uxFloat 3s ease-in-out .6s infinite}
+    @keyframes uxPop{from{transform:scale(.3) rotate(-20deg);opacity:0}}
+    @keyframes uxFloat{50%{transform:translateY(-4px)}}
+    .ux-t{font-family:var(--font-display);font-weight:800;font-size:1.18rem;text-align:center;margin:0 0 10px;line-height:1.3}
+    .ux-b{font-size:.92rem;color:var(--text-1);line-height:1.55;max-height:46vh;overflow:auto;text-align:center}
+    .ux-b p{margin:0 0 8px}
+    .ux-chip{display:block;margin:8px 0;padding:10px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);
+      font-weight:700;color:var(--text-0);animation:uxIn .4s ease both}
+    .ux-chip:nth-child(2){animation-delay:.06s}.ux-chip:nth-child(3){animation-delay:.12s}
+    @keyframes uxIn{from{opacity:0;transform:translateY(8px)}}
+    .ux-in{width:100%;margin-top:12px;padding:13px 14px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid var(--glass-border-strong);
+      color:var(--text-0);font-size:1rem;outline:none;transition:border-color .2s,box-shadow .2s}
+    .ux-in:focus{border-color:var(--ux-c,var(--brand));box-shadow:0 0 0 4px color-mix(in srgb,var(--ux-c,var(--brand)) 25%,transparent)}
+    .ux-in.shake{animation:uxShake .35s}
+    @keyframes uxShake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+    .ux-act{display:flex;gap:10px;margin-top:18px}
+    .ux-btn{position:relative;flex:1;padding:14px 12px;border-radius:16px;font-weight:800;font-size:.95rem;overflow:hidden;
+      transition:transform .12s,filter .2s,background .2s}
+    .ux-btn:active{transform:scale(.95)}
+    .ux-no{background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--text-1)}
+    .ux-no:hover{background:rgba(255,255,255,.14)}
+    .ux-yes{color:#04140e;background:linear-gradient(135deg,var(--ux-c,var(--brand)),var(--ux-c2,var(--brand-2)));box-shadow:0 10px 26px -8px var(--ux-c,var(--brand))}
+    .ux-yes:hover{filter:brightness(1.1)}
+    .ux-rip{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);animation:uxRip .55s ease-out forwards;pointer-events:none}
+    @keyframes uxRip{to{transform:scale(4);opacity:0}}
+    .ux-hint{text-align:center;font-size:.7rem;color:var(--text-2);margin-top:10px}
+
     :root {
       --bg-0: #070b16;
       --bg-1: #0b1222;
@@ -2187,6 +2230,69 @@
       el.className = 'form-msg' + (type ? ' ' + type : '');
     }
 
+
+    /* ===== POPUP BERGAYA: uiConfirm / uiPrompt (tiada nama domain dipaparkan) ===== */
+    function uxTone(msg){
+      const m=String(msg).toLowerCase();
+      if(/padam|reset|tetap semula|kilang|gantikan semua|kosongkan/.test(m)) return {ic:'🗑️',c:'#f43f5e',c2:'#fb7185',yes:'Ya, teruskan'};
+      if(/tolak|lepaskan|log keluar|belum diterima|gagal/.test(m)) return {ic:'⚠️',c:'#ffb547',c2:'#f59e0b',yes:'Teruskan'};
+      if(/pin|kata laluan/.test(m)) return {ic:'🔐',c:'#38bdf8',c2:'#13b8d6',yes:'Sahkan'};
+      if(/salin|pautan/.test(m)) return {ic:'🔗',c:'#38bdf8',c2:'#2ee6a6',yes:'Salin'};
+      if(/skor|keputusan|tamat|sahkan/.test(m)) return {ic:'🏆',c:'#2ee6a6',c2:'#13b8d6',yes:'Sahkan'};
+      return {ic:'⚽',c:'#2ee6a6',c2:'#13b8d6',yes:'Ya'};
+    }
+    function uxOpen(msg, opt){
+      return new Promise(resolve=>{
+        const tone=Object.assign(uxTone(msg),opt.tone||{});
+        const parts=String(msg).split(/\n\s*\n/);
+        const title=parts.shift().trim();
+        const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        const body=parts.map(p=>{
+          const lines=p.split('\n').map(esc);
+          return (/·|lwn|Gelanggang|\d+\s*-\s*\d+/.test(p) && p.length<160)
+            ? `<span class="ux-chip">${lines.join('<br>')}</span>` : `<p>${lines.join('<br>')}</p>`;
+        }).join('');
+        const ov=document.createElement('div');
+        ov.className='ux-ov';
+        ov.style.setProperty('--ux-c',tone.c); ov.style.setProperty('--ux-c2',tone.c2);
+        ov.style.setProperty('--ux-glow',tone.c+'55');
+        ov.innerHTML=`<div class="ux-box" role="dialog" aria-modal="true">
+          <div class="ux-ic">${tone.ic}</div><h3 class="ux-t">${esc(title)}</h3>
+          <div class="ux-b">${body}</div>
+          ${opt.input?`<input class="ux-in" ${opt.readonly?'readonly':''} value="${esc(opt.def||'')}">`:''}
+          <div class="ux-act">${opt.copy?'':'<button type="button" class="ux-btn ux-no">Batal</button>'}
+          <button type="button" class="ux-btn ux-yes">${opt.copy?'📋 Salin & Tutup':esc(tone.yes)}</button></div>
+          <div class="ux-hint">${opt.copy?'Ketik di luar untuk tutup':'Enter = teruskan · Esc = batal'}</div></div>`;
+        document.body.appendChild(ov);
+        const inp=ov.querySelector('.ux-in');
+        requestAnimationFrame(()=>{ov.classList.add('show'); (inp||ov.querySelector('.ux-yes')).focus(); if(inp&&opt.readonly) inp.select();});
+        if(navigator.vibrate) try{navigator.vibrate(12)}catch(e){}
+        let done=false;
+        const close=v=>{ if(done)return; done=true; ov.classList.remove('show'); document.removeEventListener('keydown',key);
+          setTimeout(()=>ov.remove(),230); resolve(v); };
+        const ok=()=>{
+          if(opt.copy){ const t=inp.value; (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{inp.select();document.execCommand('copy');});
+            if(typeof showToast==='function') showToast('Disalin ✓','success',1800); return close(t); }
+          close(opt.input?inp.value:true);
+        };
+        const key=e=>{ if(e.key==='Escape') close(opt.input?null:false); else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ok();} };
+        document.addEventListener('keydown',key);
+        ov.addEventListener('click',e=>{ if(e.target===ov){ const b=ov.querySelector('.ux-box'); if(opt.copy) return close(null);
+          b.animate([{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:220}); }});
+        ov.querySelectorAll('.ux-btn').forEach(b=>b.addEventListener('pointerdown',e=>{
+          const r=b.getBoundingClientRect(),s=document.createElement('span'),d=Math.max(r.width,r.height);
+          s.className='ux-rip'; s.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;
+          b.appendChild(s); setTimeout(()=>s.remove(),600);}));
+        ov.querySelector('.ux-yes').onclick=ok;
+        const no=ov.querySelector('.ux-no'); if(no) no.onclick=()=>close(opt.input?null:false);
+      });
+    }
+    function uiConfirm(msg){ return uxOpen(msg,{}); }
+    function uiPrompt(msg, def=''){
+      const copy=/^salin/i.test(String(msg).trim());
+      return uxOpen(msg,{input:true,def,copy,readonly:copy});
+    }
+
     function showToast(message, type = 'info', duration = 3200) {
       const stack = document.getElementById('toastStack');
       if (!stack) return;
@@ -2533,7 +2639,7 @@
     /* ---------------------------------------------------------
        3.4 LOG KELUAR
        --------------------------------------------------------- */
-    function logout() {
+    async function logout() {
       const s = getSession();
       if (!s) {
         state.session = null;
@@ -2545,11 +2651,11 @@
       if (s.peranan === 'PENGADIL') {
         const held = state.courts.find(c => c.pengadilId === s.userId) || null;
         if (held && isCourtPaused(held)) {
-          if (!window.confirm(`${held.nama} sedang REHAT KECEMASAN.\n\nLog keluar akan melepaskan kunci anda. Perlawanan kekal dibekukan dan pengadil lain boleh log masuk & menekan "Ambil Alih Gelanggang". Teruskan?`)) {
+          if (!await uiConfirm(`${held.nama} sedang REHAT KECEMASAN.\n\nLog keluar akan melepaskan kunci anda. Perlawanan kekal dibekukan dan pengadil lain boleh log masuk & menekan "Ambil Alih Gelanggang". Teruskan?`)) {
             return false;
           }
         } else if (held && held.status === COURT_STATUS.LIVE &&
-            !window.confirm(`Anda masih mengawal perlawanan LIVE di ${held.nama}.
+            !await uiConfirm(`Anda masih mengawal perlawanan LIVE di ${held.nama}.
 
 Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil alih. Teruskan?`)) {
           return false;
@@ -3203,7 +3309,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // Pengadil: tamatkan perlawanan & hantar ke Peti Kelulusan
-    function refereeSubmitMatch(courtId, opts = {}) {
+    async function refereeSubmitMatch(courtId, opts = {}) {
       if (!canRefereeCourt(courtId)) {
         showToast(`Anda tidak dibenarkan menamatkan perlawanan Gelanggang ${courtId}.`, 'error');
         return false;
@@ -3231,7 +3337,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if (isKnockout(match) && s1 === s2 && (opts.penalti === 'P1' || opts.penalti === 'P2')) {
         penalti = opts.penalti;
       } else if (isKnockout(match) && s1 === s2) {
-        const ans = window.prompt(
+        const ans = await uiPrompt(
           `Keputusan seri ${s1}-${s2} dalam perlawanan kalah mati (${match.peringkat}).\n` +
           `Masukkan pemenang sepakan penalti:\n1 = ${match.namaP1}\n2 = ${match.namaP2}`
         );
@@ -3248,7 +3354,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const penaltiText = penalti ? `\nMenang penalti: ${penalti === 'P1' ? match.namaP1 : match.namaP2}` : '';
       const session = getSession();
       const isRefSesi = !!session && session.peranan === 'PENGADIL';
-      const ok = opts.tanpaSahkan || window.confirm(
+      const ok = opts.tanpaSahkan || await uiConfirm(
         `Tamat & hantar keputusan ${match.id}?\n\n` +
         `${match.namaP1}  ${s1} - ${s2}  ${match.namaP2}${penaltiText}\n\n` +
         (isRefSesi ? `Dengan menekan OK, anda (${session.nama}) MENGESAHKAN keputusan ini betul. ` : '') +
@@ -3372,7 +3478,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // Urusetia: sahkan semua keputusan yang menunggu
-    function approveAllPending() {
+    async function approveAllPending() {
       if (!canApprove()) {
         showToast('Hanya Urusetia atau Master Admin boleh mengesahkan keputusan.', 'error');
         return 0;
@@ -3382,7 +3488,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         showToast('Tiada keputusan menunggu pengesahan.', 'info');
         return 0;
       }
-      if (!window.confirm(`Sahkan ${pending.length} keputusan sekaligus?`)) return 0;
+      if (!await uiConfirm(`Sahkan ${pending.length} keputusan sekaligus?`)) return 0;
       let count = 0;
       const done = [];
       pending.forEach(m => { if (approveMatch(m.id, { silent: true })) { count += 1; done.push(m.id); } });
@@ -3412,7 +3518,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // Urusetia: tolak keputusan -> kembali LIVE untuk disemak pengadil
-    function rejectMatch(matchId) {
+    async function rejectMatch(matchId) {
       if (!canApprove()) {
         showToast('Hanya Urusetia atau Master Admin boleh menolak keputusan.', 'error');
         return false;
@@ -3422,7 +3528,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         showToast('Perlawanan ini tidak menunggu pengesahan.', 'warn');
         return false;
       }
-      const reason = window.prompt('Sebab keputusan ditolak (akan dipaparkan kepada pengadil):', 'Skor perlu disemak semula');
+      const reason = await uiPrompt('Sebab keputusan ditolak (akan dipaparkan kepada pengadil):', 'Skor perlu disemak semula');
       if (reason === null) return false;
 
       const now = nowIso();
@@ -4006,7 +4112,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const resume = court.status === COURT_STATUS.LIVE;
       const takeover = court.pengadilId && court.kunciBasi ? `\n\n⚠ Kunci tidak aktif milik ${court.pengadil} akan diambil alih.` : '';
       // FASA 6: perlawanan telah dipilih & dikunci di paparan telefon -> terus Sepak Mula
-      const ok = (opts.terus && opt.mine && court.status === COURT_STATUS.SEDIA) || window.confirm(
+      const ok = (opts.terus && opt.mine && court.status === COURT_STATUS.SEDIA) || await uiConfirm(
         `⚽ ${resume ? 'Sepak Mula · Sambung Kawalan' : 'Sepak Mula'} di ${court.nama}?\n\n` +
         `${match.id} · ${match.namaP1} lwn ${match.namaP2}\n\n` +
         `Gelanggang akan DIKUNCI untuk anda. Pengadil lain tidak boleh memberi markah di gelanggang ini sehingga anda menekan "Tamat & Hantar Keputusan" atau melepaskannya.${takeover}`
@@ -4100,7 +4206,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if (!court) return false;
       const live = court.status === COURT_STATUS.LIVE;
       const rs = isCourtPaused(court) ? rehatScore(court) : null;
-      const ok = window.confirm(rs
+      const ok = await uiConfirm(rs
         ? `Lepaskan ${court.nama} semasa Rehat Kecemasan?\n\nPerlawanan kekal DIBEKUKAN (skor ${rs.s1} - ${rs.s2}). Pengadil lain boleh log masuk dan menekan "Ambil Alih Gelanggang" untuk menyambung perlawanan.`
         : live
           ? `Perlawanan di ${court.nama} masih LIVE.\n\nLepaskan kunci? Pengadil lain akan boleh mengambil alih pemberian markah.`
@@ -4140,9 +4246,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
       const court = getCourt(courtId);
       if (!court || !court.pengadilId) return false;
-      if (!window.confirm(`Lepaskan kunci ${court.nama} yang dipegang oleh ${court.pengadil || court.pengadilId}?\n\nPengadil tersebut tidak lagi boleh memberi markah sehingga menekan Sepak Mula semula.`)) return false;
+      if (!await uiConfirm(`Lepaskan kunci ${court.nama} yang dipegang oleh ${court.pengadil || court.pengadilId}?\n\nPengadil tersebut tidak lagi boleh memberi markah sehingga menekan Sepak Mula semula.`)) return false;
       if (getGasUrl()) {
-        const adminKey = ensureAdminKey();
+        const adminKey = await ensureAdminKey();
         if (!adminKey) return false;
         const res = await callGas({ action: 'lepasGelanggang', adminKey, gelanggang: courtId });
         if (!res.ok) {
@@ -4384,7 +4490,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         return false;
       }
       const match = check.match;
-      const ok = window.confirm(
+      const ok = await uiConfirm(
         `Adili perlawanan ini?\n\n${match.id} · ${match.namaP1} lwn ${match.namaP2}\n${court.nama}\n\n` +
         `Paparan anda akan DIKUNCI pada perlawanan ini sahaja sehingga anda menamatkan & mengesahkan keputusan.`
       );
@@ -4471,7 +4577,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // Langkah 3b: pengadil SAHKAN & hantar keputusan
-    function refConfirmSubmit() {
+    async function refConfirmSubmit() {
       const c = refHeldCourt();
       if (!refFinish || !c || c.id !== refFinish.courtId) { refFinish = null; renderRefMobile(); return false; }
       const m = getMatch(c.matchSemasa);
@@ -4480,7 +4586,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const perluPenalti = !!m && isKnockout(m) && s1 === s2;
       if (!refFinish.setuju) { showToast('Tandakan pengesahan anda dahulu.', 'warn'); return false; }
       if (perluPenalti && !refFinish.penalti) { showToast('Pilih pemenang sepakan penalti.', 'warn'); return false; }
-      const ok = refereeSubmitMatch(c.id, { penalti: perluPenalti ? refFinish.penalti : null, tanpaSahkan: true });
+      const ok = await refereeSubmitMatch(c.id, { penalti: perluPenalti ? refFinish.penalti : null, tanpaSahkan: true });
       if (ok) { refFinish = null; refBuzz(60); }
       renderRefMobile();
       return ok;
@@ -4509,10 +4615,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return !!res.ok;
     }
 
-    function refCloseReceipt() {
+    async function refCloseReceipt() {
       const r = state.ui && state.ui.refResit;
       if (r && r.hantar === 'gagal' && r.payload &&
-          !window.confirm('Keputusan BELUM diterima oleh Google Sheets.\n\nTeruskan juga? Maklumkan Urusetia supaya keputusan ini disemak.')) return;
+          !await uiConfirm('Keputusan BELUM diterima oleh Google Sheets.\n\nTeruskan juga? Maklumkan Urusetia supaya keputusan ini disemak.')) return;
       state.ui.refResit = null;
       saveState();
       renderRefMobile();
@@ -4854,7 +4960,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
               tangguh: true, sebab, lepas: !!tukar, pasukan: `${match.namaP1} lwn ${match.namaP2}`
             });
           } else if (!isRef && (court.pengadilId || court.rehat) && canManageSystem()) {
-            const adminKey = typeof ensureAdminKey === 'function' ? ensureAdminKey() : getAdminKey();
+            const adminKey = typeof ensureAdminKey === 'function' ? await ensureAdminKey() : getAdminKey();
             res = await callGas({ action: 'tangguhAdmin', adminKey, gelanggang: courtId, matchId: match.id, sebab, pasukan: `${match.namaP1} lwn ${match.namaP2}` });
           } else if (!isRef && typeof syncToGoogleSheets === 'function') {
             syncToGoogleSheets({ auto: true, silent: true });
@@ -5102,7 +5208,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const r0 = court0.rehat;
       const m0 = getMatch(r0.matchId) || getMatch(court0.matchSemasa);
       const rs0 = rehatScore(court0);
-      const ok = window.confirm(
+      const ok = await uiConfirm(
         `🤝 Ambil alih ${court0.nama}?\n\n` +
         (m0 ? `${m0.id} · ${m0.namaP1} lwn ${m0.namaP2}\n` : '') +
         `Skor dibekukan: ${rs0.s1} - ${rs0.s2} · ${COURT_PHASE_LABELS[r0.fasaSebelum] || r0.fasaSebelum || '-'}\n` +
@@ -5191,7 +5297,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
       const r0 = court0.rehat;
       const rs0 = rehatScore(court0);
-      const ok = window.confirm(
+      const ok = await uiConfirm(
         `▶ Sambung perlawanan di ${court0.nama}?\n\n` +
         `Skor: ${rs0.s1} - ${rs0.s2}\n` +
         `Fasa: ${COURT_PHASE_LABELS[r0.fasaSebelum] || r0.fasaSebelum || '-'} · jam bersambung dari ${formatDuration(Number(r0.elapsedMs) || 0)}`
@@ -6528,7 +6634,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       renderAdminExtras();
     }
 
-    function createNewEvent() {
+    async function createNewEvent() {
       if (!canManageSystem()) {
         showToast('Hanya Master Admin boleh mencipta kejohanan baharu.', 'error');
         return false;
@@ -6540,7 +6646,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         if (input) input.focus();
         return false;
       }
-      if (!window.confirm(`Cipta kejohanan baharu "${nama}"?\n\nSemua keputusan semasa akan dikosongkan. Sandaran JSON akan dimuat turun dahulu. Pengguna, pengadil & tetapan dikekalkan.`)) return false;
+      if (!await uiConfirm(`Cipta kejohanan baharu "${nama}"?\n\nSemua keputusan semasa akan dikosongkan. Sandaran JSON akan dimuat turun dahulu. Pengguna, pengadil & tetapan dikekalkan.`)) return false;
 
       exportData(true);
       const keep = { users: state.users, referees: state.referees, settings: state.settings, session: state.session };
@@ -6717,13 +6823,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         try {
           const parsed = JSON.parse(reader.result);
           if (!parsed || !Array.isArray(parsed.matches) || parsed.matches.length !== 65 || !Array.isArray(parsed.teams) || !Array.isArray(parsed.users)) {
             throw new Error('Format fail tidak sah (perlu 65 perlawanan).');
           }
-          if (!window.confirm('Gantikan semua data semasa dengan fail sandaran ini?')) return;
+          if (!await uiConfirm('Gantikan semua data semasa dengan fail sandaran ini?')) return;
           const session = state.session;
           state = Object.assign(createDefaultState(), parsed, { session, version: STATE_VERSION });
           normalizeState();
@@ -6740,13 +6846,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       reader.readAsText(file);
     }
 
-    function resetFactoryData() {
+    async function resetFactoryData() {
       if (!canManageSystem()) {
         showToast('Hanya Master Admin boleh menetap semula kejohanan.', 'error');
         return false;
       }
-      if (!window.confirm('Tetap semula SEMUA data kepada tetapan kilang?\n\nSemua skor, log, undian, pengguna baharu, senarai pengadil (dalam peranti ini) dan tetapan akan dipadam.')) return false;
-      const typed = window.prompt('Taip RESET untuk mengesahkan:');
+      if (!await uiConfirm('Tetap semula SEMUA data kepada tetapan kilang?\n\nSemua skor, log, undian, pengguna baharu, senarai pengadil (dalam peranti ini) dan tetapan akan dipadam.')) return false;
+      const typed = await uiPrompt('Taip RESET untuk mengesahkan:');
       if (typed === null || typed.trim().toUpperCase() !== 'RESET') {
         showToast('Tetapan semula dibatalkan.', 'info');
         return false;
@@ -6790,10 +6896,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // Jika sesi Master Admin dipulihkan selepas pelayar ditutup, minta PIN semula sekali.
-    function ensureAdminKey() {
+    async function ensureAdminKey() {
       const existing = getAdminKey();
       if (existing) return existing;
-      const pin = window.prompt('Masukkan semula PIN Master Admin untuk menyegerak dengan Google Sheets:');
+      const pin = await uiPrompt('Masukkan semula PIN Master Admin untuk menyegerak dengan Google Sheets:');
       if (pin === null) return '';
       const ok = state.users.some(u => u.peranan === 'MASTER_ADMIN' && u.status === 'AKTIF' && u.pin === pin.trim());
       if (!ok) {
@@ -6838,7 +6944,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         await navigator.clipboard.writeText(link);
         showToast('Pautan peranti disalin. Hantar kepada pengadil (buka sekali di telefon mereka).', 'success', 5000);
       } catch (err) {
-        window.prompt('Salin pautan ini dan buka di peranti pengadil:', link);
+        await uiPrompt('Salin pautan ini dan buka di peranti pengadil:', link);
       }
     }
 
@@ -6967,7 +7073,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         setRefSyncInfo('Disimpan dalam peranti ini sahaja (URL Google Apps Script belum ditetapkan).');
         return;
       }
-      const adminKey = ensureAdminKey();
+      const adminKey = await ensureAdminKey();
       if (!adminKey) {
         setRefSyncInfo('Belum disegerak ke Google Sheets (PIN Master Admin diperlukan).');
         return;
@@ -7042,7 +7148,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
       let serverRef = null;
       if (getGasUrl()) {
-        const adminKey = ensureAdminKey();
+        const adminKey = await ensureAdminKey();
         if (!adminKey) {
           setFormMsg(msgEl, 'PIN Master Admin diperlukan untuk menyimpan akaun ke Google Sheets. Akaun BELUM disimpan.', 'error');
           return false;
@@ -7111,7 +7217,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     let refReconcileBusy = false;
     async function reconcileReferees(opts = {}) {
       if (refReconcileBusy || !canManageSystem() || !getGasUrl() || !navigator.onLine) return false;
-      const adminKey = opts.prompt ? ensureAdminKey() : getAdminKey();
+      const adminKey = opts.prompt ? await ensureAdminKey() : getAdminKey();
       if (!adminKey) return false;
       refReconcileBusy = true;
       try {
@@ -7203,11 +7309,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return true;
     }
 
-    function deleteReferee(refId) {
+    async function deleteReferee(refId) {
       if (!canManageSystem()) return false;
       const ref = getRefereeById(refId);
       if (!ref) return false;
-      if (!window.confirm(`Padam akaun pengadil "${ref.nama}" (${ref.id})?\n\nPengadil ini tidak lagi boleh log masuk.`)) return false;
+      if (!await uiConfirm(`Padam akaun pengadil "${ref.nama}" (${ref.id})?\n\nPengadil ini tidak lagi boleh log masuk.`)) return false;
       state.referees = state.referees.filter(r => r.id !== refId);
       state.courts.forEach(c => { if (c.pengadilId === refId) clearCourtLock(c); });
       refPwVisible.delete(refId);
@@ -7238,7 +7344,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         await navigator.clipboard.writeText(text);
         showToast(`Maklumat log masuk ${ref.nama} disalin.`, 'success');
       } catch (err) {
-        window.prompt('Salin maklumat log masuk ini:', `${ref.nama} / ${ref.password}`);
+        await uiPrompt('Salin maklumat log masuk ini:', `${ref.nama} / ${ref.password}`);
       }
     }
 
@@ -7257,8 +7363,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         showToast('Sila simpan URL Google Apps Script dahulu.', 'warn');
         return false;
       }
-      if (!window.confirm(`Hantar ${state.referees.length} pengadil ke Google Sheets?\n\nSenarai dalam tab Senarai_Pengadil akan DIGANTIKAN dengan senarai dalam peranti ini.`)) return false;
-      const adminKey = ensureAdminKey();
+      if (!await uiConfirm(`Hantar ${state.referees.length} pengadil ke Google Sheets?\n\nSenarai dalam tab Senarai_Pengadil akan DIGANTIKAN dengan senarai dalam peranti ini.`)) return false;
+      const adminKey = await ensureAdminKey();
       if (!adminKey) return false;
       const res = await callGas({ action: 'syncPengadil', adminKey, pengadil: state.referees });
       if (!res.ok) {
@@ -7426,7 +7532,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         return true;
       } catch (err) {
         console.warn('[copyShareLink]', err);
-        window.prompt('Salin pautan live ini:', url);
+        await uiPrompt('Salin pautan live ini:', url);
         return false;
       }
     }
@@ -7816,14 +7922,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         plan.slots.length ? `• ${plan.slots.length} perlawanan seterusnya dirombak.` : '',
         plan.flagged.length ? `• ${plan.flagged.length} perlawanan perlu semakan manual.` : ''
       ].filter(Boolean).join('\n');
-      if (!window.confirm(ringkas)) return;
+      if (!await uiConfirm(ringkas)) return;
 
       correctionBusy = true;
       if (btn) btn.disabled = true;
       try {
         let serverRes = null;
         if (getGasUrl()) {
-          const adminKey = ensureAdminKey();
+          const adminKey = await ensureAdminKey();
           if (!adminKey) { setFormMsg(msg, 'PIN Master Admin diperlukan untuk menyimpan ke Google Sheets.', 'error'); return; }
           setFormMsg(msg, 'Menyimpan ke Google Sheets...', '');
           serverRes = await callGas({
@@ -7834,7 +7940,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           });
           if (!serverRes || !serverRes.ok) {
             if (serverRes && serverRes.networkError) {
-              const teruskan = window.confirm(`${serverRes.error}\n\nSimpan pembetulan dalam peranti ini dahulu? Tekan "Sync ke Google Sheets" apabila talian pulih.`);
+              const teruskan = await uiConfirm(`${serverRes.error}\n\nSimpan pembetulan dalam peranti ini dahulu? Tekan "Sync ke Google Sheets" apabila talian pulih.`);
               if (!teruskan) { setFormMsg(msg, 'Pembetulan dibatalkan.', 'error'); return; }
               serverRes = null;
             } else {
