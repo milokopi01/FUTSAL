@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbwUkzTaw8xPr8St6h4k812n0b1fpc7KdxsA8MXZ4xtqCVHwgKGKepXoqoK1JQAVAP4/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -1178,6 +1178,46 @@ body.projection-on #projection {display:grid;grid-template-rows:38px 180px minma
  .tv-head h2{font-size:15px;}.tv-head p{font-size:9px;}.tv-foot{flex-wrap:wrap;font-size:8px;}
 }
 
+  </style>
+  <style>
+    /* ===== v1.9 SAMBUTAN GOL & SEPAK MULA ===== */
+    .livefx-layer{position:fixed;inset:0;z-index:99990;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px}
+    .livefx-flash{position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,rgba(46,230,166,.55),rgba(255,181,71,.25) 40%,transparent 70%);animation:fxFlash 1.25s ease-out forwards}
+    @keyframes fxFlash{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+    .goal-fx-banner{position:relative;overflow:hidden;width:min(92vw,560px);padding:22px 26px 20px;border-radius:28px;text-align:center;color:#04140e;
+      background:linear-gradient(135deg,#2ee6a6,#13b8d6 55%,#ffb547);
+      box-shadow:0 30px 90px -10px rgba(46,230,166,.7),0 0 0 4px rgba(255,255,255,.3) inset;
+      animation:gfxIn .55s cubic-bezier(.2,1.5,.4,1) both,gfxPulse .9s ease-in-out .55s 5}
+    .goal-fx-banner.out,.kick-fx-banner.out{animation:gfxOut .42s ease forwards}
+    @keyframes gfxIn{from{opacity:0;transform:scale(.3) rotate(-8deg)}}
+    @keyframes gfxOut{to{opacity:0;transform:scale(.85) translateY(-20px)}}
+    @keyframes gfxPulse{50%{transform:scale(1.04)}}
+    .gfx-kicker,.kfx-kicker{position:relative;font:800 .82rem/1.1 var(--font-display);letter-spacing:.18em;text-transform:uppercase;opacity:.85}
+    .gfx-title{position:relative;font:900 clamp(3rem,13vw,6.8rem)/1 var(--font-display);letter-spacing:.03em;margin:6px 0 4px;text-shadow:0 5px 0 rgba(255,255,255,.35);animation:gfxShake .45s ease-in-out .55s 4}
+    @keyframes gfxShake{25%{transform:rotate(-4deg) scale(1.06)}75%{transform:rotate(4deg) scale(1.06)}}
+    .gfx-team{position:relative;font:800 clamp(1.05rem,3.4vw,1.6rem)/1.2 var(--font-display);word-break:break-word}
+    .gfx-score{position:relative;margin-top:12px;display:inline-flex;align-items:center;gap:10px;max-width:100%;padding:9px 16px;border-radius:16px;background:rgba(4,20,14,.88);color:#f2f5fb;font:700 clamp(1.5rem,5vw,2.4rem)/1 var(--font-mono)}
+    .gfx-score b{color:#2ee6a6}.gfx-score i{font-style:normal;opacity:.6}
+    .gfx-name{font:700 clamp(.62rem,1.8vw,.8rem)/1.15 var(--font-body);max-width:130px;opacity:.85;text-align:center;white-space:normal}
+    .gfx-confetti{position:absolute;inset:0;overflow:hidden}
+    .gfx-confetti span{position:absolute;top:-16px;width:9px;height:15px;border-radius:2px;animation-name:gfxFall;animation-timing-function:linear;animation-iteration-count:infinite}
+    @keyframes gfxFall{to{top:110%;transform:rotate(720deg) translateX(30px)}}
+    .kick-fx-banner{width:min(92vw,480px);padding:16px 22px;border-radius:22px;text-align:center;color:#fff;
+      background:linear-gradient(135deg,#ef4444,#f97316);box-shadow:0 24px 70px -12px rgba(239,68,68,.7),0 0 0 3px rgba(255,255,255,.25) inset;
+      animation:gfxIn .5s cubic-bezier(.2,1.5,.4,1) both}
+    .kfx-title{font:900 clamp(1.8rem,7vw,3.2rem)/1.05 var(--font-display);margin:4px 0}
+    .kfx-teams{font:700 clamp(.9rem,2.8vw,1.15rem)/1.25 var(--font-display);word-break:break-word}
+    .kfx-teams span{opacity:.75;font-weight:600;margin:0 4px}
+    .court-card.goal-fx,.tv-card.goal-fx{animation:goalCard .55s ease-in-out infinite alternate !important;border-color:#2ee6a6 !important}
+    @keyframes goalCard{from{box-shadow:0 0 0 2px rgba(46,230,166,.55),0 0 28px rgba(46,230,166,.45)}to{box-shadow:0 0 0 5px rgba(255,181,71,.85),0 0 70px rgba(46,230,166,.85)}}
+    .court-card.goal-fx .score-box,.tv-card.goal-fx .score-box{animation:goalScore .45s ease-in-out infinite alternate}
+    @keyframes goalScore{to{transform:scale(1.12)}}
+    .sound-btn.needs-tap{animation:soundTap 1.2s ease-in-out infinite;border-color:var(--accent) !important;color:var(--accent) !important}
+    @keyframes soundTap{50%{box-shadow:0 0 0 4px rgba(255,181,71,.25)}}
+    @media (prefers-reduced-motion: reduce){
+      .goal-fx-banner,.kick-fx-banner,.gfx-title,.court-card.goal-fx,.tv-card.goal-fx,.court-card.goal-fx .score-box,.tv-card.goal-fx .score-box{animation:none !important}
+      .gfx-confetti{display:none}
+    }
   </style>
 </head>
 <body data-category="SEMUA">
@@ -7445,7 +7485,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         : 'Seterusnya: <strong>Tiada</strong>';
 
       return `
-        <article class="court-card ${courtStatusClass(court)}" data-court="${court.id}">
+        <article class="court-card ${courtStatusClass(court)}${goalFxActive(court.id) ? ' goal-fx' : ''}" data-court="${court.id}">
           <div class="court-head">
             <div class="court-name">
               <div class="court-letter">${escapeHtml(court.id)}</div>
@@ -8435,10 +8475,17 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       };
     }
 
-    // Hantar markah pengadil ke Google Sheets (debounce supaya klik +1 berturut tidak membebankan)
-    function queueLivePush(courtId, delay = 700, extra = null) {
+    // Hantar markah pengadil ke Google Sheets (debounce pendek supaya klik +1 berturut digabung)
+    // v1.9: lebih pantas (250 ms), satu permintaan pada satu masa bagi setiap gelanggang
+    // (skor lama tidak boleh tiba selepas skor baharu) & hantar semula automatik bila rangkaian putus.
+    const livePushChain = {};
+    const livePushRetry = {};
+    const LIVE_PUSH_MAX_RETRY = 5;
+
+    function queueLivePush(courtId, delay = 250, extra = null, isRetry = false) {
       const s = getSession();
       if (!getGasUrl() || !s || s.peranan !== 'PENGADIL' || !s.token) return;
+      if (!isRetry) livePushRetry[courtId] = 0;
       clearTimeout(livePushTimers[courtId]);
       livePushTimers[courtId] = setTimeout(() => {
         delete livePushTimers[courtId];
@@ -8446,21 +8493,50 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }, delay);
     }
 
-    async function pushLiveNow(courtId, extra = null) {
+    function pushLiveNow(courtId, extra = null) {
+      if (extra && extra.lepas) {
+        clearTimeout(livePushTimers[courtId]);
+        delete livePushTimers[courtId];
+        livePushRetry[courtId] = LIVE_PUSH_MAX_RETRY;   // tiada hantar semula skor lama selepas keputusan
+      }
+      const prev = livePushChain[courtId] || Promise.resolve();
+      const run = prev.catch(() => null).then(() => pushLiveOnce(courtId, extra));
+      livePushChain[courtId] = run;
+      run.then(() => { if (livePushChain[courtId] === run) delete livePushChain[courtId]; }, () => {});
+      return run;
+    }
+
+    async function pushLiveOnce(courtId, extra = null) {
       const s = getSession();
       if (!s || s.peranan !== 'PENGADIL' || !s.token) return null;
-      const payload = buildLivePayload(courtId, s.token, extra && extra.lepas, extra && extra.sahkan);
+      const lepas = !!(extra && extra.lepas);
+      if (!lepas) {
+        const c = getCourt(courtId);
+        if (!c || c.pengadilId !== s.userId) return null;   // kunci telah dilepaskan
+      }
+      const payload = buildLivePayload(courtId, s.token, lepas, extra && extra.sahkan);
       if (!payload) return null;
       const res = await callGas(payload);
       if (res.ok) {
         lastHeartbeatAt = Date.now();
+        if (!lepas && livePushRetry[courtId] > 0) showToast('✅ Skor berjaya dihantar ke Google Sheets.', 'success', 2500);
+        if (!lepas) livePushRetry[courtId] = 0;
         return res;
       }
       if (handleSesiError(res)) return res;
       if (res.networkError) {
-        showToast(payload.lepas
-          ? 'Keputusan disimpan dalam peranti ini tetapi gagal dihantar ke Google Sheets. Maklumkan Urusetia.'
-          : 'Skor disimpan dalam peranti ini. Gagal dihantar ke Google Sheets (semak internet).', 'warn', 4500);
+        if (!lepas) {
+          const n = (livePushRetry[courtId] || 0) + 1;
+          if (n <= LIVE_PUSH_MAX_RETRY) {
+            livePushRetry[courtId] = n;
+            if (n === 1) showToast('Skor disimpan dalam peranti ini. Menghantar semula ke Google Sheets secara automatik...', 'warn', 3500);
+            if (!livePushTimers[courtId]) queueLivePush(courtId, Math.min(8000, 1500 * n), null, true);
+            return res;
+          }
+          showToast('Skor disimpan dalam peranti ini tetapi GAGAL dihantar ke Google Sheets. Semak internet — ia akan dihantar semula bila sambungan pulih.', 'warn', 6000);
+          return res;
+        }
+        showToast('Keputusan disimpan dalam peranti ini tetapi gagal dihantar ke Google Sheets. Maklumkan Urusetia.', 'warn', 4500);
         return res;
       }
       showToast(`Google Sheets menolak markah: ${res.error || 'ralat tidak diketahui'}`, 'error', 5500);
@@ -8468,7 +8544,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return res;
     }
 
-    // ⚽ SEPAK MULA: kunci gelanggang untuk pengadil & mulakan / sambung perlawanan
+    // Sambungan internet pulih -> hantar semula skor terkini gelanggang yang dipegang
+    window.addEventListener('online', () => {
+      const s = getSession();
+      if (!s || s.peranan !== 'PENGADIL' || !s.aksesGelanggang) return;
+      const c = getCourt(s.aksesGelanggang);
+      if (c && c.status === COURT_STATUS.LIVE && c.pengadilId === s.userId && !isCourtPaused(c)) queueLivePush(c.id, 300);
+    });
+
     async function refereeKickOff(courtId, opts = {}) {
       const s0 = getSession();
       if (!s0 || s0.peranan !== 'PENGADIL') {
@@ -8520,6 +8603,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
       const url = getGasUrl();
       const matchId = match.id;
+      let srvStarted = false;   // v1.9: pelayan telah menanda perlawanan LIVE (mula: true)
       kickoffBusy = true;
       lockEpoch += 1;
       renderRefDesk();
@@ -8529,7 +8613,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
             showToast('Sesi anda belum disahkan oleh Google Sheets. Sila log keluar dan log masuk semula ketika ada internet.', 'error', 6000);
             return false;
           }
-          const res = await callGas({ action: 'kunciGelanggang', token: s0.token, gelanggang: courtId, matchId });
+          const res = await callGas({ action: 'kunciGelanggang', token: s0.token, gelanggang: courtId, matchId,
+            mula: court.status === COURT_STATUS.SEDIA });
+          srvStarted = !!(res && res.ok && res.dimulakan);
           if (!res.ok) {
             if (handleSesiError(res)) return false;
             if (res.kunci) applyServerLocks(res.kunci, { silent: true });
@@ -8556,7 +8642,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           const check = checkCourtStartable(court);
           if (check.error || check.match.id !== matchId) {
             showToast(check.error || 'Perlawanan di gelanggang ini telah berubah. Sila cuba lagi.', 'warn');
-            if (url && s.token) callGas({ action: 'lepasGelanggang', token: s.token, gelanggang: courtId });
+            if (url && s.token) callGas(srvStarted
+              ? { action: 'skorLive', token: s.token, gelanggang: courtId, matchId, tangguh: true, lepas: true,
+                  sebab: 'Sepak mula dibatalkan (status gelanggang berubah)' }
+              : { action: 'lepasGelanggang', token: s.token, gelanggang: courtId });
             clearCourtLock(court);
             saveState();
             refreshAllViews();
@@ -8617,7 +8706,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           clearTimeout(livePushTimers[courtId]);
           delete livePushTimers[courtId];
           if (!isCourtPaused(court)) await pushLiveNow(courtId);
+        } else if (livePushChain[courtId]) {
+          await livePushChain[courtId].catch(() => null);   // tunggu skor yang sedang dihantar
         }
+        livePushRetry[courtId] = LIVE_PUSH_MAX_RETRY;
         const res = await callGas({ action: 'lepasGelanggang', token: s.token, gelanggang: courtId });
         if (!res.ok) {
           if (handleSesiError(res)) return false;
@@ -9255,11 +9347,16 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
          Pilihan: kekal sebagai pengadil ATAU tukar pengadil (kunci dilepaskan).
        - Papan Live: semua orang (termasuk penonton) nampak perlawanan yang
          sudah bermula + nama pengadil yang sedang mengadili. Data disegerak
-         daripada Google Sheets (?action=live) setiap 15 saat.
+         daripada Google Sheets (?action=live) setiap 3 saat (v1.9 - pantas,
+         dibaca daripada cache pelayan; telefon pengadil setiap 8 saat).
        --------------------------------------------------------- */
-    const PUBLIC_POLL_MS = 15000;
-    const publicLive = { data: null, lastOk: null, error: '', busy: false };
+    const PUBLIC_POLL_MS = 3000;           // v1.9: dashboard disegerak setiap 3 saat
+    const PUBLIC_POLL_REF_MS = 8000;       // telefon pengadil (jimat bateri & data)
+    const PUBLIC_POLL_MAX_MS = 20000;      // had backoff bila rangkaian bermasalah
+    const PUBLIC_FETCH_TIMEOUT_MS = 10000; // permintaan tergantung dibatalkan
+    const publicLive = { data: null, lastOk: null, error: '', busy: false, sig: '', offsetMs: 0, fails: 0 };
     let publicPollHandle = null;
+    let publicVisHooked = false;
     let postponeCourtId = null;
     const boardSeenLive = {};   // gelanggang -> matchId LIVE terakhir (untuk notifikasi "baru bermula")
     let boardReady = false;
@@ -9774,35 +9871,68 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     async function fetchPublicLive() {
       const url = getGasUrl();
       if (!url || publicLive.busy) return false;
-      if (!navigator.onLine) { publicLive.error = 'Luar talian'; renderLiveViews(); return false; }
+      if (!navigator.onLine) { publicLive.error = 'Luar talian'; renderLiveBoard(); return false; }
       publicLive.busy = true;
+      const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = ctrl ? setTimeout(() => ctrl.abort(), PUBLIC_FETCH_TIMEOUT_MS) : null;
       try {
         const sep = url.includes('?') ? '&' : '?';
-        const res = await fetch(`${url}${sep}action=live&_=${Date.now()}`, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+        const res = await fetch(`${url}${sep}action=live&_=${Date.now()}`, {
+          method: 'GET', redirect: 'follow', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined
+        });
         let data = null;
         try { data = JSON.parse(await res.text()); } catch (err) { data = null; }
         if (!data || !data.ok || !data.gelanggang) throw new Error((data && data.error) || 'Pastikan Code.gs Fasa 3 telah di-deploy.');
+        // Beza jam peranti & pelayan (elak data tempatan "lebih baharu" kerana jam peranti laju)
+        const srvMs = data.masa ? new Date(data.masa).getTime() : NaN;
+        if (!isNaN(srvMs)) publicLive.offsetMs = srvMs - Date.now();
+        const sig = JSON.stringify(data.gelanggang);
+        const changed = sig !== publicLive.sig || !!publicLive.error;
         publicLive.data = data.gelanggang;
+        publicLive.sig = sig;
         publicLive.lastOk = nowIso();
         publicLive.error = '';
-        renderLiveViews();
+        publicLive.fails = 0;
+        // Lukis semula kad gelanggang hanya bila data berubah (paparan 3D tidak berkelip)
+        if (changed) renderLiveViews(); else renderLiveBoard();
         return true;
       } catch (err) {
-        publicLive.error = (err && err.message) || 'ralat rangkaian';
-        renderLiveViews();
+        publicLive.fails += 1;
+        publicLive.error = err && err.name === 'AbortError'
+          ? 'Google Sheets lambat bertindak balas'
+          : ((err && err.message) || 'ralat rangkaian');
+        renderLiveBoard();
         return false;
       } finally {
+        if (timer) clearTimeout(timer);
         publicLive.busy = false;
       }
     }
 
+    function publicPollDelay() {
+      const s = getSession();
+      const base = s && s.peranan === 'PENGADIL' ? PUBLIC_POLL_REF_MS : PUBLIC_POLL_MS;
+      return publicLive.fails ? Math.min(PUBLIC_POLL_MAX_MS, base * Math.pow(2, Math.min(publicLive.fails, 3))) : base;
+    }
+
+    function schedulePublicPoll() {
+      clearTimeout(publicPollHandle);
+      publicPollHandle = setTimeout(async () => {
+        try { if (!document.hidden) await fetchPublicLive(); } finally { schedulePublicPoll(); }
+      }, publicPollDelay());
+    }
+
     function startPublicLiveSync() {
-      if (publicPollHandle) clearInterval(publicPollHandle);
+      clearTimeout(publicPollHandle);
       publicPollHandle = null;
       if (!getGasUrl()) return;
-      publicPollHandle = setInterval(() => { if (!document.hidden) fetchPublicLive(); }, PUBLIC_POLL_MS);
       fetchPublicLive();
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchPublicLive(); });
+      schedulePublicPoll();
+      if (!publicVisHooked) {
+        publicVisHooked = true;
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchPublicLive(); });
+        window.addEventListener('online', () => fetchPublicLive());
+      }
     }
 
     function boardStatusUpper(v) { return String(v || '').toUpperCase(); }
@@ -9836,7 +9966,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const iControl = s && s.peranan === 'PENGADIL' && court.pengadilId === s.userId;
       const srvTime = srv.kemaskini ? new Date(srv.kemaskini).getTime() : 0;
       const locTime = local.kemaskini ? new Date(local.kemaskini).getTime() : 0;
-      if (iControl || (locTime && locTime > srvTime + 2000)) return local;
+      if (iControl || (locTime && locTime + (publicLive.offsetMs || 0) > srvTime + 2000)) return local;
       const st = boardStatusUpper(srv.status);
       return {
         source: 'server',
@@ -9878,16 +10008,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         ? 'Paparan peranti ini sahaja'
         : publicLive.error
           ? `⚠ Gagal segerak: ${publicLive.error}`
-          : publicLive.lastOk ? `🔄 Disegerak automatik setiap 15 saat · terakhir ${formatTime(publicLive.lastOk)}` : '🔄 Menyegerak...';
+          : publicLive.lastOk ? `⚡ Disegerak automatik setiap ${Math.round(publicPollDelay() / 1000)} saat · terakhir ${formatTime(publicLive.lastOk)}` : '🔄 Menyegerak...';
 
-      entries.forEach(({ court, e }) => {
-        if (e.live && e.matchId && boardSeenLive[court.id] !== e.matchId) {
-          if (boardReady) showToast(`🔴 LIVE: ${e.matchId} di Gelanggang ${court.id} telah bermula${e.pengadil ? ` · Pengadil: ${e.pengadil}` : ''}.`, 'info', 4500);
-          boardSeenLive[court.id] = e.matchId;
-        } else if (!e.live) {
-          delete boardSeenLive[court.id];
-        }
-      });
+      detectLiveEvents(entries);   // v1.9: sepak mula -> wisel, gol -> sambutan 5 saat + alarm
 
       el.innerHTML = `
         <div class="live-board-head">
@@ -9897,10 +10020,246 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
             <span class="live-count ${liveCount ? '' : 'zero'}">${liveCount ? `🔴 ${liveCount} LIVE` : 'Tiada perlawanan live'}</span>
+            ${soundButtonHtml()}
             ${url ? '<button type="button" class="btn btn-sm" onclick="fetchPublicLive()" aria-label="Muat semula papan live">🔄</button>' : ''}
           </div>
         </div>`;
       boardReady = true;
+    }
+
+    /* ---------------------------------------------------------
+       v1.9 SAMBUTAN GOL & WISEL SEPAK MULA (DASHBOARD)
+       - Gol di mana-mana gelanggang: sepanduk "GOL!" + konfeti selama 5 saat,
+         kad gelanggang menyala & bunyi alarm.
+       - Sepak mula: sepanduk ringkas + bunyi wisel.
+       - Tidak dipaparkan pada peranti pengadil (elak mengganggu pemberian markah).
+       - Pelayar menyekat bunyi sehingga skrin disentuh sekali: butang 🔔 di Papan Live.
+       --------------------------------------------------------- */
+    const GOAL_FX_MS = 5000;
+    const KICK_FX_MS = 3500;
+    const SOUND_PREF_KEY = 'fpk_kbb_bunyi';
+    const goalFxUntil = {};            // gelanggang -> masa tamat sambutan
+    const fxPrev = {};                 // gelanggang -> { matchId, s1, s2, live }
+    let fxPrimed = false;
+    const liveSound = {
+      ctx: null,
+      on: (() => { try { return localStorage.getItem(SOUND_PREF_KEY) !== '0'; } catch (e) { return true; } })()
+    };
+
+    function fxEnabledHere() {
+      const s = getSession();
+      return !(s && s.peranan === 'PENGADIL');
+    }
+
+    function fxNum(v) {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Number(v);
+      return isNaN(n) ? null : n;
+    }
+
+    function detectLiveEvents(entries) {
+      // Tunggu data pertama daripada Google Sheets supaya muat semula halaman tidak "meraikan" skor lama
+      const ready = !getGasUrl() || !!publicLive.lastOk;
+      const fire = ready && fxPrimed;
+      entries.forEach(({ court, e }) => {
+        const cur = {
+          matchId: e.matchId || null,
+          s1: fxNum(e.skorP1), s2: fxNum(e.skorP2),
+          live: !!e.live && !e.rehat
+        };
+        const prev = fxPrev[court.id];
+        if (fire && prev) {
+          if (cur.live && cur.matchId && (!prev.live || prev.matchId !== cur.matchId)) {
+            onKickOffFx(court, e);
+          } else if (cur.live && prev.live && prev.matchId === cur.matchId &&
+                     prev.s1 !== null && prev.s2 !== null && cur.s1 !== null && cur.s2 !== null) {
+            if (cur.s1 > prev.s1) celebrateGoal(court, e, 1, cur);
+            else if (cur.s2 > prev.s2) celebrateGoal(court, e, 2, cur);
+          }
+        }
+        fxPrev[court.id] = cur;
+      });
+      if (ready) fxPrimed = true;
+    }
+
+    function goalFxActive(courtId) {
+      return (goalFxUntil[courtId] || 0) > Date.now();
+    }
+
+    function fxLayer() {
+      let el = document.getElementById('liveFxLayer');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'liveFxLayer';
+        el.className = 'livefx-layer';
+        el.setAttribute('aria-live', 'assertive');
+        document.body.appendChild(el);
+      }
+      return el;
+    }
+
+    function fxRemoveLater(el, ms) {
+      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 450); }, ms);
+    }
+
+    function fxMatchNames(court, e) {
+      const m = e.matchId ? getMatch(e.matchId) : null;
+      return { p1: e.namaP1 || (m && m.namaP1) || 'Pasukan 1', p2: e.namaP2 || (m && m.namaP2) || 'Pasukan 2' };
+    }
+
+    function onKickOffFx(court, e) {
+      showToast(`🔴 LIVE: ${e.matchId} di Gelanggang ${court.id} telah bermula${e.pengadil ? ` · Pengadil: ${e.pengadil}` : ''}.`, 'info', 4500);
+      if (!fxEnabledHere()) return;
+      const n = fxMatchNames(court, e);
+      const el = document.createElement('div');
+      el.className = 'kick-fx-banner';
+      el.innerHTML = `<div class="kfx-kicker">Gelanggang ${escapeHtml(court.id)} · ${escapeHtml(e.matchId || '')}</div>
+        <div class="kfx-title">⚽ SEPAK MULA!</div>
+        <div class="kfx-teams">${escapeHtml(n.p1)} <span>lwn</span> ${escapeHtml(n.p2)}</div>`;
+      fxLayer().appendChild(el);
+      fxRemoveLater(el, KICK_FX_MS);
+      playWhistle();
+    }
+
+    function celebrateGoal(court, e, side, cur) {
+      const n = fxMatchNames(court, e);
+      const team = side === 1 ? n.p1 : n.p2;
+      showToast(`⚽ GOL! ${team} · Gelanggang ${court.id} · ${cur.s1} - ${cur.s2}`, 'success', GOAL_FX_MS);
+      if (!fxEnabledHere()) return;
+      goalFxUntil[court.id] = Date.now() + GOAL_FX_MS;
+      const colors = ['#2ee6a6', '#13b8d6', '#ffb547', '#f43f5e', '#ffffff', '#facc15'];
+      let confetti = '';
+      for (let i = 0; i < 26; i++) {
+        confetti += `<span style="left:${Math.round(Math.random() * 100)}%;background:${colors[i % colors.length]};animation-delay:${(Math.random() * 1.2).toFixed(2)}s;animation-duration:${(1.8 + Math.random() * 1.4).toFixed(2)}s;transform:rotate(${Math.round(Math.random() * 360)}deg)"></span>`;
+      }
+      const el = document.createElement('div');
+      el.className = 'goal-fx-banner';
+      el.innerHTML = `<div class="gfx-confetti" aria-hidden="true">${confetti}</div>
+        <div class="gfx-kicker">Gelanggang ${escapeHtml(court.id)} · ${escapeHtml(e.matchId || '')}</div>
+        <div class="gfx-title">⚽ GOL!</div>
+        <div class="gfx-team">${escapeHtml(team)}</div>
+        <div class="gfx-score"><span class="gfx-name">${escapeHtml(n.p1)}</span><b>${cur.s1}</b><i>:</i><b>${cur.s2}</b><span class="gfx-name">${escapeHtml(n.p2)}</span></div>`;
+      const layer = fxLayer();
+      const flash = document.createElement('div');
+      flash.className = 'livefx-flash';
+      layer.appendChild(flash);
+      setTimeout(() => flash.remove(), 1300);
+      layer.appendChild(el);
+      fxRemoveLater(el, GOAL_FX_MS);
+      document.querySelectorAll(`.court-card[data-court="${court.id}"], .tv-card[data-court="${court.id}"]`)
+        .forEach(c => c.classList.add('goal-fx'));
+      setTimeout(() => {
+        if (goalFxActive(court.id)) return;
+        document.querySelectorAll(`.court-card[data-court="${court.id}"], .tv-card[data-court="${court.id}"]`)
+          .forEach(c => c.classList.remove('goal-fx'));
+      }, GOAL_FX_MS + 50);
+      playGoalAlarm();
+      try { if (navigator.vibrate) navigator.vibrate([220, 90, 220, 90, 420]); } catch (err) { /* abaikan */ }
+    }
+
+    // ----- Bunyi (Web Audio: tiada fail audio diperlukan, berfungsi luar talian) -----
+    function fxAudio() {
+      if (!liveSound.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        try { liveSound.ctx = new AC(); } catch (err) { return null; }
+        liveSound.ctx.onstatechange = () => { try { renderLiveBoard(); } catch (err) { /* abaikan */ } };
+      }
+      return liveSound.ctx;
+    }
+
+    function unlockLiveAudio() {
+      if (!liveSound.on) return;
+      const c = fxAudio();
+      if (c && c.state === 'suspended') c.resume().catch(() => {});
+    }
+    ['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
+      document.addEventListener(ev, unlockLiveAudio, { passive: true }));
+
+    function fxTone(c, t0, freq, dur, type = 'square', vol = 0.16, freqEnd = null) {
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t0);
+      if (freqEnd) o.frequency.linearRampToValueAtTime(freqEnd, t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + 0.015);
+      g.gain.setValueAtTime(vol, t0 + Math.max(0.02, dur - 0.04));
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g).connect(c.destination);
+      o.start(t0);
+      o.stop(t0 + dur + 0.02);
+      return o;
+    }
+
+    function playGoalAlarm() {
+      if (!liveSound.on) return;
+      const c = fxAudio();
+      if (!c) return;
+      if (c.state === 'suspended') c.resume().catch(() => {});
+      const t = c.currentTime + 0.03;
+      // Siren dua nada (±3 saat) + hon stadium
+      for (let i = 0; i < 6; i++) {
+        fxTone(c, t + i * 0.44, 988, 0.21, 'square', 0.14);
+        fxTone(c, t + i * 0.44 + 0.22, 740, 0.21, 'square', 0.14);
+      }
+      fxTone(c, t + 2.7, 330, 1.3, 'sawtooth', 0.13, 392);
+      fxTone(c, t + 2.7, 415, 1.3, 'sawtooth', 0.09, 494);
+    }
+
+    function playWhistle() {
+      if (!liveSound.on) return;
+      const c = fxAudio();
+      if (!c) return;
+      if (c.state === 'suspended') c.resume().catch(() => {});
+      const t = c.currentTime + 0.03;
+      [[0, 0.16], [0.24, 0.16], [0.5, 0.7]].forEach(([at, dur]) => {
+        const o = fxTone(c, t + at, 2900, dur, 'sine', 0.18);
+        // getaran wisel (bola kecil dalam wisel)
+        const lfo = c.createOscillator();
+        const lg = c.createGain();
+        lfo.frequency.value = 28;
+        lg.gain.value = 140;
+        lfo.connect(lg).connect(o.frequency);
+        lfo.start(t + at);
+        lfo.stop(t + at + dur + 0.02);
+      });
+    }
+
+    function soundButtonHtml() {
+      if (!fxEnabledHere()) return '';
+      const c = liveSound.ctx;
+      const blocked = liveSound.on && (!c || c.state !== 'running');
+      const label = !liveSound.on ? '🔕 Bunyi: Mati' : (blocked ? '🔔 Ketik untuk aktifkan bunyi' : '🔔 Bunyi: Hidup');
+      return `<button type="button" class="btn btn-sm sound-btn${blocked ? ' needs-tap' : ''}" onclick="toggleLiveSound()" aria-pressed="${liveSound.on}" title="Bunyi alarm gol & wisel sepak mula">${label}</button>`;
+    }
+
+    function toggleLiveSound() {
+      const c = liveSound.ctx;
+      const blocked = liveSound.on && (!c || c.state !== 'running');
+      if (blocked) {
+        // Butang pertama kali ditekan: aktifkan sahaja (jangan matikan)
+        unlockLiveAudio();
+        setTimeout(() => { fxTone(fxAudio(), fxAudio().currentTime + 0.02, 880, 0.15, 'sine', 0.12); renderLiveBoard(); }, 60);
+        showToast('🔔 Bunyi diaktifkan. Alarm akan berbunyi bila ada gol.', 'success', 3000);
+        return;
+      }
+      liveSound.on = !liveSound.on;
+      try { localStorage.setItem(SOUND_PREF_KEY, liveSound.on ? '1' : '0'); } catch (err) { /* abaikan */ }
+      if (liveSound.on) {
+        unlockLiveAudio();
+        setTimeout(() => { const a = fxAudio(); if (a) fxTone(a, a.currentTime + 0.02, 880, 0.15, 'sine', 0.12); }, 60);
+      }
+      renderLiveBoard();
+    }
+
+    // Uji sambutan (Konsol: testGoalFx('A'))
+    function testGoalFx(courtId = 'A') {
+      const court = getCourt(courtId) || state.courts[0];
+      if (!court) return;
+      const e = boardEntry(court);
+      celebrateGoal(court, Object.assign({}, e, { matchId: e.matchId || 'UJI' }), 1,
+        { s1: (fxNum(e.skorP1) || 0) + 1, s2: fxNum(e.skorP2) || 0 });
     }
 
     // Senarai perlawanan menunggu giliran (data peranti ini)
@@ -11409,12 +11768,16 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     async function callGas(payload) {
       const url = getGasUrl();
       if (!url) return { ok: false, networkError: true, error: 'URL Google Apps Script belum ditetapkan.' };
+      // v1.9: permintaan tergantung dibatalkan selepas 30 saat (supaya hantar semula boleh berjalan)
+      const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = ctrl ? setTimeout(() => ctrl.abort(), 30000) : null;
       try {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload),
-          redirect: 'follow'
+          redirect: 'follow',
+          signal: ctrl ? ctrl.signal : undefined
         });
         const text = await res.text();
         try {
@@ -11432,6 +11795,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       } catch (err) {
         console.warn('[callGas]', err);
         return { ok: false, networkError: true, error: 'Tiada sambungan ke Google Sheets.' };
+      } finally {
+        if (timer) clearTimeout(timer);
       }
     }
 
@@ -12527,12 +12892,12 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         const temp=document.createElement('div');temp.innerHTML=renderCourtCard(c);
         const score=temp.querySelector('.scoreboard')?.outerHTML||'';
         const phase=temp.querySelector('.court-meta')?.lastElementChild?.outerHTML||'';
-        return `<article class="tv-card ${courtStatusClass(v)}"><div class="tv-card-head"><div><strong>Gelanggang ${escapeHtml(c.id)}</strong><span class="tv-category">${c.kategori==='SM'?'SEKOLAH MENENGAH':'SEKOLAH RENDAH'}</span></div>${courtStatusBadge(v)}</div><div class="tv-scene" aria-label="Gelanggang ${escapeHtml(c.id)} 3D"></div>${score}<div class="tv-phase"><span>${m?escapeHtml(m.id):'—'}</span>${phase}</div></article>`;
+        return `<article class="tv-card ${courtStatusClass(v)}${goalFxActive(c.id)?' goal-fx':''}" data-court="${escapeHtml(c.id)}"><div class="tv-card-head"><div><strong>Gelanggang ${escapeHtml(c.id)}</strong><span class="tv-category">${c.kategori==='SM'?'SEKOLAH MENENGAH':'SEKOLAH RENDAH'}</span></div>${courtStatusBadge(v)}</div><div class="tv-scene" aria-label="Gelanggang ${escapeHtml(c.id)} 3D"></div>${score}<div class="tv-phase"><span>${m?escapeHtml(m.id):'—'}</span>${phase}</div></article>`;
       }).join('');
       try {window.drawProjectionCourts?.();}catch(e){console.warn('Paparan 3D tidak tersedia',e);}
       const info=document.querySelector('#liveBoard .live-board-head');
       const text=info?.innerText||'';
-      document.getElementById('tvUpdated').textContent=text.includes('Tiada')?'Menunggu data langsung':'Kemas kini automatik · 15 saat';
+      document.getElementById('tvUpdated').textContent=text.includes('Tiada')?'Menunggu data langsung':`Kemas kini automatik · ${Math.round(publicPollDelay()/1000)} saat`;
     }
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('projection-on'))setProjection(false);});
     window.addEventListener('resize',()=>{if(document.body.classList.contains('projection-on'))renderProjection();});

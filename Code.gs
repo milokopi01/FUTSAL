@@ -72,6 +72,14 @@
  *                - Keputusan DITOLAK mengosongkan "Disahkan Pengadil" supaya pengadil
  *                  perlu mengesahkan semula.
  *
+ *              + v1.9.0 - PAPAN LIVE PANTAS:
+ *                - GET ?action=live kini dibaca daripada CacheService (beberapa ratus ms)
+ *                  dan cache dibuang automatik selepas setiap doPost (sepak mula, gol, tamat).
+ *                - { action: 'kunciGelanggang', ..., mula: true } terus menanda perlawanan
+ *                  LIVE dalam panggilan yang sama -> dashboard memaparkan LIVE serta-merta.
+ *                - PENTING: selepas menampal fail ini, Deploy > Manage deployments >
+ *                  Edit > Version: New version > Deploy (URL kekal sama).
+ *
  *  Lajur dikesan melalui NAMA TAJUK (baris 1), jadi susunan lajur Bahagian 1
  *  boleh dikekalkan. Lajur yang tiada akan ditambah automatik di hujung.
  * =========================================================
@@ -89,9 +97,15 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.8.0';
+const API_VERSI = '1.9.0';
 const GILIRAN_MAX = 6;                     // bil. perlawanan seterusnya dipaparkan per gelanggang
-const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby'];
+const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus'];
+// v1.9.0: Papan live disimpan dalam CacheService supaya ?action=live sangat pantas
+// (paparan dashboard boleh disegerak setiap beberapa saat). Cache dibuang serta-merta
+// setiap kali ada penulisan (doPost), jadi data tidak pernah ketinggalan lebih ~1 tinjauan.
+const PAPAN_CACHE_KEY = 'PAPAN_LIVE_V19';
+const PAPAN_CACHE_VER = 'PAPAN_LIVE_VER';
+const PAPAN_CACHE_SAAT = 10;               // had maksimum umur cache (suntingan manual di Sheets)
 // FASA 6: log pengesahan keputusan oleh pengadil (tambah sahaja, tidak ditulis ganti)
 const SHEET_SAH_PENGADIL = 'Log_Sah_Pengadil';
 const SAH_PENGADIL_HEADER = ['Masa', 'ID Match', 'Gelanggang', 'Pasukan 1', 'Skor', 'Pasukan 2', 'Menang Penalti', 'Pengadil', 'ID Pengadil'];
@@ -238,7 +252,7 @@ function doGet(e) {
         sheetPengadil: SHEET_PENGADIL, masa: new Date().toISOString() }, p.callback);
     }
     if (action === 'live' || action === 'papanlive') {
-      return output_(papanLive_(), p.callback);
+      return output_(papanLiveCached_(), p.callback);
     }
     if (action === 'kunci' || action === 'statusgelanggang') {
       return output_({ ok: true, masa: new Date().toISOString(), basiSaat: KUNCI_BASI_SAAT, kunci: statusKunci_() }, p.callback);
@@ -355,6 +369,7 @@ function doPost(e) {
     console.error(err);
     return output_({ ok: false, error: String(err && err.message || err) });
   } finally {
+    bustPapanCache_();   // v1.9.0: dashboard terus nampak perubahan (sepak mula / gol / tamat)
     lock.releaseLock();
   }
 }
@@ -1054,9 +1069,27 @@ function kunciGelanggang_(body) {
   k.aktiviti = now.toISOString();
   tulisKunci_(db.sheet, k);
 
+  // v1.9.0: { mula: true } -> perlawanan terus ditanda LIVE dalam panggilan yang sama
+  // (dashboard nampak "LIVE" lebih cepat; tidak perlu menunggu panggilan skorLive kedua).
+  let dimulakan = false;
+  const mula = !perbaharui && (body.mula === true || body.mula === 'true');
+  if (mula && matchId && !k.rehat) {
+    const m = cariPerlawanan_(matchId);
+    if (m && String(m.status || '').toUpperCase() === 'MENUNGGU GILIRAN' &&
+        normGelanggang_(m.gelanggang) === g && !isNamaPlaceholder_(m.namaP1) && !isNamaPlaceholder_(m.namaP2)) {
+      upsertMatches_([{
+        id: matchId, gelanggang: g, status: 'LIVE', skorP1: 0, skorP2: 0, fasaMasa: 'Separuh 1',
+        masaMula: now.toISOString(), masaTamat: '', pengesahan: 'MENUNGGU', pemenangPenalti: '',
+        pengadil: ref.nama, catatan: ''
+      }], { abaikanKunci: true });
+      dimulakan = true;
+    }
+  }
+
   return {
     ok: true,
     gelanggang: g,
+    dimulakan: dimulakan,
     diperbaharui: sediaAda,
     diambilAlihDaripada: diambilAlihDaripada,
     kunci: statusKunci_(db)
@@ -1214,6 +1247,42 @@ function tangguhAdmin_(body) {
   logTangguh_({ gelanggang: g, matchId: id, pasukan: body.pasukan || '', pengadil: pengadilLama,
     sebab: body.sebab || '', tindakan: 'TANGGUH + LEPAS KUNCI', oleh: 'Master Admin' });
   return { ok: true, kunci: statusKunci_(db) };
+}
+
+// v1.9.0: papan live melalui CacheService. Versi cache dinaikkan setiap penulisan;
+// hasil binaan yang bermula sebelum penulisan tidak disimpan (elak data lama).
+function papanLiveCached_() {
+  let cache = null;
+  try { cache = CacheService.getScriptCache(); } catch (err) { cache = null; }
+  if (cache) {
+    try {
+      const hit = cache.get(PAPAN_CACHE_KEY);
+      if (hit) {
+        const data = JSON.parse(hit);
+        data.masa = new Date().toISOString();
+        data.cache = true;
+        return data;
+      }
+    } catch (err) { /* bina semula */ }
+  }
+  const verSebelum = cache ? (cache.get(PAPAN_CACHE_VER) || '') : '';
+  const data = papanLive_();
+  if (cache) {
+    try {
+      if ((cache.get(PAPAN_CACHE_VER) || '') === verSebelum) {
+        cache.put(PAPAN_CACHE_KEY, JSON.stringify(data), PAPAN_CACHE_SAAT);
+      }
+    } catch (err) { /* abaikan */ }
+  }
+  return data;
+}
+
+function bustPapanCache_() {
+  try {
+    const cache = CacheService.getScriptCache();
+    cache.put(PAPAN_CACHE_VER, String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8), 21600);
+    cache.remove(PAPAN_CACHE_KEY);
+  } catch (err) { /* abaikan */ }
 }
 
 // Papan live awam: perlawanan semasa setiap gelanggang + nama pengadil (tiada data sulit)
