@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbz2HLLHdIHQ7MMQX4nbFOtYykRNOugpldQto8sCiY_DSMLvemLpEEH8onoJ0VxZztNZ/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -1091,93 +1091,55 @@
 /* Paparan awam: empat gelanggang sejajar dengan empat lajur giliran. */
 :root { --tv-bg: oklch(.17 .012 240); --tv-panel: oklch(.23 .014 240); --tv-turf: #297b59; --tv-turf-alt: #358c68; --tv-base: #153f37; --tv-line: #f2f5fb; --tv-queue: oklch(.84 .15 85); }
 .tv-launch { margin-bottom:12px; }
-#projection { display:none; position:fixed; inset:0; z-index:9990; background:var(--tv-bg); color:var(--text-0); padding:10px; }
-body.projection-on {overflow:hidden;}
-body.projection-on #projection {display:grid;grid-template-rows:38px 180px minmax(0,1fr) 18px;gap:8px;}
-.tv-head {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;}
-.tv-head>div:first-child {min-width:0;}
-.tv-head h2 {font:800 18px var(--font-display);line-height:1.3;letter-spacing:0;}
-.tv-head p {font-size:10px;color:var(--text-1);}
-.tv-tools {display:flex;gap:6px;flex-shrink:0;}
-.tv-tools .btn {padding:6px 10px;min-height:32px;font-size:14px;}
-.tv-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-height:0;}
-.tv-card {display:grid;grid-template-rows:34px minmax(40px,1fr) 53px 18px;min-width:0;min-height:0;overflow:hidden;border:1px solid var(--glass-border-strong);border-top:2px solid var(--brand);border-radius:6px;background:var(--tv-panel);padding:5px 7px;}
-.tv-card-head {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px;}
-.tv-card-head>div {min-width:0;}
-.tv-card-head strong {display:block;font:800 12px var(--font-display);}
-.tv-category {display:block;font-size:8px;color:var(--text-1);}
-.tv-card .badge {font-size:7px;padding:3px 4px;white-space:normal;text-align:center;max-width:68px;letter-spacing:0;}
-.tv-scene {width:100%;min-height:0;overflow:hidden;touch-action:none;cursor:grab;}
-.tv-scene canvas {display:block;width:100%;height:100%;}
-.tv-card .scoreboard {padding:0;gap:4px;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);}
-.tv-card .team-code {display:none;}
-.tv-card .team-name {font-size:10px;line-height:1.3;overflow-wrap:anywhere;letter-spacing:0;}
-.tv-card .score-box {font-size:19px;padding:3px;gap:2px;justify-content:center;border-radius:4px;}
-.tv-card .sep {font-size:13px;}
-.tv-phase {font-size:9px;color:var(--text-1);display:flex;justify-content:space-between;gap:4px;}
-#projection .standby-board {margin:0;padding:0;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);gap:7px;border:0;}
-#projection .sb-head {display:grid;grid-template-columns:minmax(0,1fr) 205px;gap:10px;margin:0;align-items:center;}
-#projection .sb-head>div {min-width:0;}
-#projection .sb-eyebrow {font-size:9px;margin-bottom:1px;}
-#projection .sb-head h3 {font-size:16px;line-height:1.3;}
-#projection .sb-head p {font-size:10px;margin:2px 0 0;}
-#projection .sb-find {display:grid;grid-template-columns:1fr;gap:3px;width:auto;min-width:0;}
-#projection .sb-find>span {display:none;}
-#projection .sb-find input,#projection .sb-find select {padding:4px 7px;height:24px;font-size:10px;}
-#projection #sbResult:empty {display:none;}
-#projection #sbResult:not(:empty) {grid-row:2;}
-#projection:has(#sbResult:not(:empty)) .standby-board {grid-template-rows:auto auto minmax(0,1fr);}
-#projection .sb-result {margin:0;padding:5px 8px;font-size:11px;line-height:1.3;}
-#projection .sb-result small {font-size:10px;}
-#projection .sb-grid {grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-height:0;overflow:auto;align-items:stretch;}
-#projection .sb-card {animation:none;display:flex;flex-direction:column;border-radius:6px;}
-#projection .sb-card-top {gap:7px;padding:6px 8px;min-height:38px;}
-#projection .sb-court-letter {flex-basis:26px;height:26px;font-size:16px;border-radius:4px;}
-#projection .sb-card-top>div {min-width:0;}
-#projection .sb-card-top strong {font-size:12px;}
-#projection .sb-category {font-size:8px;margin-top:0;color:var(--text-1);}
-#projection .sb-stage {padding:7px 8px;}
-#projection .sb-stage-current {min-height:90px;}
-#projection .sb-standby {min-height:96px;}
-#projection .sb-label {font-size:8px;gap:4px;margin-bottom:4px;}
-#projection .sb-status-dot {width:5px;height:5px;}
-#projection .sb-match {font-size:11px;line-height:1.3;}
-#projection .sb-match-id {font-size:8px;margin-bottom:3px;}
-#projection .sb-versus {font-size:7px;margin:1px 0;}
-#projection .sb-tag,#projection .sb-hint {font-size:8px;margin-top:4px;}
-#projection .sb-empty,#projection .sb-match-note {font-size:9px;}
-#projection .sb-later-toggle {padding:5px 8px;font-size:9px;}
-#projection .sb-later {padding:0 8px 6px;gap:5px;}
-#projection .sb-later li {padding-top:5px;gap:4px;grid-template-columns:12px minmax(0,1fr);}
-#projection .sb-later .sb-team-name {display:inline;font-size:9px;}
-#projection .sb-later .sb-versus {display:inline;margin:0 3px;}
-#projection .sb-later .sb-match-id {display:inline;margin-right:4px;}
-#projection .sb-queue-number {font-size:9px;}
-.tv-foot {position:static!important;display:flex;justify-content:space-between;gap:8px;font-size:9px;color:var(--text-1);align-items:center;}
-@media(min-width:1100px) and (min-height:700px){
- body.projection-on #projection{grid-template-rows:50px minmax(230px,.8fr) minmax(410px,1.2fr) 24px;padding:16px;gap:12px;}
- .tv-grid,#projection .sb-grid{gap:12px;}.tv-head h2{font-size:24px;}.tv-head p{font-size:12px;}
- .tv-card{grid-template-rows:44px minmax(70px,1fr) 70px 24px;padding:8px 12px;}
- .tv-card-head strong{font-size:17px;}.tv-category{font-size:11px;}.tv-card .badge{font-size:10px;max-width:95px;}
- .tv-card .scoreboard{grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr);}.tv-card .team-name{font-size:15px;}.tv-card .score-box{font-size:29px;}.tv-phase{font-size:11px;}
- #projection .sb-head{grid-template-columns:minmax(0,1fr) 260px;}#projection .sb-head h3{font-size:22px;}#projection .sb-head p{font-size:12px;}
- #projection .sb-find input,#projection .sb-find select{height:30px;font-size:12px;}
- #projection .sb-card-top{padding:10px 12px;}#projection .sb-card-top strong{font-size:16px;}#projection .sb-category{font-size:10px;}
- #projection .sb-stage{padding:12px;}#projection .sb-stage-current{min-height:130px;}#projection .sb-standby{min-height:135px;}
- #projection .sb-label{font-size:10px;}#projection .sb-match{font-size:15px;}#projection .sb-tag,#projection .sb-hint{font-size:11px;}
- #projection .sb-later-toggle{font-size:12px;padding:9px 12px;}#projection .sb-later{padding:0 12px 10px;}
- #projection .sb-later .sb-team-name{font-size:12px;}#projection .sb-match-id,#projection .sb-empty{font-size:11px;}.tv-foot{font-size:11px;}
-}
-@media(max-width:600px){
- body.projection-on #projection{display:block;overflow:auto;}
- .tv-head{min-height:52px;margin-bottom:8px;}.tv-foot{margin-top:8px;}
- .tv-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:190px;}
- #projection .sb-head{grid-template-columns:minmax(0,1fr);gap:8px;}#projection .sb-find{grid-template-columns:repeat(2,minmax(0,1fr));}
- #projection .sb-grid{grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;}#projection .standby-board{display:block;}
- #projection .sb-head{margin:8px 0;}#projection .sb-stage-current{min-height:102px;}#projection .sb-standby{min-height:112px;}
- .tv-head h2{font-size:15px;}.tv-head p{font-size:9px;}.tv-foot{flex-wrap:wrap;font-size:8px;}
-}
-
+/* v1.14.3: Paparan projektor skrin penuh = susun atur "Simulasi Gelanggang Live"
+   (kad gelanggang + papan giliran), tanpa butang kawalan, diskala automatik muat skrin. */
+#projection { display:none; position:fixed; inset:0; z-index:9990; overflow:hidden; color:var(--text-0);
+  background:radial-gradient(1200px 600px at 15% -10%, rgba(46,230,166,.10), transparent 60%),
+             radial-gradient(1000px 600px at 100% 0%, rgba(56,189,248,.08), transparent 60%), var(--tv-bg); }
+body.projection-on { overflow:hidden; }
+body.projection-on #projection { display:block; }
+#projection.idle, #projection.idle * { cursor:none !important; }
+.proj-stage { position:absolute; top:0; left:0; width:1440px; padding:20px 24px 14px; display:flex; flex-direction:column; gap:16px;
+  transform-origin:0 0; will-change:transform; }
+.tv-head { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:20px; align-items:center; }
+.tv-brand { display:flex; align-items:center; gap:14px; min-width:0; }
+.tv-logo { flex:0 0 52px; height:52px; display:grid; place-items:center; font-size:30px; border-radius:14px;
+  background:linear-gradient(135deg, var(--brand), #38bdf8); box-shadow:0 0 24px rgba(46,230,166,.35); }
+.tv-brand > div { min-width:0; }
+.tv-head h2 { font:800 1.9rem/1.15 var(--font-display); letter-spacing:.01em; }
+.tv-head p { font-size:.95rem; color:var(--text-1); margin-top:3px; }
+.tv-live-count { font:800 1rem var(--font-display); padding:8px 16px; border-radius:999px; border:1px solid rgba(239,68,68,.5);
+  background:rgba(239,68,68,.12); color:#fecaca; white-space:nowrap; }
+.tv-live-count.zero { border-color:var(--glass-border-strong); background:rgba(255,255,255,.04); color:var(--text-1); }
+.tv-clock { font:800 2.4rem/1 var(--font-display); font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+#projection .proj-courts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:16px; }
+#projection .proj-slot { display:flex; min-width:0; }
+#projection .proj-slot > .court-card { flex:1; min-width:0; }
+#projection .court-controls { display:none !important; }
+#projection .court-head h3 { font-size:1.25rem; }
+#projection .court-head small { font-size:.8rem; }
+#projection .team-side .team-name { font-size:1.15rem; }
+#projection .score-box { font-size:2.8rem; }
+#projection .court-meta, #projection .court-next { font-size:.88rem; }
+#projection .pitch-overlay { font-size:1rem; }
+#projection .standby-board { margin:0; }
+#projection .sb-find, #projection #sbResult { display:none !important; }
+#projection .sb-head { grid-template-columns:minmax(0,1fr) !important; }
+#projection .sb-grid { grid-template-columns:repeat(4,minmax(0,1fr)) !important; }
+#projection .sb-card { animation:none; }
+#projection .sb-match { font-size:1.08rem; }
+.tv-foot { display:flex; justify-content:space-between; gap:12px; font-size:.85rem; color:var(--text-1); align-items:center; }
+.tv-dot { display:inline-block; width:9px; height:9px; border-radius:50%; vertical-align:middle; margin-right:4px; }
+.tv-dot-now { background:var(--brand); } .tv-dot-next { background:var(--tv-queue); }
+#tvUpdated.warn { color:#fda4af; }
+.tv-tools { position:fixed; top:12px; right:12px; z-index:9992; display:flex; gap:8px; transition:opacity .4s; }
+.tv-tools .btn { padding:8px 12px; min-height:38px; font-size:16px; background:rgba(15,23,42,.75); backdrop-filter:blur(6px); }
+.tv-fs-hint { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:9992; display:none; flex-direction:column; align-items:center; gap:2px;
+  padding:12px 22px; border-radius:14px; border:1px solid rgba(46,230,166,.5); background:rgba(15,23,42,.88); color:var(--text-0);
+  font:800 1rem var(--font-display); cursor:pointer; box-shadow:0 10px 30px rgba(0,0,0,.45); transition:opacity .4s; }
+.tv-fs-hint small { font:500 .75rem var(--font-body, inherit); color:var(--text-1); }
+#projection.need-fs .tv-fs-hint { display:flex; }
+#projection.idle .tv-tools, #projection.idle .tv-fs-hint { opacity:0; pointer-events:none; }
   </style>
   <style>
     /* ===== v1.9 SAMBUTAN GOL & SEPAK MULA ===== */
@@ -1287,12 +1249,29 @@ body.projection-on #projection {display:grid;grid-template-rows:38px 180px minma
     </div>
   </header>
 
-  <div id="projection" aria-label="Papan skor TV dan projektor">
-  <header class="tv-head"><div><h2>FUTSAL PK KBB 2026</h2><p>A &amp; B · Sekolah Menengah &nbsp; | &nbsp; C &amp; D · Sekolah Rendah</p></div><div class="tv-tools"><button class="btn" type="button" onclick="projectionFullscreen()" aria-label="Skrin penuh" title="Skrin penuh">⛶</button><button class="btn" type="button" onclick="setProjection(false)" aria-label="Tutup paparan projektor" title="Tutup paparan projektor">✕</button></div></header>
-  <div class="tv-grid" id="tvGrid"></div>
-  <div id="tvStandbySlot" style="display:contents"></div>
-  <footer class="tv-foot"><span>● SEMASA DI GELANGGANG &nbsp; · &nbsp; 🟡 SETERUSNYA: SILA BERSEDIA</span><span id="tvUpdated">Menunggu data langsung</span></footer>
-</div>
+  <div id="projection" aria-label="Paparan projektor skrin penuh">
+    <div class="proj-stage" id="projStage">
+      <header class="tv-head">
+        <div class="tv-brand">
+          <span class="tv-logo" aria-hidden="true">⚽</span>
+          <div>
+            <h2>Futsal Pendidikan Khas KBB 2026</h2>
+            <p>Peringkat Daerah Kulim Bandar Baharu · Gelanggang A &amp; B: Sekolah Menengah · C &amp; D: Sekolah Rendah</p>
+          </div>
+        </div>
+        <div class="tv-live-count" id="tvLiveCount"></div>
+        <div class="tv-clock" id="tvClock" aria-label="Masa sekarang">--:--</div>
+      </header>
+      <div class="proj-courts" id="tvGrid"></div>
+      <div id="tvStandbySlot"></div>
+      <footer class="tv-foot"><span><i class="tv-dot tv-dot-now"></i> Semasa di gelanggang &nbsp; · &nbsp; <i class="tv-dot tv-dot-next"></i> Seterusnya: sila bersedia</span><span id="tvUpdated">Menunggu data langsung</span></footer>
+    </div>
+    <div class="tv-tools">
+      <button class="btn" type="button" onclick="projectionFullscreen()" aria-label="Skrin penuh" title="Skrin penuh (F)">⛶</button>
+      <button class="btn" type="button" onclick="setProjection(false)" aria-label="Tutup paparan projektor" title="Tutup paparan projektor">✕</button>
+    </div>
+    <button class="tv-fs-hint" id="tvFsHint" type="button" onclick="projectionFullscreen()">⛶ Tekan di sini untuk skrin penuh <small>atau tekan kekunci F · klik dua kali di mana-mana</small></button>
+  </div>
 <main>
     <div class="container">
 
@@ -1324,7 +1303,7 @@ body.projection-on #projection {display:grid;grid-template-rows:38px 180px minma
         <!-- MEJA PENGADIL (Fasa 2): dipaparkan hanya selepas pengadil log masuk -->
         <div class="card glass ref-desk hidden" id="refDesk"></div>
 
-        <button type="button" class="btn btn-primary tv-launch" onclick="setProjection(true)">▣ Paparan TV / Projektor</button>
+        <button type="button" class="btn btn-primary tv-launch" onclick="setProjection(true, { fullscreen: true })">▣ Paparan Projektor (Skrin Penuh)</button>
         <div class="courts-grid" id="courtsGrid">
           <!-- Kad gelanggang A, B, C, D dijana oleh JavaScript (renderCourts) -->
         </div>
@@ -7541,6 +7520,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
             <div class="icon">🏟️</div>
             <p>Tiada gelanggang untuk kategori ini.</p>
           </div>`;
+        renderStandby();
+        renderProjection();
         return;
       }
 
@@ -7839,7 +7820,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           clearTimeout(livePushTimers[courtId]);
           delete livePushTimers[courtId];
           resit.payload = buildLivePayload(courtId, session.token, true, true);
-          pushLiveNow(courtId, { lepas: true, sahkan: true }).then(res => {
+          // v1.14.2: hantar SALINAN keputusan yang dibina sekarang. Dahulu payload dibina semula
+          // selepas gelanggang dikosongkan & diisi perlawanan seterusnya -> keputusan dihantar
+          // untuk perlawanan yang salah dan perlawanan tamat kekal LIVE di Google Sheets.
+          pushLiveNow(courtId, { lepas: true, sahkan: true, payload: resit.payload ? Object.assign({}, resit.payload) : null }).then(res => {
             if (state.ui.refResit !== resit) return;
             resit.hantar = res && res.ok ? 'ok' : 'gagal';
             if (res && res.ok) delete resit.payload;
@@ -8514,7 +8498,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         const c = getCourt(courtId);
         if (!c || c.pengadilId !== s.userId) return null;   // kunci telah dilepaskan
       }
-      const payload = buildLivePayload(courtId, s.token, lepas, extra && extra.sahkan);
+      const payload = (extra && 'payload' in extra)
+        ? (extra.payload ? Object.assign({}, extra.payload, { token: s.token }) : null)
+        : buildLivePayload(courtId, s.token, lepas, extra && extra.sahkan);
       if (!payload) return null;
       const res = await callGas(payload);
       if (res.ok) {
@@ -9353,8 +9339,28 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     const PUBLIC_POLL_MS = 3000;           // v1.9: dashboard disegerak setiap 3 saat
     const PUBLIC_POLL_REF_MS = 8000;       // telefon pengadil (jimat bateri & data)
     const PUBLIC_POLL_MAX_MS = 20000;      // had backoff bila rangkaian bermasalah
-    const PUBLIC_FETCH_TIMEOUT_MS = 10000; // permintaan tergantung dibatalkan
-    const publicLive = { data: null, lastOk: null, error: '', busy: false, sig: '', offsetMs: 0, fails: 0 };
+    const PUBLIC_FETCH_TIMEOUT_MS = 15000; // v1.14.3: permintaan tergantung dibatalkan (Apps Script kadang-kadang > 10 s)
+    const PUBLIC_WARN_AGE_S = 25;          // v1.14.3: amaran hanya jika data benar-benar lapuk
+    const publicLive = { data: null, lastOk: null, error: '', busy: false, busySince: 0, seq: 0, renderAt: 0, sig: '', offsetMs: 0, fails: 0 };
+    // v1.14.2: Google Sheets ialah sumber paparan. Data peranti ini hanya diutamakan seketika
+    // selepas tindakan di peranti ini (sebelum pelayan mengesahkannya) atau bila pelayan tidak dapat dihubungi.
+    const BOARD_LOCAL_GRACE_MS = 20000;   // tempoh data tempatan diutamakan selepas tindakan tempatan
+    const BOARD_SRV_FRESH_MS = 45000;     // data pelayan dianggap terkini jika diterima dalam tempoh ini
+    const PUBLIC_RERENDER_MS = 10000;     // paparan projektor / standby dilukis semula sekurang-kurangnya setiap 10 s
+    // v1.14.3: satu permintaan lambat bukan masalah (data terakhir masih dipaparkan).
+    // Amaran hanya bila gagal berturut-turut DAN data sudah lapuk.
+    function publicLiveAgeS() {
+      return publicLive.lastOk ? Math.round((Date.now() - new Date(publicLive.lastOk).getTime()) / 1000) : null;
+    }
+    function publicSyncWarn() {
+      if (!publicLive.error) return false;
+      const age = publicLiveAgeS();
+      return age === null ? publicLive.fails >= 2 : (publicLive.fails >= 2 && age > PUBLIC_WARN_AGE_S);
+    }
+    function publicLiveFresh() {
+      if (!publicLive.data || !publicLive.lastOk) return false;
+      return Date.now() - new Date(publicLive.lastOk).getTime() <= BOARD_SRV_FRESH_MS;
+    }
     let publicPollHandle = null;
     let publicVisHooked = false;
     let postponeCourtId = null;
@@ -9868,20 +9874,43 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     }
 
     // ---------- Papan Live Awam ----------
+    // v1.14.2: had masa keras (termasuk pelayar lama tanpa AbortController) & pemulihan
+    // permintaan tergantung -> skrin projektor tidak lagi berhenti dikemas kini.
+    function withTimeout(promise, ms, onTimeout) {
+      let t = null;
+      const timeout = new Promise((_, reject) => {
+        t = setTimeout(() => {
+          try { if (onTimeout) onTimeout(); } catch (e) { /* abaikan */ }
+          const err = new Error('Google Sheets lambat bertindak balas');
+          err.name = 'AbortError';
+          reject(err);
+        }, ms);
+      });
+      return Promise.race([promise, timeout]).then(v => { clearTimeout(t); return v; }, e => { clearTimeout(t); throw e; });
+    }
+
     async function fetchPublicLive() {
       const url = getGasUrl();
-      if (!url || publicLive.busy) return false;
-      if (!navigator.onLine) { publicLive.error = 'Luar talian'; renderLiveBoard(); return false; }
+      if (!url) return false;
+      // Permintaan sebelumnya tergantung terlalu lama -> abaikan & mulakan yang baharu
+      if (publicLive.busy && Date.now() - (publicLive.busySince || 0) < PUBLIC_FETCH_TIMEOUT_MS + 3000) return false;
+      if (!navigator.onLine) { publicLive.error = 'Luar talian'; renderLiveBoard(); updateProjectionStatus(); return false; }
+      const seq = (publicLive.seq || 0) + 1;
+      publicLive.seq = seq;
       publicLive.busy = true;
+      publicLive.busySince = Date.now();
       const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
-      const timer = ctrl ? setTimeout(() => ctrl.abort(), PUBLIC_FETCH_TIMEOUT_MS) : null;
       try {
         const sep = url.includes('?') ? '&' : '?';
-        const res = await fetch(`${url}${sep}action=live&_=${Date.now()}`, {
-          method: 'GET', redirect: 'follow', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined
-        });
+        const text = await withTimeout((async () => {
+          const res = await fetch(`${url}${sep}action=live&_=${Date.now()}`, {
+            method: 'GET', redirect: 'follow', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined
+          });
+          return res.text();
+        })(), PUBLIC_FETCH_TIMEOUT_MS, () => { if (ctrl) ctrl.abort(); });
+        if (seq !== publicLive.seq) return false;   // respons lama tiba selepas permintaan baharu
         let data = null;
-        try { data = JSON.parse(await res.text()); } catch (err) { data = null; }
+        try { data = JSON.parse(text); } catch (err) { data = null; }
         if (!data || !data.ok || !data.gelanggang) throw new Error((data && data.error) || 'Pastikan Code.gs Fasa 3 telah di-deploy.');
         // Beza jam peranti & pelayan (elak data tempatan "lebih baharu" kerana jam peranti laju)
         const srvMs = data.masa ? new Date(data.masa).getTime() : NaN;
@@ -9893,26 +9922,62 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         publicLive.lastOk = nowIso();
         publicLive.error = '';
         publicLive.fails = 0;
-        // Lukis semula kad gelanggang hanya bila data berubah (paparan 3D tidak berkelip)
-        if (changed) renderLiveViews(); else renderLiveBoard();
+        const healed = healStuckCourts();
+        // Lukis semula kad gelanggang bila data berubah. Paparan projektor & standby juga
+        // dilukis semula berkala supaya peraturan berasaskan masa sentiasa terpakai.
+        if (changed || healed) {
+          renderLiveViews();
+          publicLive.renderAt = Date.now();
+        } else {
+          renderLiveBoard();
+          if (Date.now() - (publicLive.renderAt || 0) > PUBLIC_RERENDER_MS) {
+            publicLive.renderAt = Date.now();
+            renderStandby();
+            renderProjection();
+          }
+        }
         return true;
       } catch (err) {
+        if (seq !== publicLive.seq) return false;
         publicLive.fails += 1;
         publicLive.error = err && err.name === 'AbortError'
           ? 'Google Sheets lambat bertindak balas'
           : ((err && err.message) || 'ralat rangkaian');
         renderLiveBoard();
+        updateProjectionStatus();
         return false;
       } finally {
-        if (timer) clearTimeout(timer);
-        publicLive.busy = false;
+        if (seq === publicLive.seq) publicLive.busy = false;
       }
+    }
+
+    // v1.14.2: Gelanggang yang tersekat "Tamat · Tunggu Sah" dalam data peranti ini (cth. data
+    // lama dalam storan pelayar) dikosongkan bila Google Sheets boleh dihubungi. Keputusan
+    // perlawanan KEKAL dalam Peti Kelulusan Urusetia - hanya paparan gelanggang dibebaskan.
+    function healStuckCourts() {
+      if (!getGasUrl() || !publicLiveFresh()) return false;
+      const s = getSession();
+      let changed = false;
+      state.courts.forEach(c => {
+        if (c.status !== COURT_STATUS.TAMAT) return;
+        if (s && s.peranan === 'PENGADIL' && c.pengadilId === s.userId) return;
+        const t = c.kemaskiniTerakhir ? new Date(c.kemaskiniTerakhir).getTime() : 0;
+        if (t && Date.now() - t < BOARD_LOCAL_GRACE_MS) return;
+        resetCourt(c);
+        autoAssignCourts(c.id, { silent: true });
+        changed = true;
+      });
+      if (changed) saveState();
+      return changed;
     }
 
     function publicPollDelay() {
       const s = getSession();
       const base = s && s.peranan === 'PENGADIL' ? PUBLIC_POLL_REF_MS : PUBLIC_POLL_MS;
-      return publicLive.fails ? Math.min(PUBLIC_POLL_MAX_MS, base * Math.pow(2, Math.min(publicLive.fails, 3))) : base;
+      if (!publicLive.fails) return base;
+      // Projektor: cuba semula cepat (data paparan utama); peranti lain: backoff biasa
+      if (document.body.classList.contains('projection-on')) return Math.min(8000, base * (1 + publicLive.fails));
+      return Math.min(PUBLIC_POLL_MAX_MS, base * Math.pow(2, Math.min(publicLive.fails, 3)));
     }
 
     function schedulePublicPoll() {
@@ -9962,12 +10027,39 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         kemaskini: court.kemaskiniTerakhir || null
       };
       const srv = publicLive.data && publicLive.data[court.id];
-      if (!srv || !srv.matchId) return local;
+      if (!srv) return local;
       const s = getSession();
       const iControl = s && s.peranan === 'PENGADIL' && court.pengadilId === s.userId;
+      if (iControl) return local;   // pengadil pemegang kunci: data sendiri sentiasa paling tepat
+      const fresh = publicLiveFresh();
       const srvTime = srv.kemaskini ? new Date(srv.kemaskini).getTime() : 0;
       const locTime = local.kemaskini ? new Date(local.kemaskini).getTime() : 0;
-      if (iControl || (locTime && locTime + (publicLive.offsetMs || 0) > srvTime + 2000)) return local;
+      const localNewer = !!locTime && locTime + (publicLive.offsetMs || 0) > (srvTime || 0) + 2000;
+      const localRecent = !!locTime && Date.now() - locTime < BOARD_LOCAL_GRACE_MS;
+      const localBusy = local.live || local.done || local.rehat;
+      // Tindakan sebenar di peranti ini (bukan sekadar susunan automatik gelanggang kosong)
+      const localAct = localBusy || local.ditangguh;
+
+      // v1.14.2: Pelayan menyatakan gelanggang KOSONG (tiada perlawanan LIVE / ditangguh).
+      // Dahulu data tempatan sentiasa dipakai di sini -> projektor tersekat pada keputusan lama.
+      if (!srv.matchId) {
+        if (!fresh || (localBusy && localRecent)) return local;
+        return {
+          source: 'server', idle: true, matchId: null, namaP1: '', namaP2: '', skorP1: null, skorP2: null,
+          live: false, done: false, ditangguh: false, sebab: '', fasa: '', masaMula: null, fasaMulaPada: null,
+          pengadil: srv.pengadil || '', pengadilBasi: false, rehat: false, rehatSebab: '', rehatPada: null,
+          kemaskini: null
+        };
+      }
+      // Perlawanan sama: data tempatan dipakai hanya jika ia lebih baharu DAN baru berlaku
+      // (atau pelayan tidak dapat dihubungi). Perlawanan berbeza: pelayan sentiasa menang bila terkini.
+      const sameMatch = !!local.matchId && local.matchId === srv.matchId;
+      if (fresh) {
+        if (sameMatch && localAct && localNewer && localRecent) return local;
+        if (!sameMatch && localBusy && localRecent && localNewer) return local;
+      } else if (localNewer) {
+        return local;
+      }
       const st = boardStatusUpper(srv.status);
       return {
         source: 'server',
@@ -10007,8 +10099,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const url = getGasUrl();
       const syncText = !url
         ? 'Paparan peranti ini sahaja'
-        : publicLive.error
-          ? `⚠ Gagal segerak: ${publicLive.error}`
+        : publicSyncWarn()
+          ? `⚠ Sambungan ke Google Sheets perlahan (${publicLive.error}) · mencuba semula automatik`
           : publicLive.lastOk ? `⚡ Disegerak automatik setiap ${Math.round(publicPollDelay() / 1000)} saat · terakhir ${formatTime(publicLive.lastOk)}` : '🔄 Menyegerak...';
 
       detectLiveEvents(entries);   // v1.9: sepak mula -> wisel, gol -> sambutan 5 saat + alarm
@@ -10305,9 +10397,22 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       let source = 'local';
 
       if (e.source === 'server') {
-        const srvIdle = !e.live && !e.rehat && !e.done && !e.ditangguh &&
-          boardStatusUpper(srv && srv.status) === 'SELESAI';
-        if (!srvIdle) {
+        const srvIdle = !!e.idle || (!e.live && !e.rehat && !e.done && !e.ditangguh &&
+          boardStatusUpper(srv && srv.status) === 'SELESAI');
+        if (srvIdle && court.status !== COURT_STATUS.SEDIA) {
+          // v1.14.2: data peranti ini masih LIVE / TAMAT tetapi Google Sheets menyatakan gelanggang
+          // kosong -> paparkan perlawanan seterusnya (bukan keputusan lama yang tersekat).
+          const q = (srvQueue && srvQueue.length) ? srvQueue : localCourtQueue(court.id, null);
+          const first = q[0] || null;
+          source = 'server';
+          match = first;
+          Object.assign(v, {
+            matchSemasa: first ? first.id : null, status: COURT_STATUS.SEDIA,
+            skorLiveP1: 0, skorLiveP2: 0, ditangguh: null, rehat: null,
+            pengadil: e.pengadil || null, pengadilId: e.pengadil ? (court.pengadilId || 'SRV') : null,
+            kunciBasi: false, fasaMasa: 'SEDIA', fasaMulaPada: null, masaMula: null
+          });
+        } else if (!srvIdle) {
           source = 'server';
           match = srvMatchLike({ id: e.matchId, namaP1: e.namaP1, namaP2: e.namaP2 });
           Object.assign(v, {
@@ -12877,65 +12982,132 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
        4.8 PERMULAAN APLIKASI & SERVICE WORKER
        --------------------------------------------------------- */
 
-    function setProjection(on) {
+    // v1.14.3: Paparan projektor skrin penuh.
+    //  - Susun atur sama seperti tab "Simulasi Gelanggang Live" (kad gelanggang + papan giliran),
+    //    tanpa butang kawalan & carian.
+    //  - Diskala automatik supaya SEMUA kandungan muat satu skrin (tiada tatal), apa jua resolusi.
+    //  - Kad dikemas kini di tempat (hanya kad yang berubah dilukis semula) -> tiada kelipan.
+    //  - Kursor & butang disembunyikan selepas 3 saat tanpa pergerakan tetikus.
+    function projectionOn(){return document.body.classList.contains('projection-on');}
+    function setProjection(on, opts = {}) {
       document.body.classList.toggle('projection-on',on);
       const board=document.getElementById('standbyBoard');
       if(on) document.getElementById('tvStandbySlot').appendChild(board);
       else document.getElementById('standbyHome').after(board);
-      if(on) { renderProjection({rebuild:true}); fetchPublicLive(); }
-      else {disposeTvScenes();const g=document.getElementById('tvGrid');g.innerHTML='';delete g.dataset.courts;}
+      const g=document.getElementById('tvGrid');
+      if(on) {
+        renderStandby(); renderProjection({rebuild:true}); fetchPublicLive(); updateProjectionChrome(); projectionPoke();
+        fitProjection(true);
+        if(opts.fullscreen) projectionFullscreen({ silent:true });
+      } else {
+        disposeTvScenes(); g.innerHTML=''; delete g.dataset.courts;
+        if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+      }
       updateProjectionWakeLock();
       const url=new URL(location.href);if(on)url.searchParams.set('display','projector');else url.searchParams.delete('display');history.replaceState(null,'',url);
     }
-    async function projectionFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch(e){showToast('Sila gunakan skrin penuh pelayar (F11).','info');}}
-    // v1.9.1: Paparan projektor dikemas kini DI TEMPAT (skor, status, fasa) tanpa membina
-    // semula 4 adegan 3D setiap kali data berubah. Dahulu setiap kemas kini mencipta 4 konteks
-    // WebGL baharu (tidak pernah dilepaskan) -> pelayar menjadi berat / tersekat dan skrin
-    // projektor berhenti dikemas kini selepas beberapa lama.
+    async function projectionFullscreen(opts = {}){
+      try{
+        if(document.fullscreenElement)await document.exitFullscreen();
+        else await document.documentElement.requestFullscreen({ navigationUI:'hide' });
+      }catch(e){ if(!opts.silent) showToast('Sila tekan F11 untuk skrin penuh.','info'); }
+      updateProjectionChrome();
+    }
     let projWakeLock = null;
     function disposeTvScenes(){
       document.querySelectorAll('.tv-scene').forEach(h=>{try{h._dispose?.();}catch(e){}});
     }
     function renderProjection(opts = {}){
-      if(!document.body.classList.contains('projection-on'))return;
+      if(!projectionOn())return;
       const grid=document.getElementById('tvGrid');
       if(!grid)return;
       const ids=state.courts.map(c=>c.id).join(',');
-      if(opts.rebuild || grid.dataset.courts!==ids || !grid.querySelector('.tv-card')){
-        disposeTvScenes();
-        grid.innerHTML=state.courts.map(c=>`<article class="tv-card" data-court="${escapeHtml(c.id)}"><div class="tv-card-head"></div><div class="tv-scene" aria-label="Gelanggang ${escapeHtml(c.id)} 3D"></div><div class="scoreboard"></div><div class="tv-phase"></div></article>`).join('');
+      if(opts.rebuild || grid.dataset.courts!==ids || !grid.querySelector('.proj-slot')){
+        grid.innerHTML=state.courts.map(c=>`<div class="proj-slot" data-slot="${escapeHtml(c.id)}"></div>`).join('');
         grid.dataset.courts=ids;
-        try {window.drawProjectionCourts?.();}catch(e){console.warn('Paparan 3D tidak tersedia',e);}
       }
-      const swap=(card,sel,html)=>{const el=card.querySelector(sel);if(el&&html&&el.outerHTML!==html)el.outerHTML=html;};
+      let live=0;
       state.courts.forEach(c=>{
-        const card=grid.querySelector(`.tv-card[data-court="${c.id}"]`);
-        if(!card)return;
-        const d=courtDisplay(c),v=d.v,m=d.match;
-        const temp=document.createElement('div');temp.innerHTML=renderCourtCard(c);
-        const score=temp.querySelector('.scoreboard')?.outerHTML||'';
-        const phase=temp.querySelector('.court-meta')?.lastElementChild?.outerHTML||'';
-        const cls=`tv-card ${courtStatusClass(v)}${goalFxActive(c.id)?' goal-fx':''}`;
-        if(card.className!==cls)card.className=cls;
-        swap(card,'.tv-card-head',`<div class="tv-card-head"><div><strong>Gelanggang ${escapeHtml(c.id)}</strong><span class="tv-category">${c.kategori==='SM'?'SEKOLAH MENENGAH':'SEKOLAH RENDAH'}</span></div>${courtStatusBadge(v)}</div>`);
-        swap(card,'.scoreboard',score);
-        swap(card,'.tv-phase',`<div class="tv-phase"><span>${m?escapeHtml(m.id):'—'}</span>${phase}</div>`);
+        const slot=grid.querySelector(`.proj-slot[data-slot="${c.id}"]`);
+        if(!slot)return;
+        const html=renderCourtCard(c);
+        if(slot._html!==html){ slot.innerHTML=html; slot._html=html; }
+        const v=courtDisplay(c).v;
+        if(v.status===COURT_STATUS.LIVE && !isCourtPaused(v)) live+=1;
       });
+      const lc=document.getElementById('tvLiveCount');
+      if(lc){ const t=live?`🔴 ${live} LIVE`:'Tiada perlawanan live'; if(lc.textContent!==t)lc.textContent=t; lc.classList.toggle('zero',!live); }
       updateCourtTimers();
       updateProjectionStatus();
+      scheduleProjFit();
     }
-    // Status penyegerakan di kaki paparan projektor (merah jika data lapuk)
+    // ---- Skala automatik muat skrin ----
+    const PROJ_WIDTHS=[1280,1440,1600,1760,1920];
+    let projW=1440, projScale=0, projFitRaf=0;
+    function scheduleProjFit(full){
+      if(projFitRaf)cancelAnimationFrame(projFitRaf);
+      projFitRaf=requestAnimationFrame(()=>{projFitRaf=0;fitProjection(!!full);});
+    }
+    function fitProjection(full){
+      const st=document.getElementById('projStage');
+      if(!st||!projectionOn())return;
+      const vw=window.innerWidth||1280, vh=window.innerHeight||720;
+      const tinggi=w=>{st.style.width=w+'px';return st.scrollHeight||1;};
+      if(full||!projScale){
+        // Pilih lebar susun atur yang memberikan tulisan paling besar tetapi muat sepenuhnya
+        let best=null;
+        PROJ_WIDTHS.forEach(w=>{const sc=Math.min(vw/w, vh/tinggi(w)); if(!best||sc>best.sc+0.005)best={w,sc};});
+        projW=best.w; projScale=0;
+      }
+      const h=tinggi(projW);
+      const sc=Math.min(vw/projW, vh/h);
+      // Elak "bernafas": hanya kecilkan bila perlu, besarkan bila beza ketara
+      if(!projScale || sc<projScale-0.0005 || sc>projScale*1.03) projScale=sc;
+      const x=Math.max(0,(vw-projW*projScale)/2), y=Math.max(0,(vh-h*projScale)/2);
+      st.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${projScale.toFixed(4)})`;
+    }
+    // ---- Jam, kursor & cadangan skrin penuh ----
+    let projIdleT=null;
+    function projectionPoke(){
+      const el=document.getElementById('projection'); if(!el)return;
+      el.classList.remove('idle');
+      clearTimeout(projIdleT);
+      projIdleT=setTimeout(()=>{ if(projectionOn()) el.classList.add('idle'); },3000);
+    }
+    function updateProjectionChrome(){
+      const el=document.getElementById('projection'); if(!el)return;
+      el.classList.toggle('need-fs', projectionOn() && !document.fullscreenElement && !!document.documentElement.requestFullscreen);
+      const clk=document.getElementById('tvClock');
+      if(clk){ const t=new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit',hour12:false}); if(clk.textContent!==t)clk.textContent=t; }
+    }
+    (function bindProjectionChrome(){
+      const el=document.getElementById('projection'); if(!el)return;
+      ['mousemove','mousedown','touchstart'].forEach(ev=>el.addEventListener(ev,projectionPoke,{passive:true}));
+      el.addEventListener('dblclick',e=>{ if(!e.target.closest('button,a,select,input,summary'))projectionFullscreen(); });
+      document.addEventListener('fullscreenchange',()=>{ updateProjectionChrome(); scheduleProjFit(true); });
+      document.addEventListener('keydown',e=>{
+        if(!projectionOn()||e.ctrlKey||e.metaKey||e.altKey)return;
+        if(e.key==='f'||e.key==='F'){ e.preventDefault(); projectionFullscreen(); }
+      });
+      if(window.ResizeObserver){
+        // Tinggi kandungan berubah (cth. nama pasukan panjang) -> skala semula
+        let lastH=0;
+        new ResizeObserver(()=>{ const st=document.getElementById('projStage'); if(!st||!projectionOn())return;
+          const h=st.scrollHeight; if(Math.abs(h-lastH)>2){ lastH=h; scheduleProjFit(false); } }).observe(document.getElementById('projStage'));
+      }
+    })();
+    // Status penyegerakan di kaki paparan projektor (merah hanya jika data benar-benar lapuk)
     function updateProjectionStatus(){
       const el=document.getElementById('tvUpdated');
-      if(!el||!document.body.classList.contains('projection-on'))return;
-      if(!getGasUrl()){el.textContent='Paparan peranti ini sahaja';el.style.color='';return;}
+      if(!el||!projectionOn())return;
+      if(!getGasUrl()){el.textContent='Paparan peranti ini sahaja';el.classList.remove('warn');return;}
       const last=publicLive.lastOk?new Date(publicLive.lastOk).getTime():0;
       const age=last?Math.round((Date.now()-last)/1000):null;
-      const stale=age===null||age>20;
-      el.textContent=publicLive.error&&stale
-        ? `⚠ Gagal segerak (${publicLive.error}) · cuba semula automatik`
-        : last?`⚡ Live · dikemas kini ${age<=3?'baru tadi':age+' saat lalu'} · ${formatTime(publicLive.lastOk)}`:'Menyambung ke Google Sheets...';
-      el.style.color=stale&&last?'#fda4af':'';
+      const warn=publicSyncWarn();
+      el.textContent=warn
+        ? `⚠ Sambungan perlahan · data ${age!==null?age+' saat lalu':'belum diterima'} · mencuba semula automatik`
+        : last?`⚡ Live · dikemas kini ${age<=5?'baru tadi':age+' saat lalu'} · ${formatTime(publicLive.lastOk)}`:'Menyambung ke Google Sheets...';
+      el.classList.toggle('warn',warn);
     }
     async function updateProjectionWakeLock(){
       const want=document.body.classList.contains('projection-on')&&!document.hidden;
@@ -12950,8 +13122,11 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     setInterval(()=>{
       if(!document.body.classList.contains('projection-on'))return;
       updateProjectionStatus();
+      updateProjectionChrome();
       const last=publicLive.lastOk?new Date(publicLive.lastOk).getTime():0;
-      if(getGasUrl()&&!publicLive.busy&&Date.now()-last>8000)fetchPublicLive();
+      // v1.14.2: fetchPublicLive sendiri memulihkan permintaan yang tergantung
+      if(getGasUrl()&&Date.now()-last>8000)fetchPublicLive();
+      if(Date.now()-(publicLive.renderAt||0)>PUBLIC_RERENDER_MS){publicLive.renderAt=Date.now();renderProjection();}
     },2000);
     document.addEventListener('visibilitychange',updateProjectionWakeLock);
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('projection-on'))setProjection(false);});
@@ -12959,7 +13134,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     window.addEventListener('resize',()=>{
       if(!document.body.classList.contains('projection-on'))return;
       clearTimeout(projResizeT);
-      projResizeT=setTimeout(()=>renderProjection({rebuild:true}),250);
+      projResizeT=setTimeout(()=>fitProjection(true),150);
     });
 
     function initApp() {
