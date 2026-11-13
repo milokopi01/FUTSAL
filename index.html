@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbzIeiLf42lxcQKyLxpqPtZef0W70o6tW-7LUN-JZUmOoMlMMsn21ubeVyzCWTUbapFm/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -13306,8 +13306,15 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     function initApp() {
       applyGasUrlFromLink();   // FASA 4.1
       bindEvents();
+      // v1.14.7: halaman hadapan SENTIASA "Simulasi Gelanggang Live" setiap kali pautan dibuka.
+      // Tab terakhir yang disimpan dalam peranti diabaikan; hanya pautan yang menyatakan
+      // tab secara jelas (cth. index.html#tab-standings) akan membuka tab lain.
       const hashTab = location.hash.replace('#', '');
-      if (hashTab && document.getElementById(hashTab) && canViewTab(hashTab)) state.ui.activeTab = hashTab;
+      state.ui.activeTab = (hashTab && document.getElementById(hashTab) && canViewTab(hashTab)) ? hashTab : 'tab-live';
+      setActiveTab(state.ui.activeTab);
+      if (state.ui.activeTab === 'tab-live' && hashTab && history.replaceState) {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
       autoAssignCourts(null, { silent: true });
       switchEvent(state.ui.kategori || 'SEMUA');
       renderAll();
