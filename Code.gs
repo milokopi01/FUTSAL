@@ -120,7 +120,7 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.9.5';
+const API_VERSI = '1.9.6';
 const GILIRAN_MAX = 6;                     // bil. perlawanan seterusnya dipaparkan per gelanggang
 const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus', 'papanPintar', 'keputusanLewat', 'papanSegera'];
 // v1.9.0: Papan live disimpan dalam CacheService supaya ?action=live sangat pantas
@@ -402,6 +402,7 @@ function doPost(e) {
       ditambah: result.inserted,
       ditolak: result.skipped,
       dilindungi: result.protectedRows,   // perlawanan dikunci pengadil (markah tidak ditulis ganti)
+      idDilindungi: result.idDilindungi || [],   // v1.9.6: ID yang tidak ditulis (peranti kembalikan ke Peti Kelulusan)
       dimuktamad: result.finalRows,       // keputusan DISAHKAN yang cuba diubah tanpa kunci Master Admin
       lapuk: result.staleRows,            // data peranti lama (versi pembetulan tidak sepadan)
       masa: new Date().toISOString()
@@ -436,6 +437,7 @@ function upsertMatches_(list, opts) {
 
   const now = new Date();
   let updated = 0, inserted = 0, skipped = 0, protectedRows = 0, finalRows = 0, staleRows = 0;
+  const idDilindungi = [];   // v1.9.6: ID perlawanan yang tidak ditulis kerana dikunci pengadil
   const barisBerubah = {};   // v1.9.3: indeks baris yang disentuh
 
   list.forEach(function (m) {
@@ -491,7 +493,7 @@ function upsertMatches_(list, opts) {
     if (admin && m.versiPembetulan !== undefined && colOf.versiPembetulan !== undefined) {
       row[colOf.versiPembetulan] = String(m.versiPembetulan || '').slice(0, 60);
     }
-    if (dilindungi) protectedRows++;
+    if (dilindungi) { protectedRows++; idDilindungi.push(id); }
     if (ditolakMuktamad) finalRows++;
     if (ditolakLapuk) staleRows++;
     row[colOf.kemaskini] = now;
@@ -508,14 +510,14 @@ function upsertMatches_(list, opts) {
       }
       sheet.getRange(i + 1, 1, 1, width).setValues([values[i]]);
     });
-    return { updated: updated, inserted: inserted, skipped: skipped, protectedRows: protectedRows, finalRows: finalRows, staleRows: staleRows };
+    return { updated: updated, inserted: inserted, skipped: skipped, protectedRows: protectedRows, finalRows: finalRows, staleRows: staleRows, idDilindungi: idDilindungi };
   }
   if (colOf.versiPembetulan !== undefined) {
     sheet.getRange(1, colOf.versiPembetulan + 1, values.length, 1).setNumberFormat('@');
   }
   sheet.getRange(1, 1, values.length, width).setValues(values);
   formatDateColumns_(sheet, colOf, values.length);
-  return { updated: updated, inserted: inserted, skipped: skipped, protectedRows: protectedRows, finalRows: finalRows, staleRows: staleRows };
+  return { updated: updated, inserted: inserted, skipped: skipped, protectedRows: protectedRows, finalRows: finalRows, staleRows: staleRows, idDilindungi: idDilindungi };
 }
 
 // Baris perlawanan telah DISAHKAN (SELESAI) -> keputusan muktamad
