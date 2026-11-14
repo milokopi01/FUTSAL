@@ -10078,6 +10078,70 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return true;
     }
 
+    // v1.16.1: TELEFON PENGADIL / PAPARAN AWAM - giliran gelanggang ikut Google Sheets.
+    // Peranti pengadil tidak membaca jadual penuh (?action=read), jadi status perlawanan
+    // tempatan boleh menjadi lapuk (cth: perlawanan pernah dimulakan / ditangguh / dibatalkan
+    // di peranti lain). Akibatnya gelanggang melangkau perlawanan yang masih belum dimain
+    // (cth: Gelanggang C terus ke SR-22 walaupun SR-18 belum dimain).
+    // Papan live (?action=live) memulangkan giliran sebenar setiap gelanggang -> gunakannya
+    // sebagai sumber sah bagi peranti yang BUKAN Urusetia / Master Admin.
+    function syncQueueFromBoard() {
+      try {
+        if (canApprove()) return false;   // Urusetia / Master Admin guna jadual penuh daripada Google Sheets
+      } catch (e) { return false; }
+      if (!publicLive.data || !publicLiveFresh()) return false;
+      const s = getSession();
+      const me = s && s.peranan === 'PENGADIL' ? s.userId : null;
+      const builtMs = Number(publicLive.builtMs) || 0;
+      const offset = Number(publicLive.offsetMs) || 0;
+      const heldIds = new Set(state.courts.filter(c => me && c.pengadilId === me).map(c => c.matchSemasa).filter(Boolean));
+      const resit = state.ui && state.ui.refResit;
+      if (resit && resit.matchId) heldIds.add(resit.matchId);
+      const localMs = m => Math.max(0, ...[m.masaTamat, m.masaMula, m.disahkanPada]
+        .map(v => (v ? new Date(v).getTime() : 0)).filter(Number.isFinite));
+      let changed = false;
+
+      state.courts.forEach(c => {
+        const srv = publicLive.data[c.id];
+        if (!srv || !Array.isArray(srv.giliran)) return;
+        // 1) Perlawanan dalam giliran pelayan = masih MENUNGGU GILIRAN di Google Sheets
+        srv.giliran.forEach(g => {
+          const m = getMatch(String(g.id || '').toUpperCase());
+          if (!m || heldIds.has(m.id)) return;
+          if (m.status !== MATCH_STATUS.MENUNGGU) {
+            // Jangan batalkan tindakan tempatan yang belum sempat sampai ke papan pelayan
+            const t = localMs(m);
+            if (t && builtMs && t + offset > builtMs - 60000) return;
+            Object.assign(m, {
+              status: MATCH_STATUS.MENUNGGU, skorP1: null, skorP2: null, pengesahan: 'MENUNGGU',
+              pemenangPenalti: null, masaMula: null, masaTamat: null, disahkanOleh: null, disahkanPada: null,
+              sahPengadil: null, sahPengadilId: null, sahPengadilPada: null, dipulihkan: false
+            });
+            changed = true;
+          }
+          if (m.gelanggang !== c.id) { m.gelanggang = c.id; changed = true; }
+          if (g.namaP1 && m.namaP1 !== g.namaP1) { m.namaP1 = g.namaP1; changed = true; }
+          if (g.namaP2 && m.namaP2 !== g.namaP2) { m.namaP2 = g.namaP2; changed = true; }
+        });
+        // 2) Gelanggang kosong di Google Sheets -> perlawanan semasa = giliran pertama pelayan
+        if (srv.matchId) return;
+        if (me && c.pengadilId === me) return;
+        if (c.status !== COURT_STATUS.SEDIA || isCourtPaused(c)) return;
+        if (c.kemaskiniTerakhir && Date.now() - new Date(c.kemaskiniTerakhir).getTime() < BOARD_LOCAL_GRACE_MS) return;
+        const first = srv.giliran[0] ? getMatch(String(srv.giliran[0].id || '').toUpperCase()) : null;
+        const want = first && first.status === MATCH_STATUS.MENUNGGU ? first.id : null;
+        if (want && c.matchSemasa !== want) {
+          state.courts.forEach(o => { if (o !== c && o.matchSemasa === want && o.status === COURT_STATUS.SEDIA) o.matchSemasa = null; });
+          c.matchSemasa = want;
+          const nxt = srv.giliran[1] ? String(srv.giliran[1].id || '').toUpperCase() : null;
+          c.matchSeterusnya = nxt && getMatch(nxt) ? nxt : null;
+          changed = true;
+        }
+      });
+      if (changed) saveState();
+      return changed;
+    }
+
     async function fetchPublicLive() {
       const url = getGasUrl();
       if (!url) return false;
@@ -10120,11 +10184,14 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         publicLive.lastOk = nowIso();
         publicLive.error = '';
         publicLive.fails = 0;
+        publicLive.builtMs = Number.isFinite(built) && built > 0 ? built : (Number.isFinite(srvMs) ? srvMs : Date.now());
         const restoredCourt = restoreOwnedCourtFromLive();
+        const queueSynced = syncQueueFromBoard();
         const healed = healStuckCourts();
         // Lukis semula kad gelanggang bila data berubah. Paparan projektor & standby juga
         // dilukis semula berkala supaya peraturan berasaskan masa sentiasa terpakai.
-        if (changed || healed || restoredCourt) {
+        if (queueSynced) { refreshAllViews(); publicLive.renderAt = Date.now(); }
+        else if (changed || healed || restoredCourt) {
           renderLiveViews();
           publicLive.renderAt = Date.now();
         } else {
