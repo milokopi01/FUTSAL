@@ -74,6 +74,14 @@ Amaran ini ialah arahan penyelenggaraan untuk AI, bukan kod yang boleh menerbitk
  *                - Lajur ini hanya boleh ditulis melalui skorLive (pengadil) atau Master Admin.
  *                  Tangguh perlawanan mengosongkan pengesahan.
  *
+ *              + v1.9.8 - BACKUP & RESTORE (MASTER ADMIN SAHAJA, tab Sandaran_Data):
+ *                { action: 'simpanSandaran', adminKey, catatan, oleh, data: '<JSON>' }
+ *                { action: 'senaraiSandaran', adminKey }
+ *                { action: 'ambilSandaran', adminKey, id }
+ *                { action: 'padamSandaran', adminKey, id }
+ *                - Data aplikasi penuh disimpan dalam beberapa sel (had 50,000 aksara/sel).
+ *                - 20 sandaran terkini disimpan; yang paling lama dipadam automatik.
+ *
  *              + FASA 7 - PETI KELULUSAN URUSETIA / MASTER ADMIN:
  *                - Peranti Urusetia / Master Admin membaca GET ?action=read setiap 15 saat
  *                  supaya keputusan "TAMAT - TUNGGU SAH" daripada telefon pengadil muncul
@@ -132,9 +140,9 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.9.7';
+const API_VERSI = '1.9.8';   // v1.9.8: Backup & Restore (tab Sandaran_Data)
 const GILIRAN_MAX = 6;                     // bil. perlawanan seterusnya dipaparkan per gelanggang
-const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus', 'papanPintar', 'keputusanLewat', 'papanSegera'];
+const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus', 'papanPintar', 'keputusanLewat', 'papanSegera', 'sandaran'];
 // v1.9.0: Papan live disimpan dalam CacheService supaya ?action=live sangat pantas
 // (paparan dashboard boleh disegerak setiap beberapa saat). Cache dibuang serta-merta
 // setiap kali ada penulisan (doPost), jadi data tidak pernah ketinggalan lebih ~1 tinjauan.
@@ -146,7 +154,8 @@ const UPSERT_TULIS_BARIS_MAX = 6;          // v1.9.3: <= 6 baris berubah -> tuli
 const LIVE_TERBIAR_MINIT = 40;             // v1.9.2: baris LIVE tanpa kunci & tanpa kemas kini -> diabaikan di papan
 const TANGGUH_PAPAN_MINIT = 20;            // v1.9.2: perlawanan ditangguh dipaparkan sebagai 'semasa' selama ini
 // v1.9.2: tindakan yang tidak mengubah papan live -> cache tidak dibuang
-const ACTIONS_TANPA_UBAH_PAPAN = ['ping', 'loginpengadil', 'statusgelanggang', 'senaraipengadil', 'logpembetulan'];
+const ACTIONS_TANPA_UBAH_PAPAN = ['ping', 'loginpengadil', 'statusgelanggang', 'senaraipengadil', 'logpembetulan',
+  'simpansandaran', 'senaraisandaran', 'ambilsandaran', 'padamsandaran'];
 // FASA 6: log pengesahan keputusan oleh pengadil (tambah sahaja, tidak ditulis ganti)
 const SHEET_SAH_PENGADIL = 'Log_Sah_Pengadil';
 const SAH_PENGADIL_HEADER = ['Masa', 'ID Match', 'Gelanggang', 'Pasukan 1', 'Skor', 'Pasukan 2', 'Menang Penalti', 'Pengadil', 'ID Pengadil'];
@@ -181,7 +190,9 @@ const PENGADIL_ACTIONS = [
   // Fasa 4: pembetulan markah (Master Admin sahaja)
   'pembetulanskor', 'logpembetulan',
   // Fasa 5: rehat kecemasan & ambil alih pengadil
-  'rehatkecemasan', 'ambilalihgelanggang', 'sambungperlawanan'
+  'rehatkecemasan', 'ambilalihgelanggang', 'sambungperlawanan',
+  // v1.9.8: Backup & Restore (Master Admin sahaja)
+  'simpansandaran', 'senaraisandaran', 'ambilsandaran', 'padamsandaran'
 ];
 const PENGADIL_LOGIN_MAX_GAGAL = 5;        // cubaan gagal sebelum dikunci
 const PENGADIL_LOGIN_KUNCI_SAAT = 300;     // tempoh kunci (5 minit)
@@ -665,8 +676,127 @@ function handlePengadil_(action, body) {
     case 'simpanpengadil':  return simpanPengadil_(body.pengadil || {});
     case 'padampengadil':   return padamPengadil_(body.id || (body.pengadil && body.pengadil.id));
     case 'syncpengadil':    return syncPengadil_(body.pengadil);
+    // v1.9.8: Backup & Restore
+    case 'simpansandaran':  return simpanSandaran_(body);
+    case 'senaraisandaran': return senaraiSandaran_();
+    case 'ambilsandaran':   return ambilSandaran_(body.id);
+    case 'padamsandaran':   return padamSandaran_(body.id);
     default:                return { ok: false, error: 'Tindakan pengadil tidak dikenali.' };
   }
+}
+
+/* =========================================================
+   v1.9.8: BACKUP & RESTORE (tab Sandaran_Data) - Master Admin sahaja
+   - Setiap baris = satu sandaran penuh data aplikasi (JSON).
+   - JSON dipecah kepada cebisan <= SANDARAN_CEBISAN aksara (had sel Sheets 50,000).
+   - Setiap cebisan diawali '~' supaya Sheets tidak menganggapnya formula / nombor.
+   ========================================================= */
+const SHEET_SANDARAN = 'Sandaran_Data';
+const SANDARAN_HEADER = ['Masa', 'ID Sandaran', 'Catatan', 'Oleh', 'Saiz (aksara)', 'Bil. Cebisan'];
+const SANDARAN_CEBISAN = 45000;
+const SANDARAN_MAX_CEBISAN = 200;          // ~9 juta aksara
+const SANDARAN_SIMPAN_MAX = 20;            // bil. sandaran terkini yang disimpan
+const SANDARAN_AWALAN = '~';
+
+function getSandaranSheet_() {
+  const sheet = getOrCreateSheet_(SHEET_SANDARAN);
+  const first = sheet.getRange(1, 1, 1, SANDARAN_HEADER.length).getValues()[0];
+  if (first.join('') === '') {
+    sheet.getRange(1, 1, 1, SANDARAN_HEADER.length).setValues([SANDARAN_HEADER]).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function simpanSandaran_(body) {
+  const raw = body && body.data;
+  const json = typeof raw === 'string' ? raw : JSON.stringify(raw || null);
+  if (!json || json === 'null') return { ok: false, error: 'Tiada data sandaran diterima.' };
+  try {
+    const p = JSON.parse(json);
+    if (!p || !Array.isArray(p.matches) || !Array.isArray(p.teams)) throw new Error('x');
+  } catch (err) {
+    return { ok: false, error: 'Format data sandaran tidak sah.' };
+  }
+  const cebisan = [];
+  for (let i = 0; i < json.length; i += SANDARAN_CEBISAN) cebisan.push(SANDARAN_AWALAN + json.substr(i, SANDARAN_CEBISAN));
+  if (cebisan.length > SANDARAN_MAX_CEBISAN) return { ok: false, error: 'Data sandaran terlalu besar.' };
+
+  const sheet = getSandaranSheet_();
+  const lebar = SANDARAN_HEADER.length + cebisan.length;
+  if (sheet.getMaxColumns() < lebar) sheet.insertColumnsAfter(sheet.getMaxColumns(), lebar - sheet.getMaxColumns());
+
+  const now = new Date();
+  let id = 'SB-' + Utilities.formatDate(now, TIMEZONE, 'yyyyMMdd-HHmmss');
+  if (cariBarisSandaran_(sheet, id) > 0) id += '-' + Math.floor(Math.random() * 900 + 100);
+  const catatan = String((body && body.catatan) || '').slice(0, 200);
+  const oleh = String((body && body.oleh) || 'Master Admin').slice(0, 80);
+  const baris = sheet.getLastRow() + 1;
+  if (sheet.getMaxRows() < baris) sheet.insertRowsAfter(sheet.getMaxRows(), baris - sheet.getMaxRows());
+  const julat = sheet.getRange(baris, 1, 1, lebar);
+  julat.setNumberFormat('@');
+  julat.setValues([[Utilities.formatDate(now, TIMEZONE, 'dd/MM/yyyy HH:mm:ss'), id, catatan, oleh, String(json.length), String(cebisan.length)].concat(cebisan)]);
+
+  // Simpan hanya SANDARAN_SIMPAN_MAX sandaran terkini (baris paling atas = paling lama)
+  const jumlah = sheet.getLastRow() - 1;
+  if (jumlah > SANDARAN_SIMPAN_MAX) sheet.deleteRows(2, jumlah - SANDARAN_SIMPAN_MAX);
+  SpreadsheetApp.flush();
+  if (cariBarisSandaran_(sheet, id) < 0) return { ok: false, error: 'Sandaran gagal disahkan dalam Google Sheets. Cuba lagi.' };
+  return { ok: true, id: id, masa: now.toISOString(), saiz: json.length, cebisan: cebisan.length };
+}
+
+function cariBarisSandaran_(sheet, id) {
+  const last = sheet.getLastRow();
+  if (last < 2 || !id) return -1;
+  const ids = sheet.getRange(2, 2, last - 1, 1).getDisplayValues();
+  for (let i = 0; i < ids.length; i++) if (String(ids[i][0]) === String(id)) return i + 2;
+  return -1;
+}
+
+function senaraiSandaran_() {
+  const sheet = getSandaranSheet_();
+  const last = sheet.getLastRow();
+  if (last < 2) return { ok: true, sandaran: [] };
+  const rows = sheet.getRange(2, 1, last - 1, SANDARAN_HEADER.length).getDisplayValues();
+  const list = rows.filter(function (r) { return r[1]; }).map(function (r) {
+    return { masa: masaSandaranIso_(r[0]), id: r[1], catatan: r[2], oleh: r[3], saiz: Number(r[4]) || 0, cebisan: Number(r[5]) || 0 };
+  });
+  list.reverse();   // terkini dahulu
+  return { ok: true, sandaran: list };
+}
+
+function masaSandaranIso_(v) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})$/.exec(String(v || ''));
+  if (!m) return String(v || '');
+  return m[3] + '-' + m[2] + '-' + m[1] + 'T' + m[4] + ':' + m[5] + ':' + m[6] + '+08:00';
+}
+
+function ambilSandaran_(id) {
+  const sheet = getSandaranSheet_();
+  const baris = cariBarisSandaran_(sheet, id);
+  if (baris < 0) return { ok: false, error: 'Sandaran ' + id + ' tidak ditemui.' };
+  const meta = sheet.getRange(baris, 1, 1, SANDARAN_HEADER.length).getDisplayValues()[0];
+  const n = Number(meta[5]) || 0;
+  if (!n) return { ok: false, error: 'Sandaran ' + id + ' kosong.' };
+  const cebisan = sheet.getRange(baris, SANDARAN_HEADER.length + 1, 1, n).getValues()[0];
+  const json = cebisan.map(function (c) {
+    const t = String(c == null ? '' : c);
+    return t.charAt(0) === SANDARAN_AWALAN ? t.slice(1) : t;
+  }).join('');
+  if (Number(meta[4]) && json.length !== Number(meta[4])) {
+    return { ok: false, error: 'Sandaran ' + id + ' tidak lengkap (saiz tidak sepadan).' };
+  }
+  try { JSON.parse(json); } catch (err) { return { ok: false, error: 'Sandaran ' + id + ' rosak (JSON tidak sah).' }; }
+  return { ok: true, id: id, masa: masaSandaranIso_(meta[0]), catatan: meta[2], oleh: meta[3], data: json };
+}
+
+function padamSandaran_(id) {
+  const sheet = getSandaranSheet_();
+  const baris = cariBarisSandaran_(sheet, id);
+  if (baris < 0) return { ok: false, error: 'Sandaran ' + id + ' tidak ditemui.' };
+  sheet.deleteRow(baris);
+  SpreadsheetApp.flush();
+  return { ok: true, id: id };
 }
 
 function getMasterAdminKey_() {
@@ -2193,7 +2323,8 @@ function setupSheet() {
   getKunciSheet_();
   getTangguhSheet_();
   getPembetulanSheet_();
-  SpreadsheetApp.getActiveSpreadsheet().toast('Tab ' + SHEET_JADUAL + ', ' + SHEET_PENGADIL + ', ' + SHEET_KUNCI + ', ' + SHEET_TANGGUH + ' & ' + SHEET_PEMBETULAN + ' sedia digunakan.', 'Live Futsal PK KBB', 5);
+  getSandaranSheet_();
+  SpreadsheetApp.getActiveSpreadsheet().toast('Tab ' + SHEET_JADUAL + ', ' + SHEET_PENGADIL + ', ' + SHEET_KUNCI + ', ' + SHEET_TANGGUH + ', ' + SHEET_PEMBETULAN + ' & ' + SHEET_SANDARAN + ' sedia digunakan.', 'Live Futsal PK KBB', 5);
   return sheet.getName();
 }
 

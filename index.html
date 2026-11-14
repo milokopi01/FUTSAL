@@ -13,7 +13,6 @@ Amaran ini ialah arahan penyelenggaraan untuk AI, bukan kod yang boleh menerbitk
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbw1D9A27V_hUZk2Go3aoE7gs1lofCAAxgpVgWg-RdDy5RruAf7SVY8k8RtSS-eJ1QzJ/exec" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -630,6 +629,7 @@ Amaran ini ialah arahan penyelenggaraan untuk AI, bukan kod yang boleh menerbitk
     .approval-list { display: grid; gap: 14px; }
     .approval-sync-info { font-size: .8rem; margin: -6px 0 14px; }
     .approval-sync-info.is-error { color: var(--danger, #e5484d); }
+    .hint-box.is-error { color: var(--danger, #e5484d); }
     .approval-item {
       display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
       padding: 16px 18px; border-left: 4px solid var(--court-done);
@@ -6182,18 +6182,12 @@ void main() {
        ========================================================= */
     const STORAGE_KEY = 'FUTSAL_PK_KBB_2026_STATE';
     const STATE_VERSION = 1;
-    // URL Web App Google Apps Script lalai untuk SEMUA peranti (termasuk telefon pengadil).
-    // Isi di sini supaya pengadil boleh log masuk dari mana-mana peranti. URL yang disimpan
-    // dalam Tetapan Master Admin akan mengatasi nilai ini pada peranti tersebut.
-    // PENTING: jika anda deploy dengan "New deployment" (URL baharu), tukar URL di bawah.
-    // "Manage deployments > Edit > New version" mengekalkan URL yang sama.
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec';
-    // v1.15.0: semua deployment Code.gs yang diketahui (spreadsheet yang sama). Peranti memilih
-    // secara automatik deployment yang menjalankan Code.gs PALING BAHARU (paling pantas).
-    const KNOWN_GAS_URLS = [
-      'https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec',
-      'https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec'
-    ];
+    // v1.16.0: SATU URL Web App Google Apps Script sahaja untuk SEMUA peranti
+    // (Master Admin, Urusetia, pengadil & paparan awam). URL ini TIDAK lagi boleh diubah
+    // dalam Tetapan Master Admin dan pautan ?gas=... diabaikan, supaya aplikasi tidak keliru.
+    // PENTING: kemas kini Code.gs melalui "Manage deployments > Edit > New version" supaya
+    // URL kekal sama. Jika terpaksa buat "New deployment" (URL baharu), tukar URL di bawah.
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec';
     const GAS_MIN_VERSI = '1.9.7';   // versi Code.gs dengan papan live pantas (CacheService)
     const ADMIN_KEY_STORAGE = 'FUTSAL_PK_KBB_ADMIN_KEY';
 
@@ -11048,7 +11042,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
     function ensureSettings() {
       if (!state.settings || typeof state.settings !== 'object') state.settings = {};
-      state.settings = Object.assign({ gasUrl: '', autoSync: false, lastSync: null, lastSyncStatus: '' }, state.settings);
+      state.settings = Object.assign({ autoSync: false, lastSync: null, lastSyncStatus: '' }, state.settings);
+      // v1.16.0: URL lama yang pernah disimpan dalam peranti dibuang (guna GAS_URL sahaja)
+      if ('gasUrl' in state.settings) delete state.settings.gasUrl;
       if (!state.drawXY) state.drawXY = { X1: null, X2: null, X3: null, Y1: null, Y2: null, Y3: null };
       if (!('drawXYMode' in state)) state.drawXYMode = null; // null | 'AUTO' | 'MANUAL'
     }
@@ -11845,27 +11841,44 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           </div>
           <button type="button" class="btn btn-sm" id="btnCreateEvent">＋ Cipta Kejohanan Baharu</button>
           <hr style="border:0;border-top:1px solid var(--glass-border);margin:16px 0;" />
-          <div class="field">
-            <label for="gasUrl">URL Web App Google Apps Script</label>
-            <input type="url" class="input" id="gasUrl" placeholder="https://script.google.com/macros/s/AKfycbxN0SxtxHzzyMCAHLIN-9uEI0Ln0yc7qb1hOSXwLMKWTUnFkZ_eLwCpBNEVhVwfTTkz/exec" />
-          </div>
+          <div class="hint-box" id="gasFixedInfo" style="margin-bottom:12px;">🔗 Google Sheets disambung melalui <strong>satu URL tetap</strong> dalam index.html (semua peranti guna URL yang sama).</div>
           <label style="display:flex;gap:8px;align-items:center;font-size:.84rem;margin-bottom:12px;cursor:pointer;">
             <input type="checkbox" id="gasAutoSync" /> Sync automatik selepas setiap pengesahan
           </label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-sm" id="btnSaveGas">💾 Simpan URL</button>
             <button type="button" class="btn btn-primary btn-sm" id="btnSyncGas">☁ Sync ke Google Sheets</button>
             <button type="button" class="btn btn-sm" id="btnCheckGas">🔌 Semak Sambungan</button>
-            <button type="button" class="btn btn-sm" id="btnCopyDeviceLink" title="Pautan yang menyambungkan peranti pengadil ke Google Sheets ini">📋 Salin Pautan Peranti</button>
           </div>
           <div class="hint-box" id="gasCheckInfo" style="margin-top:10px;"></div>
-          <div class="hint-box" id="gasSyncInfo">Belum pernah sync.</div>`;
+          <div class="hint-box" id="gasSyncInfo">Belum pernah sync.</div>
+          <hr style="border:0;border-top:1px solid var(--glass-border);margin:16px 0;" />
+          <h4 style="margin:0 0 6px;font-size:.95rem;">🗄 Backup &amp; Restore (Google Sheets)</h4>
+          <p class="muted" style="font-size:.8rem;margin-bottom:10px;">Simpan salinan penuh data aplikasi ke tab <strong>Sandaran_Data</strong> dalam Google Sheets, dan pulihkan pada mana-mana peranti. 20 sandaran terkini disimpan.</p>
+          <div class="field">
+            <label for="backupNote">Catatan sandaran (pilihan)</label>
+            <input type="text" class="input" id="backupNote" placeholder="cth: Selepas Peringkat Kumpulan" maxlength="120" />
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <button type="button" class="btn btn-primary btn-sm" id="btnBackupGas">⬆ Backup ke Google Sheets</button>
+            <button type="button" class="btn btn-sm" id="btnListBackups">🔄 Muat Senarai Sandaran</button>
+          </div>
+          <div class="field">
+            <label for="backupSelect">Pilih sandaran untuk dipulihkan</label>
+            <select class="input" id="backupSelect"><option value="">— Tekan "Muat Senarai Sandaran" —</option></select>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm" id="btnRestoreGas">♻ Restore Sandaran Dipilih</button>
+            <button type="button" class="btn btn-danger btn-sm" id="btnDeleteBackup">🗑 Padam Sandaran</button>
+          </div>
+          <div class="hint-box" id="backupInfo" style="margin-top:10px;">Belum ada sandaran dimuatkan.</div>`;
         grid.appendChild(card);
         document.getElementById('btnCreateEvent').addEventListener('click', createNewEvent);
-        document.getElementById('btnSaveGas').addEventListener('click', saveGasUrl);
         document.getElementById('btnSyncGas').addEventListener('click', () => syncToGoogleSheets());
         document.getElementById('btnCheckGas').addEventListener('click', checkGasConnection);
-        document.getElementById('btnCopyDeviceLink').addEventListener('click', copyDeviceLink);
+        document.getElementById('btnBackupGas').addEventListener('click', backupToSheets);
+        document.getElementById('btnListBackups').addEventListener('click', () => loadBackupList());
+        document.getElementById('btnRestoreGas').addEventListener('click', restoreFromSheets);
+        document.getElementById('btnDeleteBackup').addEventListener('click', deleteBackupFromSheets);
         document.getElementById('gasAutoSync').addEventListener('change', (e) => {
           state.settings.autoSync = !!e.target.checked;
           saveState();
@@ -11874,8 +11887,6 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
       const ev = document.getElementById('currentEventName');
       if (ev) ev.textContent = (state.events.SR && state.events.SR.nama) || '-';
-      const urlInput = document.getElementById('gasUrl');
-      if (urlInput && document.activeElement !== urlInput) urlInput.value = getGasUrl();
       const chk = document.getElementById('gasCheckInfo');
       if (chk) chk.textContent = state.settings.gasCheck || 'Tekan "🔌 Semak Sambungan" untuk memastikan Google Sheets & Code.gs terkini berfungsi.';
       const auto = document.getElementById('gasAutoSync');
@@ -11944,32 +11955,6 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return true;
     }
 
-    function saveGasUrl() {
-      if (!canManageSystem()) {
-        showToast('Hanya Master Admin boleh menukar tetapan.', 'error');
-        return false;
-      }
-      const input = document.getElementById('gasUrl');
-      const url = (input ? input.value : '').trim();
-      if (url && !/^https:\/\/script\.google(usercontent)?\.com\/.+/i.test(url)) {
-        showToast('URL mesti bermula dengan https://script.google.com/...', 'error');
-        if (input) input.focus();
-        return false;
-      }
-      state.settings.gasUrl = url;
-      Object.assign(gasHealth, { versi: null, url: null, lama: false, dimaklum: false });
-      publicLive.seq += 1;
-      Object.assign(publicLive, { data: null, sig: '', lastOk: null, busy: false, error: '', fails: 0 });
-      lockEpoch += 1;
-      saveState();
-      renderAdminExtras();
-      startPublicLiveSync();
-      startLockSync();
-      autoPickGasUrl();
-      showToast(url ? 'URL Google Apps Script disimpan.' : 'URL Google Apps Script dikosongkan.', 'success');
-      return true;
-    }
-
     // Nama pengadil bagi perlawanan (dihantar ke lajur "Nama Pengadil" dalam Google Sheets)
     function refereeName(match) {
       if (match.pengadil) return match.pengadil;
@@ -12026,7 +12011,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       }
       const url = getGasUrl();
       if (!url) {
-        if (!options.auto) showToast('Sila simpan URL Google Apps Script dahulu.', 'warn');
+        if (!options.auto) showToast('URL Google Apps Script belum ditetapkan dalam index.html.', 'warn');
         return false;
       }
       if (!navigator.onLine) {
@@ -12162,7 +12147,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     let refPwShowAll = false;
 
     function getGasUrl() {
-      return (state.settings && state.settings.gasUrl) || DEFAULT_GAS_URL || '';
+      return GAS_URL;
     }
 
     function getAdminKey() {
@@ -12195,37 +12180,223 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     const GAS_OLD_MSG = 'Google Sheets masih menggunakan Code.gs versi LAMA, jadi akaun pengadil tidak dapat disimpan / disemak. ' +
       'Master Admin: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy.';
 
-    // FASA 4.1: pautan peranti (?gas=URL) -> sambungkan peranti ini ke Google Sheets yang sama
+    // v1.16.0: pautan lama ?gas=URL diabaikan (satu URL tetap sahaja). Parameter dibuang
+    // daripada bar alamat supaya tidak dikongsi semula.
     function applyGasUrlFromLink() {
       try {
         const params = new URLSearchParams(window.location.search);
-        const g = (params.get('gas') || '').trim();
-        if (!g) return;
+        if (!params.has('gas')) return;
         params.delete('gas');
         const qs = params.toString();
         history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
-        if (!/^https:\/\/script\.google(usercontent)?\.com\/.+/i.test(g)) return;
-        if (state.settings.gasUrl !== g) {
-          state.settings.gasUrl = g;
-          saveState();
-          showToast('✅ Peranti ini kini disambung ke Google Sheets kejohanan.', 'success', 4500);
-        }
       } catch (err) { /* abaikan */ }
     }
 
-    function deviceLink() {
-      const url = getGasUrl();
-      return `${location.origin}${location.pathname}?gas=${encodeURIComponent(url)}`;
+    /* ---------------------------------------------------------
+       v1.16.0: BACKUP & RESTORE KE GOOGLE SHEETS (Master Admin)
+       Code.gs v1.9.8+: simpanSandaran / senaraiSandaran / ambilSandaran / padamSandaran
+       --------------------------------------------------------- */
+    const SANDARAN_MIN_VERSI = '1.9.8';
+    const SANDARAN_OLD_MSG = 'Fungsi Backup & Restore memerlukan Code.gs v' + SANDARAN_MIN_VERSI + ' atau lebih baharu. ' +
+      'Master Admin: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy (URL kekal sama).';
+    let backupList = [];
+    let backupBusy = false;
+
+    function setBackupInfo(msg, isError) {
+      const el = document.getElementById('backupInfo');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.toggle('is-error', !!isError);
     }
 
-    async function copyDeviceLink() {
-      if (!getGasUrl()) { showToast('Sila simpan URL Google Apps Script dahulu.', 'warn'); return; }
-      const link = deviceLink();
+    function backupErrorMsg(res) {
+      if (!res) return 'Tiada respons daripada Google Sheets.';
+      if (res.kod === 'SKRIP_LAMA' || res.kod === 'TINDAKAN_TIDAK_DIKENALI' ||
+          /Tindakan (pengadil )?tidak dikenali/i.test(String(res.error || ''))) return SANDARAN_OLD_MSG;
+      if (res.kod === 'BUKAN_ADMIN') {
+        setAdminKey('');
+        return 'PIN Master Admin tidak sepadan dengan MASTER_ADMIN_PIN di Code.gs. Cuba lagi.';
+      }
+      return res.error || 'Ralat tidak diketahui.';
+    }
+
+    async function backupPrecheck() {
+      if (!canManageSystem()) { showToast('Hanya Master Admin boleh menggunakan Backup & Restore.', 'error'); return ''; }
+      if (backupBusy) return '';
+      if (!navigator.onLine) { showToast('Tiada sambungan internet. Cuba lagi kemudian.', 'error'); return ''; }
+      return await ensureAdminKey();
+    }
+
+    function setBackupButtons(disabled) {
+      ['btnBackupGas', 'btnListBackups', 'btnRestoreGas', 'btnDeleteBackup'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) b.disabled = !!disabled;
+      });
+    }
+
+    function backupSnapshot() {
+      const data = Object.assign({}, state, { session: null });
+      if (data.settings) {
+        data.settings = Object.assign({}, data.settings);
+        delete data.settings.gasUrl;
+      }
+      return data;
+    }
+
+    function fmtBackupTime(v) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? String(v || '-') : d.toLocaleString('ms-MY');
+    }
+
+    function renderBackupSelect(selectId) {
+      const sel = document.getElementById('backupSelect');
+      if (!sel) return;
+      if (!backupList.length) {
+        sel.innerHTML = '<option value="">— Tiada sandaran dalam Google Sheets —</option>';
+        return;
+      }
+      sel.innerHTML = backupList.map(b => {
+        const kb = Math.max(1, Math.round((Number(b.saiz) || 0) / 1024));
+        const label = `${fmtBackupTime(b.masa)} · ${b.catatan || 'Tanpa catatan'} · ${kb} KB`;
+        return `<option value="${escapeAttrSafe(b.id)}">${escapeHtmlSafe(label)}</option>`;
+      }).join('');
+      if (selectId && backupList.some(b => b.id === selectId)) sel.value = selectId;
+    }
+
+    function escapeHtmlSafe(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function escapeAttrSafe(v) { return escapeHtmlSafe(v); }
+
+    async function backupToSheets() {
+      const adminKey = await backupPrecheck();
+      if (!adminKey) return false;
+      const noteEl = document.getElementById('backupNote');
+      const catatan = (noteEl ? noteEl.value : '').trim();
+      const s = getSession();
+      backupBusy = true; setBackupButtons(true);
+      setBackupInfo('⏳ Menyimpan sandaran ke Google Sheets…');
       try {
-        await navigator.clipboard.writeText(link);
-        showToast('Pautan peranti disalin. Hantar kepada pengadil (buka sekali di telefon mereka).', 'success', 5000);
-      } catch (err) {
-        await uiPrompt('Salin pautan ini dan buka di peranti pengadil:', link);
+        const res = await callGas({
+          action: 'simpanSandaran', adminKey, catatan,
+          oleh: (s && (s.nama || s.userId)) || 'Master Admin',
+          data: JSON.stringify(backupSnapshot())
+        });
+        if (!res || !res.ok) {
+          const msg = backupErrorMsg(res);
+          setBackupInfo('⚠ Backup gagal: ' + msg, true);
+          showToast('Backup gagal: ' + msg, 'error', 8000);
+          return false;
+        }
+        if (noteEl) noteEl.value = '';
+        setBackupInfo(`✅ Sandaran ${res.id} disimpan dalam tab Sandaran_Data (${fmtBackupTime(res.masa)}).`);
+        showToast('Sandaran disimpan ke Google Sheets.', 'success');
+        backupBusy = false;
+        await loadBackupList({ silent: true, selectId: res.id });
+        return true;
+      } finally {
+        backupBusy = false; setBackupButtons(false);
+      }
+    }
+
+    async function loadBackupList(opts = {}) {
+      const adminKey = await backupPrecheck();
+      if (!adminKey) return false;
+      backupBusy = true; setBackupButtons(true);
+      if (!opts.silent) setBackupInfo('⏳ Memuatkan senarai sandaran…');
+      try {
+        const res = await callGas({ action: 'senaraiSandaran', adminKey });
+        if (!res || !res.ok) {
+          const msg = backupErrorMsg(res);
+          setBackupInfo('⚠ Gagal memuatkan senarai: ' + msg, true);
+          if (!opts.silent) showToast('Gagal memuatkan senarai sandaran: ' + msg, 'error', 8000);
+          return false;
+        }
+        backupList = Array.isArray(res.sandaran) ? res.sandaran : [];
+        renderBackupSelect(opts.selectId);
+        if (!opts.silent) setBackupInfo(backupList.length
+          ? `📋 ${backupList.length} sandaran ditemui dalam Google Sheets. Pilih satu untuk dipulihkan.`
+          : 'Tiada sandaran lagi dalam Google Sheets. Tekan "Backup ke Google Sheets" untuk mencipta satu.');
+        return true;
+      } finally {
+        backupBusy = false; setBackupButtons(false);
+      }
+    }
+
+    function validateBackupData(parsed) {
+      if (!parsed || !Array.isArray(parsed.matches) || parsed.matches.length !== 65 || !Array.isArray(parsed.teams) || !Array.isArray(parsed.users)) {
+        throw new Error('Format sandaran tidak sah (perlu 65 perlawanan).');
+      }
+      return parsed;
+    }
+
+    async function restoreFromSheets() {
+      const sel = document.getElementById('backupSelect');
+      const id = sel ? sel.value : '';
+      if (!id) { showToast('Pilih sandaran dahulu (tekan "Muat Senarai Sandaran").', 'warn'); return false; }
+      const info = backupList.find(b => b.id === id);
+      const label = info ? `${fmtBackupTime(info.masa)} · ${info.catatan || 'Tanpa catatan'}` : id;
+      if (!await uiConfirm(`Restore sandaran ${id}?\n\n${label}\n\nSemua data dalam peranti ini akan digantikan. Salinan data semasa akan dimuat turun (JSON) dahulu sebagai langkah keselamatan.`)) return false;
+      const adminKey = await backupPrecheck();
+      if (!adminKey) return false;
+      backupBusy = true; setBackupButtons(true);
+      setBackupInfo('⏳ Memuat turun sandaran daripada Google Sheets…');
+      try {
+        const res = await callGas({ action: 'ambilSandaran', adminKey, id });
+        if (!res || !res.ok) {
+          const msg = backupErrorMsg(res);
+          setBackupInfo('⚠ Restore gagal: ' + msg, true);
+          showToast('Restore gagal: ' + msg, 'error', 8000);
+          return false;
+        }
+        let parsed;
+        try {
+          parsed = validateBackupData(typeof res.data === 'string' ? JSON.parse(res.data) : res.data);
+        } catch (err) {
+          setBackupInfo('⚠ Restore gagal: ' + err.message, true);
+          showToast('Restore gagal: ' + err.message, 'error', 6000);
+          return false;
+        }
+        exportData(true);   // salinan keselamatan data semasa
+        const session = state.session;
+        const settings = Object.assign({}, state.settings);
+        state = Object.assign(createDefaultState(), parsed, { session, settings, version: STATE_VERSION });
+        normalizeState();
+        ensureSettings();
+        if (!getSession()) state.session = null;
+        saveState();
+        renderAll();
+        setBackupInfo(`✅ Sandaran ${id} dipulihkan dalam peranti ini. Tekan "☁ Sync ke Google Sheets" jika mahu hantar data ini ke Google Sheets.`);
+        showToast(`Sandaran ${id} berjaya dipulihkan.`, 'success', 5000);
+        return true;
+      } finally {
+        backupBusy = false; setBackupButtons(false);
+      }
+    }
+
+    async function deleteBackupFromSheets() {
+      const sel = document.getElementById('backupSelect');
+      const id = sel ? sel.value : '';
+      if (!id) { showToast('Pilih sandaran yang hendak dipadam.', 'warn'); return false; }
+      if (!await uiConfirm(`Padam sandaran ${id} daripada Google Sheets?\n\nTindakan ini tidak boleh dibatalkan.`)) return false;
+      const adminKey = await backupPrecheck();
+      if (!adminKey) return false;
+      backupBusy = true; setBackupButtons(true);
+      try {
+        const res = await callGas({ action: 'padamSandaran', adminKey, id });
+        if (!res || !res.ok) {
+          const msg = backupErrorMsg(res);
+          setBackupInfo('⚠ Gagal memadam: ' + msg, true);
+          showToast('Gagal memadam sandaran: ' + msg, 'error', 8000);
+          return false;
+        }
+        showToast(`Sandaran ${id} dipadam.`, 'success');
+        backupBusy = false;
+        await loadBackupList({ silent: true });
+        setBackupInfo(`🗑 Sandaran ${id} dipadam. ${backupList.length} sandaran berbaki.`);
+        return true;
+      } finally {
+        backupBusy = false; setBackupButtons(false);
       }
     }
 
@@ -12288,7 +12459,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     // Semak URL & versi Code.gs yang di-deploy
     async function checkGasConnection() {
       const url = getGasUrl();
-      if (!url) { showToast('Sila simpan URL Google Apps Script dahulu.', 'warn'); return false; }
+      if (!url) { showToast('URL Google Apps Script belum ditetapkan dalam index.html.', 'warn'); return false; }
       const btn = document.getElementById('btnCheckGas');
       if (btn) btn.disabled = true;
       let msg = '';
@@ -12538,7 +12709,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       } else {
         ref.sheetSync = false;
         setRefSyncInfo(`⚠ ${ref.nama} disimpan dalam peranti ini SAHAJA (URL Google Apps Script belum ditetapkan).`);
-        if (!editing) showToast(`Pengadil ${nama} dicipta dalam peranti ini sahaja. Simpan URL Google Sheets supaya boleh log masuk di peranti lain.`, 'warn', 6000);
+        if (!editing) showToast(`Pengadil ${nama} dicipta dalam peranti ini sahaja. Semak sambungan Google Sheets supaya boleh log masuk di peranti lain.`, 'warn', 6000);
       }
       saveState();
       closeModal('refereeModal');
@@ -12698,7 +12869,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     async function pullReferees() {
       if (!canManageSystem()) return false;
       if (!getGasUrl()) {
-        showToast('Sila simpan URL Google Apps Script dahulu.', 'warn');
+        showToast('URL Google Apps Script belum ditetapkan dalam index.html.', 'warn');
         return false;
       }
       return reconcileReferees({ prompt: true });
@@ -12707,7 +12878,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     async function pushAllReferees() {
       if (!canManageSystem()) return false;
       if (!getGasUrl()) {
-        showToast('Sila simpan URL Google Apps Script dahulu.', 'warn');
+        showToast('URL Google Apps Script belum ditetapkan dalam index.html.', 'warn');
         return false;
       }
       if (!await uiConfirm(`Hantar ${state.referees.length} pengadil ke Google Sheets?\n\nSenarai dalam tab Senarai_Pengadil akan DIGANTIKAN dengan senarai dalam peranti ini.`)) return false;
@@ -12750,7 +12921,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const info = document.getElementById('refereeSyncInfo');
       if (info) {
         info.textContent = state.settings.refSyncStatus ||
-          (getGasUrl() ? 'Perubahan akan disegerak ke tab Senarai_Pengadil dalam Google Sheets.' : 'Senarai disimpan dalam peranti ini. Simpan URL Google Apps Script untuk menyimpan ke Google Sheets.');
+          (getGasUrl() ? 'Perubahan akan disegerak ke tab Senarai_Pengadil dalam Google Sheets.' : 'Senarai disimpan dalam peranti ini. URL Google Apps Script belum ditetapkan dalam index.html.');
       }
 
       if (!list.length) {
