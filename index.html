@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyjCXJvFHGUKjW80rb3RFla7XftdcUlC9iAoRWvBNFTqK4M9pOcrnevYTZ4M26CrF2Q/exec" />
 <!--
 AMARAN WAJIB UNTUK AI / PENYELENGGARA — JANGAN PADAM
 Sebelum mengeluarkan kemas kini:
@@ -10,9 +14,6 @@ Sebelum mengeluarkan kemas kini:
 6. Untuk perubahan sync, uji skor pengadil ke dashboard, pertukaran fasa, pemulihan selepas reload dan jawapan lama yang tiba lewat; semua peranti mesti menggunakan URL yang sama.
 Amaran ini ialah arahan penyelenggaraan untuk AI, bukan kod yang boleh menerbitkan Google Apps Script secara automatik.
 --> 
-<html lang="ms">
-<head>
-  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -6186,8 +6187,9 @@ void main() {
     // (Master Admin, Urusetia, pengadil & paparan awam). URL ini TIDAK lagi boleh diubah
     // dalam Tetapan Master Admin dan pautan ?gas=... diabaikan, supaya aplikasi tidak keliru.
     // PENTING: kemas kini Code.gs melalui "Manage deployments > Edit > New version" supaya
-    // URL kekal sama. Jika terpaksa buat "New deployment" (URL baharu), tukar URL di bawah.
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV0JWGQHSQO-oyXVuufdpWov8UjY9ba_6kFZjBRtAI23epXKRKtUDJbnJNB6JIWaqX/exec';
+    // URL kekal sama. Jika terpaksa buat "New deployment" (URL baharu), tukar URL pada baris 5.
+    // URL dibaca daripada <meta name="gas-web-app-url"> pada BARIS 5 index.html (satu-satunya tempat URL).
+    const GAS_URL = ((document.querySelector('meta[name="gas-web-app-url"]') || {}).content || '').trim();
     const GAS_MIN_VERSI = '1.9.7';   // versi Code.gs dengan papan live pantas (CacheService)
     const ADMIN_KEY_STORAGE = 'FUTSAL_PK_KBB_ADMIN_KEY';
 
