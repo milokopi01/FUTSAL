@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8" />
-  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyuoPcJlYYrppL2ycjMypc2k7cQPeQGWmQBMTpf5M4XXVxNOO22tJG6B0I89j3TBc4L/exec" />
+  <meta name="gas-web-app-url" content="https://script.google.com/macros/s/AKfycbyjCXJvFHGUKjW80rb3RFla7XftdcUlC9iAoRWvBNFTqK4M9pOcrnevYTZ4M26CrF2Q/exec" />
 <!--
 AMARAN WAJIB UNTUK AI / PENYELENGGARA — JANGAN PADAM
 Sebelum mengeluarkan kemas kini:
@@ -1743,6 +1743,7 @@ body.projection-on #projection { display:block; }
                 <button type="button" class="btn btn-sm" id="btnExportData">⬇ Eksport JSON</button>
                 <label class="btn btn-sm" for="importFile" style="cursor:pointer;">⬆ Import JSON</label>
                 <input type="file" id="importFile" accept="application/json" class="hidden" />
+                <button type="button" class="btn btn-danger btn-sm" id="btnResetEvent" title="Padam semua markah ujian (peranti ini &amp; Google Sheets). Pasukan, pengadil, pengguna &amp; gelanggang dikekalkan.">🧹 Reset Event (Hari Sebenar)</button>
                 <button type="button" class="btn btn-danger btn-sm" id="btnResetData">⟲ Tetap Semula Kejohanan</button>
               </div>
             </div>
@@ -12967,6 +12968,63 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       return true;
     }
 
+
+    // Reset Event: kosongkan SEMUA markah / keputusan / log (peranti ini + Google Sheets)
+    // tetapi KEKALKAN pasukan, pengadil, pengguna, tetapan & senarai gelanggang.
+    async function resetEventData() {
+      if (!canManageSystem()) {
+        showToast('Hanya Master Admin boleh reset event.', 'error');
+        return false;
+      }
+      if (!await uiConfirm('RESET EVENT untuk hari perlawanan sebenar?\n\nSemua markah, keputusan, log pengesahan, kunci gelanggang & undian Pusingan Kedua akan dipadam (dalam peranti ini DAN Google Sheets).\n\nPasukan, pengadil, pengguna & gelanggang DIKEKALKAN.\n\nDisyorkan: Eksport JSON dahulu sebagai sandaran.')) return false;
+      const typed = await uiPrompt('Taip RESET EVENT untuk mengesahkan:');
+      if (typed === null || typed.trim().toUpperCase() !== 'RESET EVENT') {
+        showToast('Reset event dibatalkan.', 'info');
+        return false;
+      }
+      const btn = document.getElementById('btnResetEvent');
+      if (btn) btn.disabled = true;
+      try {
+        let sheetsOk = false;
+        if (getGasUrl()) {
+          const adminKey = await ensureAdminKey();
+          if (!adminKey) { showToast('Reset dibatalkan: PIN Master Admin diperlukan untuk kosongkan Google Sheets.', 'error'); return false; }
+          const res = await callGas({ action: 'resetAcara', adminKey });
+          if (!res || !res.ok) {
+            showToast(`Google Sheets gagal direset: ${(res && res.error) || 'ralat rangkaian'}. Tiada data dipadam.`, 'error', 7000);
+            return false;
+          }
+          sheetsOk = true;
+        }
+        const initTeams = deepClone(INITIAL_TEAMS);
+        const keep = {
+          users: state.users, referees: state.referees, settings: state.settings, session: state.session,
+          events: state.events, courtConfig: state.courtConfig, courtConfigVersi: state.courtConfigVersi,
+          teams: (state.teams || []).map(t => {
+            // slot undian X1..Y3 dikembalikan kepada asal (undian ujian dibuang)
+            if (/^SR-[XY]\d$/.test(t.id)) return initTeams.find(x => x.id === t.id) || t;
+            return t;
+          }),
+          ui: state.ui
+        };
+        state = createDefaultState();
+        Object.assign(state, keep);
+        state.matches.forEach(m => { m.eventId = (state.events[m.kategori] || {}).id || m.eventId; });
+        state.courts.forEach(c => { c.eventId = (state.events[c.kategori] || {}).id || c.eventId || ''; });
+        normalizeState();
+        ensureSettings();
+        saveState();
+        lastSyncSignature = null;
+        renderAll();
+        if (sheetsOk) await syncToGoogleSheets({});
+        setActiveTab('tab-live');
+        showToast(sheetsOk ? 'Event direset. Semua markah ujian dipadam di peranti ini & Google Sheets. Sedia untuk hari sebenar!' : 'Event direset dalam peranti ini.', 'success', 6000);
+        return true;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
     /* ---------------------------------------------------------
        4.5b PANGKALAN DATA PENGADIL (MASTER ADMIN SAHAJA)
        - Data tempatan: state.referees (localStorage peranti ini)
@@ -14362,6 +14420,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       on('btnSaveDraw', 'click', saveDrawXY);
       on('btnExportData', 'click', () => exportData(false));
       on('btnResetData', 'click', resetFactoryData);
+      on('btnResetEvent', 'click', resetEventData);
       on('importFile', 'change', (e) => { importData(e.target.files && e.target.files[0]); e.target.value = ''; });
 
       // FASA 4: pembetulan markah

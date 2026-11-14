@@ -214,7 +214,9 @@ const PENGADIL_ACTIONS = [
   // v1.9.8: Backup & Restore (Master Admin sahaja)
   'simpansandaran', 'senaraisandaran', 'ambilsandaran', 'padamsandaran',
   // v1.9.9: Urus Gelanggang (Master Admin sahaja) & senarai gelanggang (semua)
-  'urusgelanggang', 'senaraigelanggang'
+  'urusgelanggang', 'senaraigelanggang',
+  // Reset Event (Master Admin sahaja) - kosongkan markah ujian sebelum hari sebenar
+  'resetacara'
 ];
 const PENGADIL_LOGIN_MAX_GAGAL = 5;        // cubaan gagal sebelum dikunci
 const PENGADIL_LOGIN_KUNCI_SAAT = 300;     // tempoh kunci (5 minit)
@@ -722,6 +724,7 @@ function handlePengadil_(action, body) {
     case 'padamsandaran':   return padamSandaran_(body.id);
     // v1.9.9: Urus Gelanggang
     case 'urusgelanggang':  return urusGelanggang_(body);
+    case 'resetacara':      return resetAcara_();
     default:                return { ok: false, error: 'Tindakan pengadil tidak dikenali.' };
   }
 }
@@ -2646,4 +2649,28 @@ function testRehatKecemasan() {
 function testSenaraiGelanggang() {
   Logger.log(JSON.stringify(bacaGelanggang_()));
   Logger.log('Aktif: ' + gelanggangAktif_().join(', '));
+}
+
+
+/* =========================================================
+   RESET EVENT (Master Admin sahaja)
+   Kosongkan semua baris perlawanan, carta & log supaya event bermula bersih.
+   Senarai_Pengadil, Sandaran_Data & senarai gelanggang DIKEKALKAN.
+   Aplikasi akan menghantar semula jadual kosong (syncAll) selepas ini.
+   ========================================================= */
+function resetAcara_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const tab = [SHEET_JADUAL, SHEET_CARTA, SHEET_LOG, SHEET_KUNCI, SHEET_TANGGUH, SHEET_PEMBETULAN, SHEET_SAH_PENGADIL];
+  const dikosongkan = [];
+  tab.forEach(function (nama) {
+    const sh = ss.getSheetByName(nama);
+    if (!sh) return;
+    const last = sh.getLastRow();
+    if (last > 1) {
+      sh.getRange(2, 1, last - 1, Math.max(sh.getLastColumn(), 1)).clearContent();
+      dikosongkan.push(nama);
+    }
+  });
+  try { CacheService.getScriptCache().removeAll([PAPAN_CACHE_KEY, PAPAN_CACHE_VER]); } catch (e) {}
+  return { ok: true, dikosongkan: dikosongkan, masa: new Date().toISOString() };
 }
