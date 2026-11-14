@@ -428,7 +428,7 @@ Amaran ini ialah arahan penyelenggaraan untuk AI, bukan kod yang boleh menerbitk
     /* =========================================================
        6. SIMULASI GELANGGANG LIVE
        ========================================================= */
-    .courts-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .courts-grid { display: grid; grid-template-columns: repeat(var(--court-cols, 4), minmax(0, 1fr)); gap: 16px; }
     @media (min-width:601px) and (max-width:1100px) { .courts-grid {grid-template-columns:repeat(2,minmax(0,1fr));} }
     .court-card {
       position: relative; overflow: hidden;
@@ -937,6 +937,19 @@ Amaran ini ialah arahan penyelenggaraan untuk AI, bukan kod yang boleh menerbitk
     .rehat-note { padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(250,204,21,.4); background: rgba(250,204,21,.07); font-size: .82rem; color: var(--text-1); margin: 10px 0; line-height: 1.5; }
 
     /* FASA 4: PEMBETULAN MARKAH (MASTER ADMIN) */
+    .badge-off { color: #fda4af; background: rgba(244,63,94,.12); border-color: rgba(244,63,94,.4); }
+    .court-mgr-form { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; padding: 12px 18px; border-bottom: 1px solid var(--glass-border); }
+    .court-mgr-form .field { margin:0; }
+    .court-mgr-form .input, .court-mgr-form .select { min-width: 0; }
+    .court-mgr-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    tr.court-off td { opacity:.62; }
+    .badge-open { color: #86efac; background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.38); }
+    .court-gen-box { display:flex; gap:14px; flex-wrap:wrap; align-items:center; justify-content:space-between; padding: 14px 18px; border-bottom: 1px solid var(--glass-border);
+      background: linear-gradient(90deg, rgba(46,230,166,.10), rgba(46,230,166,0)); }
+    .court-gen-box p { margin:0; font-size:.82rem; max-width: 640px; }
+    .court-lock-wrap { padding: 14px 18px 4px; border-top: 1px solid var(--glass-border); }
+    .court-lock-wrap h4 { margin: 0 0 4px; font-size: .95rem; }
+    .court-lock-wrap .select { padding: 4px 8px; font-size: .8rem; min-width: 120px; }
     .badge-fix { color: var(--accent); background: rgba(255,181,71,.12); border-color: rgba(255,181,71,.45); }
     .corr-old { font-size: .8rem; color: var(--text-2); margin-bottom: 10px; }
     .corr-scores { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; margin-bottom: 12px; }
@@ -1134,7 +1147,7 @@ body.projection-on #projection { display:block; }
   background:rgba(239,68,68,.12); color:#fecaca; white-space:nowrap; }
 .tv-live-count.zero { border-color:var(--glass-border-strong); background:rgba(255,255,255,.04); color:var(--text-1); }
 .tv-clock { font:800 2.4rem/1 var(--font-display); font-variant-numeric:tabular-nums; letter-spacing:.02em; }
-#projection .proj-courts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:16px; }
+#projection .proj-courts { display:grid; grid-template-columns:repeat(var(--proj-cols,4),minmax(0,1fr)) !important; gap:16px; }
 #projection .proj-slot { display:flex; min-width:0; }
 #projection .proj-slot > .court-card { flex:1; min-width:0; }
 #projection .court-controls { display:none !important; }
@@ -1642,6 +1655,64 @@ body.projection-on #projection { display:block; }
                 <button type="button" class="btn btn-sm" id="btnAutoDraw">🎲 Undian Rawak</button>
                 <button type="button" class="btn btn-primary btn-sm" id="btnSaveDraw">💾 Simpan Undian</button>
               </div>
+            </div>
+
+            <!-- v1.17.0: Urus Gelanggang (tambah / aktif / tutup) -->
+            <div class="card glass" id="courtManagerCard" style="grid-column: 1 / -1; padding: 0; overflow: hidden;">
+              <div class="card-bar">
+                <div>
+                  <h3 class="card-title" style="margin:0;">🏟️ Urus Gelanggang <span class="badge badge-fix">Master Admin Sahaja</span></h3>
+                  <p class="muted" style="font-size:.8rem;margin-top:4px;">Tambah gelanggang baharu, aktifkan atau tutup gelanggang. Bila gelanggang <strong>ditutup</strong>, baki perlawanan (Menunggu Giliran) disusun semula ke gelanggang yang <strong>aktif sahaja</strong>. Gelanggang <strong>SR + SM (Terbuka)</strong> menerima semua kategori.</p>
+                </div>
+                <div class="court-mgr-actions">
+                  <button type="button" class="btn btn-sm" data-court-rebalance="SM" title="Susun semula baki perlawanan Sekolah Menengah ke gelanggang aktif">⟳ Susun Semula Baki SM</button>
+                  <button type="button" class="btn btn-sm" data-court-rebalance="SR" title="Susun semula baki perlawanan Sekolah Rendah ke gelanggang aktif">⟳ Susun Semula Baki SR</button>
+                </div>
+              </div>
+              <!-- v1.18.0: Jana Susunan - buka semua gelanggang kepada semua kategori & agih sekata -->
+              <div class="court-gen-box">
+                <p>⚡ <strong>Jana Susunan</strong>: semua gelanggang aktif dibuka kepada <strong>semua kategori</strong> (SR &amp; SM) dan baki perlawanan yang <strong>belum sepak mula</strong> diagih semula secara sekata. Perlawanan yang sedang LIVE / menunggu pengesahan diteruskan seperti biasa. Kunci dahulu gelanggang Separuh Akhir &amp; Akhir di bawah sebelum menjana.</p>
+                <button type="button" class="btn btn-primary" id="btnGenerateCourts">⚡ Jana Susunan Semua Gelanggang</button>
+              </div>
+              <div class="court-mgr-form">
+                <div class="field" style="width:140px;">
+                  <label for="newCourtId">Kod Gelanggang</label>
+                  <input type="text" class="input" id="newCourtId" placeholder="cth: E" maxlength="3" autocomplete="off" style="text-transform:uppercase;" />
+                </div>
+                <div class="field" style="flex:1 1 200px;">
+                  <label for="newCourtName">Nama (pilihan)</label>
+                  <input type="text" class="input" id="newCourtName" placeholder="cth: Gelanggang E (Dewan 2)" maxlength="40" />
+                </div>
+                <div class="field" style="width:190px;">
+                  <label for="newCourtKategori">Kategori</label>
+                  <select class="select" id="newCourtKategori">
+                    <option value="SM">Sekolah Menengah (SM)</option>
+                    <option value="SR">Sekolah Rendah (SR)</option>
+                    <option value="SEMUA">Semua Kategori (Terbuka)</option>
+                  </select>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" id="btnAddCourt">＋ Tambah Gelanggang</button>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table" id="courtManagerTable">
+                  <thead>
+                    <tr><th>Gel.</th><th>Nama</th><th>Kategori</th><th>Status</th><th class="num">Baki Perlawanan</th><th>Sekarang</th><th>Tindakan</th></tr>
+                  </thead>
+                  <tbody id="courtManagerBody"><!-- Dijana oleh renderCourtManager() --></tbody>
+                </table>
+              </div>
+              <!-- v1.18.0: Kunci gelanggang Separuh Akhir / Tempat 3/4 / Akhir -->
+              <div class="court-lock-wrap">
+                <h4>🔒 Kunci Gelanggang Separuh Akhir &amp; Akhir</h4>
+                <p class="muted" style="font-size:.8rem;margin:0 0 8px;">Pilih gelanggang tempat perlawanan ini akan berlangsung. <strong>Jana Susunan</strong> akan sentiasa meletakkan perlawanan yang dikunci di gelanggang pilihan anda.</p>
+                <div class="table-wrap">
+                  <table class="data-table" id="courtLockTable">
+                    <thead><tr><th>ID</th><th>Kat.</th><th>Peringkat</th><th>Perlawanan</th><th>Status</th><th>Gelanggang Dikunci</th></tr></thead>
+                    <tbody id="courtLockBody"><!-- Dijana oleh renderCourtLocks() --></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="hint-box" id="courtCfgInfo" style="margin:12px 18px 16px;">Senarai gelanggang.</div>
             </div>
 
             <!-- Tugasan gelanggang -->
@@ -6190,7 +6261,7 @@ void main() {
     // URL kekal sama. Jika terpaksa buat "New deployment" (URL baharu), tukar URL pada baris 5.
     // URL dibaca daripada <meta name="gas-web-app-url"> pada BARIS 5 index.html (satu-satunya tempat URL).
     const GAS_URL = ((document.querySelector('meta[name="gas-web-app-url"]') || {}).content || '').trim();
-    const GAS_MIN_VERSI = '1.9.7';   // versi Code.gs dengan papan live pantas (CacheService)
+    const GAS_MIN_VERSI = '1.10.0';  // versi Code.gs dengan Jana Susunan (gelanggang terbuka + kunci Separuh Akhir / Akhir)
     const ADMIN_KEY_STORAGE = 'FUTSAL_PK_KBB_ADMIN_KEY';
 
     const EVENTS = {
@@ -6450,6 +6521,11 @@ void main() {
         teams: deepClone(INITIAL_TEAMS),
         matches: buildInitialMatches(),
         courts: deepClone(INITIAL_COURTS),
+        courtConfig: defaultCourtConfig(),   // v1.17.0: senarai semua gelanggang (aktif / ditutup)
+        courtConfigVersi: 0,
+        courtConfigPending: false,
+        courtSusunan: {},                // v1.18.0: { matchId: urutan } hasil Jana Susunan
+        courtKunciAcara: {},             // v1.18.0: { matchId: gelanggang } Separuh Akhir / Akhir dikunci
         users: deepClone(INITIAL_USERS),
         referees: deepClone(INITIAL_REFEREES),
         approvalLog: [],                 // { masa, matchId, keputusan, tindakan, oleh }
@@ -6549,6 +6625,668 @@ void main() {
     let refSelectedCourt = null;       // gelanggang dipilih di Meja Pengadil (belum dikunci)
     const livePushTimers = {};
 
+    /* ---------------------------------------------------------
+       3.0b URUS GELANGGANG (v1.17.0) - MASTER ADMIN
+       state.courtConfig = SEMUA gelanggang { id, nama, kategori, aktif }
+       state.courts      = gelanggang AKTIF sahaja (semua paparan guna senarai ini)
+       Tutup gelanggang -> baki perlawanan (MENUNGGU GILIRAN) disusun semula ke
+       gelanggang AKTIF sahaja (kategori sama). Senarai dikongsi melalui Code.gs v1.9.9.
+       --------------------------------------------------------- */
+    const COURT_ID_RE = /^[A-Z0-9]{1,3}$/;
+    const COURT_KAT_OPEN = 'SEMUA';   // v1.18.0: gelanggang terbuka kepada semua kategori
+    const COURT_MAX = 12;
+    const COURT_STAGE_RANK = { 'PERINGKAT KUMPULAN': 0, 'PUSINGAN KEDUA': 1, 'SUKU AKHIR': 1, 'SEPARUH AKHIR': 2, 'TEMPAT 3/4': 3, 'AKHIR': 3 };
+    const courtCfgSync = { busy: false, error: '', lastOk: null, changedAt: 0, lastTry: 0 };
+
+    function defaultCourtConfig() {
+      return INITIAL_COURTS.map(c => ({ id: c.id, nama: c.nama, kategori: c.kategori, aktif: true }));
+    }
+
+    function cleanCourtConfig(list) {
+      const out = [];
+      const seen = {};
+      (Array.isArray(list) ? list : []).forEach(g => {
+        if (!g) return;
+        const id = String(g.id || '').trim().toUpperCase();
+        const kat = String(g.kategori || '').trim().toUpperCase();
+        if (!COURT_ID_RE.test(id) || seen[id] || (kat !== 'SR' && kat !== 'SM' && kat !== COURT_KAT_OPEN)) return;
+        seen[id] = true;
+        const nama = String(g.nama || '').replace(/\s+/g, ' ').trim().slice(0, 40) || `Gelanggang ${id}`;
+        out.push({ id, nama, kategori: kat, aktif: !(g.aktif === false || g.aktif === 'false') });
+      });
+      return out.slice(0, COURT_MAX);
+    }
+
+    function courtKategoriLabel(kat) {
+      if (kat === COURT_KAT_OPEN) return 'Semua Kategori';
+      return kat === 'SR' ? 'Sekolah Rendah' : 'Sekolah Menengah';
+    }
+
+    /* v1.18.0: gelanggang TERBUKA (kategori 'SEMUA') menerima perlawanan SR & SM.
+       kat 'SEMUA' sebagai tapisan paparan = semua gelanggang. */
+    function courtAccepts(c, kat) {
+      if (!c) return false;
+      return kat === 'SEMUA' || c.kategori === COURT_KAT_OPEN || c.kategori === kat;
+    }
+
+    function courtKatBadge(kat, panjang = false) {
+      if (kat === COURT_KAT_OPEN) return `<span class="badge badge-open">${panjang ? 'Semua Kategori' : 'SR + SM'}</span>`;
+      if (kat === 'SR') return `<span class="badge badge-sr">${panjang ? 'Sek. Rendah' : 'SR'}</span>`;
+      return `<span class="badge badge-sm">${panjang ? 'Sek. Menengah' : 'SM'}</span>`;
+    }
+
+    // Urutan giliran: ikut Jana Susunan (jika ada), kemudian kategori & nombor perlawanan
+    function matchQueueCmp(a, b) {
+      const s = state.courtSusunan || {};
+      const ra = s[a.id], rb = s[b.id];
+      const ada = typeof ra === 'number', adb = typeof rb === 'number';
+      if (ada && adb && ra !== rb) return ra - rb;
+      if (ada !== adb) return ada ? -1 : 1;
+      return a.kategori === b.kategori ? a.no - b.no : a.kategori.localeCompare(b.kategori);
+    }
+
+    const LOCKABLE_STAGES = ['SEPARUH AKHIR', 'TEMPAT 3/4', 'AKHIR'];
+
+    // Kunci acara yang masih sah (gelanggang wujud & aktif & menerima kategori perlawanan)
+    function validEventLock(m) {
+      const g = m && (state.courtKunciAcara || {})[m.id];
+      if (!g) return null;
+      const cfg = state.courtConfig.find(x => x.id === g);
+      return cfg && cfg.aktif && courtAccepts(cfg, m.kategori) ? g : null;
+    }
+
+    function makeCourt(cfg) {
+      const ev = (state.events && state.events[cfg.kategori]) || EVENTS[cfg.kategori] || {};
+      return {
+        id: cfg.id, nama: cfg.nama, eventId: ev.id || '', kategori: cfg.kategori,
+        kategoriNama: ev.kategori || courtKategoriLabel(cfg.kategori).toUpperCase(),
+        matchSemasa: null, matchSeterusnya: null, skorLiveP1: 0, skorLiveP2: 0,
+        status: COURT_STATUS.SEDIA, fasaMasa: 'SEDIA', fasaMulaPada: null,
+        pengadil: null, pengadilId: null, dikunciPada: null, kunciBasi: false,
+        masaMula: null, kemaskiniTerakhir: null, ditangguh: null, rehat: null
+      };
+    }
+
+    // Gelanggang sedang digunakan (tidak boleh ditutup / disusun semula)
+    function isCourtBusy(c) {
+      return !!c && (c.status === COURT_STATUS.LIVE || c.status === COURT_STATUS.TAMAT || !!c.pengadilId || !!c.rehat);
+    }
+
+    // Selaraskan state.courts (gelanggang aktif) dengan state.courtConfig
+    function syncCourtsWithConfig() {
+      const cfg = state.courtConfig || [];
+      const old = Array.isArray(state.courts) ? state.courts : [];
+      const byId = {};
+      old.forEach(c => { if (c && c.id) byId[c.id] = c; });
+      const next = [];
+      cfg.forEach(g => {
+        const c = byId[g.id];
+        // Gelanggang yang masih sibuk dikekalkan sehingga perlawanan semasa selesai
+        if (!g.aktif && !(c && isCourtBusy(c))) return;
+        const court = c || makeCourt(g);
+        court.nama = g.nama;
+        if (court.kategori !== g.kategori) {
+          const ev = (state.events && state.events[g.kategori]) || {};
+          court.kategori = g.kategori;
+          court.eventId = ev.id || court.eventId;
+          court.kategoriNama = ev.kategori || courtKategoriLabel(g.kategori).toUpperCase();
+          if (!isCourtBusy(court)) { court.matchSemasa = null; court.matchSeterusnya = null; }
+        }
+        court.ditutup = !g.aktif;
+        next.push(court);
+      });
+      const changed = next.length !== old.length || next.some((c, i) => old[i] !== c);
+      state.courts = next;
+      Object.keys(state.events || {}).forEach(k => {
+        if (state.events[k]) state.events[k].gelanggang = cfg.filter(g => g.aktif && courtAccepts(g, k)).map(g => g.id);
+      });
+      return changed;
+    }
+
+    function ensureCourtConfig() {
+      let cfg = cleanCourtConfig(state.courtConfig);
+      if (!cfg.length) {
+        cfg = cleanCourtConfig((state.courts || []).map(c => ({ id: c && c.id, nama: c && c.nama, kategori: c && c.kategori, aktif: true })));
+        if (!cfg.length) cfg = defaultCourtConfig();
+      }
+      state.courtConfig = cfg;
+      if (typeof state.courtConfigVersi !== 'number') state.courtConfigVersi = Number(state.courtConfigVersi) || 0;
+      if (typeof state.courtConfigPending !== 'boolean') state.courtConfigPending = false;
+      if (!state.courtSusunan || typeof state.courtSusunan !== 'object') state.courtSusunan = {};
+      if (!state.courtKunciAcara || typeof state.courtKunciAcara !== 'object') state.courtKunciAcara = {};
+      syncCourtsWithConfig();
+    }
+
+    // Kunci pasukan (kod & nama sebenar) - elak pasukan sama bermain serentak di dua gelanggang
+    function matchTeamKeys(m) {
+      const keys = [];
+      [['kodP1', 'namaP1'], ['kodP2', 'namaP2']].forEach(([k, n]) => {
+        if (m[k]) keys.push('K|' + String(m.kategori || '') + '|' + String(m[k]).toUpperCase());   // kod (A1, B2...) berulang antara SR & SM
+        if (m[n] && !isPlaceholderName(m[n])) keys.push('N|' + String(m[n]).trim().toUpperCase());
+      });
+      return keys;
+    }
+
+    function matchStageRank(m) {
+      const r = COURT_STAGE_RANK[String(m.peringkat || '').toUpperCase()];
+      return typeof r === 'number' ? r : 0;
+    }
+
+    // v1.18.0: Rancang susunan baki perlawanan (satu atau semua kategori) ke gelanggang AKTIF.
+    // - Perlawanan diagih "pusingan demi pusingan" (satu perlawanan setiap gelanggang).
+    // - Kategori berlainan diselang-seli secara sekata (ikut kedudukan relatif dalam kategori).
+    // - Tiada pasukan sama dalam pusingan yang sama; dalam satu kategori, peringkat tidak
+    //   dicampur (cth. Akhir tidak serentak dengan Separuh Akhir kategori yang sama).
+    // - Perlawanan yang dikunci (Separuh Akhir / Akhir) sentiasa ke gelanggang kuncinya.
+    // - Perlawanan LIVE / Tunggu Sah / dikunci pengadil tidak disentuh.
+    function planCourtSchedule(kats) {
+      const courts = state.courts.filter(c => !c.ditutup && kats.some(k => courtAccepts(c, k)));
+      if (!courts.length) return { error: `Tiada gelanggang aktif untuk ${kats.map(courtKategoriLabel).join(' & ')}.` };
+      const busyIds = new Set(state.courts.filter(c => isCourtBusy(c) && c.matchSemasa).map(c => c.matchSemasa));
+      const perKat = {};
+      kats.forEach(k => {
+        perKat[k] = state.matches
+          .filter(m => m.kategori === k && m.status === MATCH_STATUS.MENUNGGU && !busyIds.has(m.id))
+          .sort((a, b) => a.no - b.no);
+      });
+      const merged = [];
+      kats.forEach(k => perKat[k].forEach((m, i) => merged.push({ m, key: (i + 0.5) / perKat[k].length })));
+      merged.sort((a, b) => a.key - b.key || a.m.kategori.localeCompare(b.m.kategori) || a.m.no - b.m.no);
+      const queue = merged.map(x => x.m);
+
+      const liveNow = state.matches.filter(m => kats.includes(m.kategori) && (m.status === MATCH_STATUS.LIVE || busyIds.has(m.id)));
+      const liveTeams = [];
+      const liveRanks = {};
+      liveNow.forEach(m => {
+        liveTeams.push(...matchTeamKeys(m));
+        (liveRanks[m.kategori] = liveRanks[m.kategori] || []).push(matchStageRank(m));
+      });
+      // Gelanggang kosong dahulu, kemudian gelanggang yang masih sibuk
+      const order = courts.slice().sort((a, b) => (isCourtBusy(a) ? 1 : 0) - (isCourtBusy(b) ? 1 : 0));
+      const orderIdx = {};
+      const load = {};
+      order.forEach((c, i) => { load[c.id] = 0; orderIdx[c.id] = i; });
+      const lockOf = m => {
+        const g = validEventLock(m);
+        return g && orderIdx[g] !== undefined ? g : null;
+      };
+      const pickCourt = (m, used) => {
+        const cand = order.filter(c => !used.has(c.id) && courtAccepts(c, m.kategori));
+        if (!cand.length) return null;
+        cand.sort((a, b) => load[a.id] - load[b.id] || orderIdx[a.id] - orderIdx[b.id]);
+        return cand[0].id;
+      };
+
+      const plan = [];
+      let first = true;
+      let guard = 0;
+      while (queue.length && guard++ < 1000) {
+        const round = [];
+        const used = new Set();
+        const teams = new Set(first ? liveTeams : []);
+        // Peringkat terendah yang masih berbaki bagi setiap kategori
+        const minRank = {};
+        queue.forEach(m => {
+          const r = matchStageRank(m);
+          if (minRank[m.kategori] === undefined || r < minRank[m.kategori]) minRank[m.kategori] = r;
+        });
+        for (let i = 0; i < queue.length && used.size < order.length; i++) {
+          const m = queue[i];
+          const r = matchStageRank(m);
+          if (r !== minRank[m.kategori]) continue;
+          if (first && (liveRanks[m.kategori] || []).some(x => x < r)) continue;
+          const keys = matchTeamKeys(m);
+          if (keys.some(k => teams.has(k))) continue;
+          const lock = lockOf(m);
+          const court = lock ? (used.has(lock) ? null : lock) : pickCourt(m, used);
+          if (!court) continue;
+          round.push({ m, court });
+          used.add(court);
+          keys.forEach(k => teams.add(k));
+        }
+        if (!round.length) {
+          if (first) { first = false; continue; }
+          const m = queue[0];
+          const court = lockOf(m) || pickCourt(m, new Set());
+          if (!court) { queue.shift(); continue; }
+          round.push({ m, court });
+        }
+        round.forEach(({ m, court }) => {
+          load[court] += 1;
+          plan.push({ id: m.id, gelanggang: court });
+          queue.splice(queue.indexOf(m), 1);
+        });
+        first = false;
+      }
+      return { plan, courts: courts.map(c => c.id) };
+    }
+
+    // Serasi dengan panggilan lama (satu kategori)
+    function planCourtRebalance(kategori) {
+      return planCourtSchedule([kategori]);
+    }
+
+    function snapshotCourtAssign() {
+      const snap = {};
+      state.matches.forEach(m => { snap[m.id] = m.gelanggang; });
+      return snap;
+    }
+
+    // Gelanggang SEDIA yang memegang perlawanan milik gelanggang lain -> kosongkan & isi semula
+    function releaseMisplacedCourtMatches(all = false) {
+      state.courts.forEach(c => {
+        if (isCourtBusy(c) || !c.matchSemasa) return;
+        const m = getMatch(c.matchSemasa);
+        if (all || !m || m.gelanggang !== c.id) c.matchSemasa = null;
+      });
+    }
+
+    // Terima senarai gelanggang daripada Google Sheets (semua peranti)
+    function applyServerCourtConfig(srv, opts = {}) {
+      if (!srv || !Array.isArray(srv.senarai)) return false;
+      const versi = Number(srv.versi) || 0;
+      if (!opts.force) {
+        if (state.courtConfigPending) return false;              // perubahan tempatan belum dihantar
+        if (versi <= (Number(state.courtConfigVersi) || 0)) return false;
+      }
+      const cfg = cleanCourtConfig(srv.senarai);
+      if (!cfg.length) return false;
+      state.courtConfigVersi = versi;
+      // v1.18.0: urutan Jana Susunan & kunci acara turut dikongsi
+      const susunan = (srv.susunan && typeof srv.susunan === 'object') ? srv.susunan : {};
+      const kunci = (srv.kunciAcara && typeof srv.kunciAcara === 'object') ? srv.kunciAcara : {};
+      const extraSama = JSON.stringify(susunan) === JSON.stringify(state.courtSusunan || {}) &&
+        JSON.stringify(kunci) === JSON.stringify(state.courtKunciAcara || {});
+      state.courtSusunan = susunan;
+      state.courtKunciAcara = kunci;
+      if (JSON.stringify(cfg) === JSON.stringify(state.courtConfig)) {
+        if (!extraSama) { autoAssignCourts(null, { silent: true }); saveState(); return true; }
+        saveState();
+        return false;
+      }
+      state.courtConfig = cfg;
+      syncCourtsWithConfig();
+      releaseMisplacedCourtMatches();
+      autoAssignCourts(null, { silent: true });
+      saveState();
+      return true;
+    }
+
+    function updateCourtCfgInfo() {
+      const el = document.getElementById('courtCfgInfo');
+      if (!el) return;
+      const aktif = state.courtConfig.filter(g => g.aktif).length;
+      const tutup = state.courtConfig.length - aktif;
+      let msg = `${aktif} gelanggang aktif${tutup ? ` · ${tutup} ditutup` : ''}. `;
+      if (!getGasUrl()) msg += 'Disimpan dalam peranti ini sahaja (tiada Google Sheets).';
+      else if (courtCfgSync.busy) msg += '⏳ Menghantar ke Google Sheets…';
+      else if (state.courtConfigPending) msg += `⚠ Belum dihantar ke Google Sheets${courtCfgSync.error ? ': ' + courtCfgSync.error : ''}. Akan dicuba semula secara automatik.`;
+      else if (courtCfgSync.lastOk) msg += `☁ Dikongsi dengan semua peranti melalui Google Sheets (${formatTime(courtCfgSync.lastOk)}).`;
+      else msg += '☁ Dikongsi dengan semua peranti melalui Google Sheets.';
+      el.textContent = msg;
+      el.classList.toggle('is-error', !!state.courtConfigPending && !!courtCfgSync.error);
+    }
+
+    // Hantar senarai gelanggang & susunan baki perlawanan ke Google Sheets (Code.gs v1.9.9)
+    async function pushCourtConfig(before = null) {
+      if (!getGasUrl() || courtCfgSync.busy) { updateCourtCfgInfo(); return null; }
+      courtCfgSync.busy = true;
+      courtCfgSync.lastTry = Date.now();
+      updateCourtCfgInfo();
+      const versiHantar = state.courtConfigVersi;
+      let res = null;
+      try {
+        res = await callGas({
+          action: 'urusGelanggang',
+          adminKey: getAdminKey() || undefined,
+          versi: versiHantar,
+          senarai: state.courtConfig,
+          susunan: state.courtSusunan || {},          // v1.18.0
+          kunciAcara: state.courtKunciAcara || {},    // v1.18.0
+          matches: state.matches.filter(m => m.status === MATCH_STATUS.MENUNGGU).map(m => ({ id: m.id, gelanggang: m.gelanggang }))
+        });
+      } finally {
+        courtCfgSync.busy = false;
+      }
+      if (res && res.ok) {
+        if (state.courtConfigVersi === versiHantar) state.courtConfigPending = false;
+        if (res.senaraiGelanggang && state.courtConfigVersi === versiHantar) {
+          state.courtConfigVersi = Number(res.senaraiGelanggang.versi) || versiHantar;
+        }
+        courtCfgSync.lastOk = nowIso();
+        courtCfgSync.error = '';
+        courtCfgSync.changedAt = Date.now();
+        saveState();
+        updateCourtCfgInfo();
+        return res;
+      }
+      const ditolak = res && !res.networkError && res.kod !== 'SKRIP_LAMA' && res.senaraiGelanggang;
+      courtCfgSync.error = (res && res.error) || 'ralat tidak diketahui';
+      if (ditolak) {
+        // Google Sheets menolak perubahan -> kembali kepada senarai & susunan pelayan
+        state.courtConfigPending = false;
+        if (before) state.matches.forEach(m => { if (m.status === MATCH_STATUS.MENUNGGU && before[m.id]) m.gelanggang = before[m.id]; });
+        applyServerCourtConfig(res.senaraiGelanggang, { force: true });
+        releaseMisplacedCourtMatches();
+        autoAssignCourts(null, { silent: true });
+        saveState();
+        refreshAllViews();
+        showToast(`Google Sheets menolak perubahan gelanggang: ${courtCfgSync.error}`, 'error', 7000);
+      } else if (res && res.kod === 'SKRIP_LAMA') {
+        showToast('Perubahan gelanggang disimpan dalam peranti ini. Code.gs di Google Sheets masih versi lama - tampal Code.gs v1.10.0 & Deploy (New version) supaya semua peranti menerima senarai gelanggang baharu.', 'warn', 9000);
+      } else {
+        showToast(`Perubahan gelanggang disimpan dalam peranti ini tetapi belum dihantar ke Google Sheets (${courtCfgSync.error}). Akan dicuba semula.`, 'warn', 6500);
+      }
+      updateCourtCfgInfo();
+      return res;
+    }
+
+    // Cuba hantar semula perubahan gelanggang yang tertangguh (Master Admin)
+    function retryPendingCourtConfig() {
+      try {
+        if (!state.courtConfigPending || courtCfgSync.busy || !canManageSystem() || !getGasUrl()) return;
+        if (Date.now() - (courtCfgSync.lastTry || 0) < 30000) return;
+        pushCourtConfig(null).catch(() => {});
+      } catch (e) { /* abaikan */ }
+    }
+
+    // Simpan perubahan senarai gelanggang + susun semula baki perlawanan kategori terlibat
+    async function commitCourtChange(kategoriList, before, label) {
+      state.courtConfigVersi = Math.max(Date.now(), (Number(state.courtConfigVersi) || 0) + 1);
+      state.courtConfigPending = !!getGasUrl();
+      courtCfgSync.changedAt = Date.now();
+      courtCfgSync.error = '';
+      syncCourtsWithConfig();
+      let moved = 0;
+      const ralat = [];
+      // v1.18.0: ada gelanggang TERBUKA -> susun semua kategori bersama (agihan sekata)
+      const terbuka = state.courtConfig.some(g => g.aktif && g.kategori === COURT_KAT_OPEN);
+      const runs = terbuka ? [['SR', 'SM']]
+        : (kategoriList.includes(COURT_KAT_OPEN) ? [['SR'], ['SM']] : kategoriList.filter(k => k === 'SR' || k === 'SM').map(k => [k]));
+      if (terbuka) state.courtSusunan = {};
+      runs.forEach(kats => {
+        const r = planCourtSchedule(kats);
+        if (r.error) { ralat.push(r.error); return; }
+        const susunan = state.courtSusunan || (state.courtSusunan = {});
+        if (!terbuka) Object.keys(susunan).forEach(id => { const mm = getMatch(id); if (!mm || kats.includes(mm.kategori)) delete susunan[id]; });
+        r.plan.forEach((p, i) => {
+          const m = getMatch(p.id);
+          susunan[p.id] = i;
+          if (m && m.gelanggang !== p.gelanggang) { m.gelanggang = p.gelanggang; moved += 1; }
+        });
+      });
+      releaseMisplacedCourtMatches(true);
+      autoAssignCourts(null, { silent: true });
+      saveState();
+      refreshAllViews();
+      showToast(`${label}. ${moved} baki perlawanan disusun semula ke gelanggang aktif.${ralat.length ? ' ' + ralat.join(' ') : ''}`,
+        ralat.length ? 'warn' : 'success', 5500);
+      if (getGasUrl()) await pushCourtConfig(before);
+      updateCourtCfgInfo();
+      return moved;
+    }
+
+    function bakiDiGelanggang(id) {
+      return state.matches.filter(m => m.gelanggang === id && m.status === MATCH_STATUS.MENUNGGU).length;
+    }
+
+    async function addCourtFromForm() {
+      if (!canManageSystem()) { showToast('Hanya Master Admin boleh menambah gelanggang.', 'error'); return false; }
+      const idEl = document.getElementById('newCourtId');
+      const namaEl = document.getElementById('newCourtName');
+      const katEl = document.getElementById('newCourtKategori');
+      const id = String(idEl ? idEl.value : '').trim().toUpperCase();
+      const kat = katEl ? katEl.value : 'SM';
+      if (!COURT_ID_RE.test(id)) { showToast('Kod gelanggang mesti 1-3 huruf / nombor (cth: E).', 'warn'); if (idEl) idEl.focus(); return false; }
+      if (state.courtConfig.some(g => g.id === id)) { showToast(`Gelanggang ${id} sudah wujud. Gunakan butang "Aktifkan" jika ia ditutup.`, 'warn'); return false; }
+      if (state.courtConfig.length >= COURT_MAX) { showToast(`Maksimum ${COURT_MAX} gelanggang.`, 'warn'); return false; }
+      const nama = String(namaEl ? namaEl.value : '').replace(/\s+/g, ' ').trim().slice(0, 40) || `Gelanggang ${id}`;
+      if (!await uiConfirm(`Tambah Gelanggang ${id}?\n\n${nama} · ${courtKategoriLabel(kat)}\n\nBaki perlawanan ${courtKategoriLabel(kat)} akan disusun semula merangkumi gelanggang baharu ini.`)) return false;
+      const before = snapshotCourtAssign();
+      state.courtConfig.push({ id, nama, kategori: kat, aktif: true });
+      if (idEl) idEl.value = '';
+      if (namaEl) namaEl.value = '';
+      await commitCourtChange([kat], before, `Gelanggang ${id} ditambah`);
+      return true;
+    }
+
+    async function setCourtActive(id, aktif) {
+      if (!canManageSystem()) { showToast('Hanya Master Admin boleh mengubah status gelanggang.', 'error'); return false; }
+      const cfg = state.courtConfig.find(g => g.id === id);
+      if (!cfg) return false;
+      if (cfg.aktif === aktif) return true;
+      const label = courtKategoriLabel(cfg.kategori);
+      if (!aktif) {
+        const court = getCourt(id);
+        if (court && isCourtBusy(court)) {
+          const sebab = court.rehat ? 'dalam Rehat Kecemasan' : (court.status === COURT_STATUS.LIVE ? 'sedang LIVE'
+            : (court.status === COURT_STATUS.TAMAT ? 'menunggu pengesahan keputusan' : `dikunci oleh ${court.pengadil || 'pengadil'}`));
+          showToast(`Gelanggang ${id} ${sebab}. Tamatkan perlawanan / lepaskan kunci dahulu sebelum menutup gelanggang.`, 'warn', 6500);
+          return false;
+        }
+        const lain = state.courtConfig.filter(g => g.aktif && g.id !== id);
+        const katTanpa = ['SR', 'SM'].filter(k => !lain.some(g => courtAccepts(g, k)));
+        if (katTanpa.length) {
+          showToast(`Tidak boleh tutup: Gelanggang ${id} satu-satunya gelanggang aktif untuk ${katTanpa.map(courtKategoriLabel).join(' & ')}. Tambah / aktifkan gelanggang lain dahulu.`, 'warn', 7000);
+          return false;
+        }
+        const dikunci = state.matches.filter(m => (state.courtKunciAcara || {})[m.id] === id && m.status === MATCH_STATUS.MENUNGGU);
+        if (dikunci.length) showToast(`Perhatian: ${dikunci.map(m => m.id).join(', ')} dikunci ke Gelanggang ${id}. Kunci itu diabaikan selagi gelanggang ditutup.`, 'warn', 7000);
+        const baki = bakiDiGelanggang(id);
+        if (!await uiConfirm(`Tutup Gelanggang ${id}?\n\n${baki} baki perlawanan akan dipindahkan ke Gelanggang ${lain.map(g => g.id).join(', ')}\n\nGelanggang ini tidak lagi dipaparkan dan pengadil tidak boleh Sepak Mula di sini. Baki perlawanan ${label} disusun semula mengikut gelanggang aktif sahaja.`)) return false;
+      } else if (!await uiConfirm(`Aktifkan semula Gelanggang ${id}?\n\n${cfg.nama} · ${label}\n\nBaki perlawanan ${label} akan disusun semula merangkumi gelanggang ini.`)) {
+        return false;
+      }
+      const before = snapshotCourtAssign();
+      cfg.aktif = aktif;
+      await commitCourtChange([cfg.kategori], before, aktif ? `Gelanggang ${id} diaktifkan` : `Gelanggang ${id} ditutup`);
+      return true;
+    }
+
+    async function rebalanceCourts(kat) {
+      if (!canManageSystem()) { showToast('Hanya Master Admin boleh menyusun semula gelanggang.', 'error'); return false; }
+      const aktif = state.courtConfig.filter(g => g.aktif && courtAccepts(g, kat)).map(g => g.id);
+      if (!aktif.length) { showToast(`Tiada gelanggang aktif untuk ${courtKategoriLabel(kat)}.`, 'warn'); return false; }
+      const baki = state.matches.filter(m => m.kategori === kat && m.status === MATCH_STATUS.MENUNGGU).length;
+      if (!await uiConfirm(`Susun semula baki perlawanan ${courtKategoriLabel(kat)}?\n\n${baki} perlawanan · Gelanggang ${aktif.join(', ')}\n\nPerlawanan yang sedang LIVE / menunggu pengesahan tidak diubah.`)) return false;
+      await commitCourtChange([kat], snapshotCourtAssign(), `Susun semula ${kat}`);
+      return true;
+    }
+
+    // v1.18.0: JANA SUSUNAN - buka semua gelanggang kepada semua kategori & agih sekata
+    async function generateOpenSchedule() {
+      if (!canManageSystem()) { showToast('Hanya Master Admin boleh menjana susunan gelanggang.', 'error'); return false; }
+      if (getGasUrl() && gasHealth.versi && cmpVersi(gasHealth.versi, GAS_MIN_VERSI) < 0) {
+        showToast(`Code.gs di Google Sheets masih v${gasHealth.versi}. Jana Susunan perlukan v${GAS_MIN_VERSI}: tampal Code.gs terkini > Deploy > Manage deployments > ✏️ Edit > Version: New version > Deploy.`, 'error', 10000);
+        return false;
+      }
+      const aktif = state.courtConfig.filter(g => g.aktif);
+      if (!aktif.length) { showToast('Tiada gelanggang aktif.', 'warn'); return false; }
+      const busy = state.courts.filter(c => !c.ditutup && isCourtBusy(c));
+      const busyIds = new Set(busy.map(c => c.matchSemasa).filter(Boolean));
+      const baki = state.matches.filter(m => m.status === MATCH_STATUS.MENUNGGU && !busyIds.has(m.id));
+      // Selepas dijana semua gelanggang terbuka -> kunci sah jika gelanggangnya aktif
+      const lockAktif = m => { const g = (state.courtKunciAcara || {})[m.id]; return g && aktif.some(x => x.id === g) ? g : null; };
+      const kunci = baki.filter(m => lockAktif(m));
+      const kunciTak = baki.filter(m => (state.courtKunciAcara || {})[m.id] && !lockAktif(m));
+      const lines = [
+        `${aktif.length} gelanggang aktif: ${aktif.map(g => g.id).join(', ')} → dibuka kepada SEMUA kategori (SR & SM).`,
+        `${baki.length} baki perlawanan (belum sepak mula) akan diagih semula secara sekata.`,
+        busy.length ? `${busy.length} gelanggang sedang digunakan (${busy.map(c => c.id).join(', ')}) - perlawanan semasa diteruskan.` : 'Tiada perlawanan sedang berlangsung.',
+        kunci.length ? `🔒 Dikunci: ${kunci.map(m => `${m.id} → ${lockAktif(m)}`).join(', ')}` : '🔒 Tiada Separuh Akhir / Akhir dikunci (akan diagih bebas).'
+      ];
+      if (kunciTak.length) lines.push(`⚠ Kunci diabaikan (gelanggang ditutup): ${kunciTak.map(m => m.id).join(', ')}`);
+      if (!await uiConfirm(`Jana susunan semua gelanggang?\n\n${lines.join('\n')}`)) return false;
+      const before = snapshotCourtAssign();
+      state.courtConfig.forEach(g => { g.kategori = COURT_KAT_OPEN; });
+      await commitCourtChange([COURT_KAT_OPEN], before, 'Susunan dijana: semua gelanggang dibuka kepada semua kategori');
+      return true;
+    }
+
+    // v1.18.0: tukar kategori gelanggang (SR / SM / SEMUA)
+    async function setCourtKategori(id, kat) {
+      if (!canManageSystem()) { showToast('Hanya Master Admin boleh mengubah kategori gelanggang.', 'error'); renderCourtManager(); return false; }
+      const cfg = state.courtConfig.find(g => g.id === id);
+      if (!cfg || cfg.kategori === kat) return false;
+      const lain = state.courtConfig.filter(g => g.aktif && g.id !== id);
+      const katTanpa = cfg.aktif ? ['SR', 'SM'].filter(k => k !== kat && kat !== COURT_KAT_OPEN && !lain.some(g => courtAccepts(g, k))) : [];
+      if (katTanpa.length) {
+        showToast(`Tidak boleh: tiada gelanggang aktif lain untuk ${katTanpa.map(courtKategoriLabel).join(' & ')}.`, 'warn', 6500);
+        renderCourtManager();
+        return false;
+      }
+      if (!await uiConfirm(`Tukar Gelanggang ${id} kepada ${courtKategoriLabel(kat)}?\n\nBaki perlawanan yang belum sepak mula akan disusun semula.`)) { renderCourtManager(); return false; }
+      const before = snapshotCourtAssign();
+      const lama = cfg.kategori;
+      cfg.kategori = kat;
+      await commitCourtChange([lama, kat], before, `Gelanggang ${id} kini ${courtKategoriLabel(kat)}`);
+      return true;
+    }
+
+    // v1.18.0: kunci Separuh Akhir / Tempat 3/4 / Akhir ke gelanggang tertentu
+    async function setEventLock(matchId, courtId) {
+      if (!canManageSystem()) { showToast('Hanya Master Admin boleh mengunci gelanggang perlawanan.', 'error'); renderCourtLocks(); return false; }
+      const m = getMatch(matchId);
+      if (!m) return false;
+      const map = state.courtKunciAcara || (state.courtKunciAcara = {});
+      const before = snapshotCourtAssign();
+      if (courtId) map[m.id] = courtId; else delete map[m.id];
+      state.courtConfigVersi = Math.max(Date.now(), (Number(state.courtConfigVersi) || 0) + 1);
+      state.courtConfigPending = !!getGasUrl();
+      courtCfgSync.changedAt = Date.now();
+      courtCfgSync.error = '';
+      let msg = courtId ? `${m.id} dikunci ke Gelanggang ${courtId}.` : `Kunci gelanggang ${m.id} dibuang.`;
+      const court = courtId ? getCourt(courtId) : null;
+      if (courtId && m.status === MATCH_STATUS.MENUNGGU) {
+        if (court && courtAccepts(court, m.kategori)) {
+          if (m.gelanggang !== courtId) {
+            state.courts.forEach(c => { if (c.matchSemasa === m.id && c.status === COURT_STATUS.SEDIA) c.matchSemasa = null; });
+            m.gelanggang = courtId;
+          }
+        } else msg += ` Gelanggang ${courtId} belum menerima ${courtKategoriLabel(m.kategori)} - tekan Jana Susunan.`;
+      }
+      autoAssignCourts(null, { silent: true });
+      saveState();
+      refreshAllViews();
+      showToast(`${msg} Tekan ⚡ Jana Susunan untuk menyusun semula baki perlawanan.`, 'success', 5500);
+      if (getGasUrl()) await pushCourtConfig(before);
+      updateCourtCfgInfo();
+      return true;
+    }
+
+    function renderCourtLocks() {
+      const body = document.getElementById('courtLockBody');
+      if (!body) return;
+      const list = state.matches
+        .filter(m => LOCKABLE_STAGES.includes(String(m.peringkat || '').toUpperCase()))
+        .sort((a, b) => a.kategori === b.kategori ? a.no - b.no : b.kategori.localeCompare(a.kategori));
+      if (!list.length) {
+        body.innerHTML = '<tr><td colspan="6" class="muted">Tiada perlawanan Separuh Akhir / Akhir.</td></tr>';
+        return;
+      }
+      const aktif = state.courtConfig.filter(g => g.aktif);
+      const map = state.courtKunciAcara || {};
+      body.innerHTML = list.map(m => {
+        const cur = map[m.id] || '';
+        const boleh = m.status === MATCH_STATUS.MENUNGGU && canManageSystem();
+        const opts = ['<option value="">— Bebas (ikut Jana) —</option>']
+          .concat(aktif.map(g => `<option value="${escapeHtml(g.id)}" ${g.id === cur ? 'selected' : ''}>🔒 ${escapeHtml(g.nama)}</option>`));
+        if (cur && !aktif.some(g => g.id === cur)) opts.push(`<option value="${escapeHtml(cur)}" selected>🔒 ${escapeHtml(cur)} (ditutup)</option>`);
+        const sel = boleh
+          ? `<select class="select" data-event-lock="${escapeHtml(m.id)}" aria-label="Gelanggang dikunci ${escapeHtml(m.id)}">${opts.join('')}</select>`
+          : `<span class="mono">${cur ? '🔒 ' + escapeHtml(cur) : escapeHtml(m.gelanggang || '-')}</span>`;
+        return `
+          <tr>
+            <td class="mono">${escapeHtml(m.id)}</td>
+            <td>${courtKatBadge(m.kategori)}</td>
+            <td>${escapeHtml(m.peringkat)}</td>
+            <td class="team-cell">${escapeHtml(m.namaP1)} <small>lwn</small> ${escapeHtml(m.namaP2)}</td>
+            <td>${statusBadge(m)} <small class="muted">Gel. ${escapeHtml(m.gelanggang || '-')}</small></td>
+            <td>${sel}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function renderCourtManager() {
+      const body = document.getElementById('courtManagerBody');
+      if (!body) return;
+      const card = document.getElementById('courtManagerCard');
+      if (card && !card.dataset.bound) {
+        card.dataset.bound = '1';
+        const add = document.getElementById('btnAddCourt');
+        if (add) add.addEventListener('click', () => { addCourtFromForm().catch(err => console.error('[addCourt]', err)); });
+        const idEl = document.getElementById('newCourtId');
+        if (idEl) idEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCourtFromForm(); } });
+        card.addEventListener('click', e => {
+          const b = e.target.closest('button');
+          if (!b) return;
+          if (b.dataset.courtToggle) setCourtActive(b.dataset.courtToggle, b.dataset.aktif === '1').catch(err => console.error('[courtToggle]', err));
+          else if (b.dataset.courtRebalance) rebalanceCourts(b.dataset.courtRebalance).catch(err => console.error('[rebalance]', err));
+          else if (b.id === 'btnGenerateCourts') generateOpenSchedule().catch(err => console.error('[generate]', err));
+        });
+        card.addEventListener('change', e => {
+          const el = e.target;
+          if (el && el.dataset && el.dataset.eventLock) setEventLock(el.dataset.eventLock, el.value).catch(err => console.error('[eventLock]', err));
+          else if (el && el.dataset && el.dataset.courtKat) setCourtKategori(el.dataset.courtKat, el.value).catch(err => console.error('[courtKat]', err));
+        });
+      }
+      const idEl = document.getElementById('newCourtId');
+      if (idEl && !idEl.value && document.activeElement !== idEl) {
+        const ada = new Set(state.courtConfig.map(g => g.id));
+        const next = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').find(ch => !ada.has(ch));
+        idEl.placeholder = next ? `cth: ${next}` : 'cth: E1';
+      }
+      body.innerHTML = state.courtConfig.map(g => {
+        const court = getCourt(g.id);
+        const baki = bakiDiGelanggang(g.id);
+        const cur = court ? getMatch(court.matchSemasa) : null;
+        const statusHtml = g.aktif
+          ? '<span class="badge badge-ready badge-dot">Aktif</span>'
+          : '<span class="badge badge-off">Ditutup</span>';
+        let now = '-';
+        if (court && court.rehat) now = '<span class="badge badge-done">Rehat Kecemasan</span>';
+        else if (court && court.status === COURT_STATUS.LIVE) now = `<span class="badge badge-live badge-dot">Live</span> <span class="mono">${escapeHtml(court.matchSemasa || '')}</span>`;
+        else if (court && court.status === COURT_STATUS.TAMAT) now = '<span class="badge badge-done">Tunggu Sah</span>';
+        else if (cur) now = `<span class="mono">${escapeHtml(cur.id)}</span> · Sedia`;
+        if (court && court.pengadil) now += ` <small class="muted">(${escapeHtml(court.pengadil)})</small>`;
+        const btn = g.aktif
+          ? `<button type="button" class="btn btn-danger btn-sm" data-court-toggle="${escapeHtml(g.id)}" data-aktif="0">⛔ Tutup</button>`
+          : `<button type="button" class="btn btn-primary btn-sm" data-court-toggle="${escapeHtml(g.id)}" data-aktif="1">✅ Aktifkan</button>`;
+        return `
+          <tr class="${g.aktif ? '' : 'court-off'}">
+            <td class="mono">${escapeHtml(g.id)}</td>
+            <td>${escapeHtml(g.nama)}</td>
+            <td><select class="select" style="padding:4px 8px;font-size:.8rem;" data-court-kat="${escapeHtml(g.id)}" aria-label="Kategori Gelanggang ${escapeHtml(g.id)}">
+              ${['SM', 'SR', COURT_KAT_OPEN].map(k => `<option value="${k}" ${k === g.kategori ? 'selected' : ''}>${k === COURT_KAT_OPEN ? 'SR + SM (Terbuka)' : k}</option>`).join('')}
+            </select></td>
+            <td>${statusHtml}</td>
+            <td class="num">${baki}</td>
+            <td>${now}</td>
+            <td>${btn}</td>
+          </tr>`;
+      }).join('');
+      renderCourtLocks();   // v1.18.0
+      updateCourtCfgInfo();
+    }
+
+    // Pilihan tapisan gelanggang dalam Jadual Penuh ikut senarai gelanggang semasa
+    function renderScheduleCourtFilter() {
+      const sel = document.getElementById('scheduleFilterCourt');
+      if (!sel) return;
+      const sig = state.courtConfig.map(g => `${g.id}:${g.aktif ? 1 : 0}`).join(',');
+      if (sel.dataset.sig === sig) return;
+      const val = sel.value || 'SEMUA';
+      const k = (state.ui && state.ui.kategori) || 'SEMUA';
+      sel.innerHTML = '<option value="SEMUA">Semua Gelanggang</option>' + state.courtConfig.map(g =>
+        `<option value="${escapeHtml(g.id)}" ${!courtAccepts(g, k) ? 'hidden' : ''}>${escapeHtml(g.nama)}${g.aktif ? '' : ' (Ditutup)'}</option>`).join('');
+      sel.value = state.courtConfig.some(g => g.id === val) ? val : 'SEMUA';
+      sel.dataset.sig = sig;
+    }
+
+    function courtGridCols(n) {
+      return n <= 4 ? Math.max(1, n) : (n <= 6 ? 3 : 4);
+    }
+
     // Selaraskan data lama (status Bahagian 2 / Excel) kepada status baharu.
     function normalizeState() {
       const legacyMatchStatus = {
@@ -6599,6 +7337,7 @@ void main() {
         state.courts.forEach(c => { if (c.pengadilId === oldId) { c.pengadil = null; c.pengadilId = null; c.dikunciPada = null; c.kunciBasi = false; } });
         state.session = null;
       }
+      ensureCourtConfig();   // v1.17.0: senarai gelanggang dinamik
     }
     normalizeState();
     saveState();
@@ -7532,9 +8271,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const rs = paused ? rehatScore(court) : null;
       const s1 = paused ? rs.s1 : (showLiveScore ? court.skorLiveP1 : 0);
       const s2 = paused ? rs.s2 : (showLiveScore ? court.skorLiveP2 : 0);
-      const katBadge = court.kategori === 'SR'
-        ? '<span class="badge badge-sr">Sek. Rendah</span>'
-        : '<span class="badge badge-sm">Sek. Menengah</span>';
+      const katBadge = courtKatBadge(court.kategori, true);
       const matchInfo = match
         ? `${escapeHtml(match.id)} · ${escapeHtml(match.peringkat)}${match.kumpulan && match.kumpulan !== '-' ? ' · Kump. ' + escapeHtml(match.kumpulan) : ''}`
         : 'Tiada perlawanan';
@@ -7613,7 +8350,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if (!grid) return;
       try { if (reconcileTamatCourts()) { saveState(); updateApprovalBadge(); renderApprovals(); } } catch (err) { console.error('[reconcileTamatCourts]', err); }
       const filter = (state.ui && state.ui.kategori) || 'SEMUA';
-      const courts = state.courts.filter(c => filter === 'SEMUA' || c.kategori === filter);
+      const courts = state.courts.filter(c => courtAccepts(c, filter));
+      grid.style.setProperty('--court-cols', String(Math.max(2, courtGridCols(courts.length))));
 
       if (!courts.length) {
         grid.innerHTML = `
@@ -8277,6 +9015,20 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
           const kind = mergeServerMatch(row);
           if (kind) { count[kind] += 1; if (kind === 'baharu') baru.push(String(row.id).toUpperCase()); }
         });
+        // v1.17.0: senarai gelanggang & susunan baki perlawanan daripada Google Sheets
+        let susunBerubah = applyServerCourtConfig(data.senaraiGelanggang);
+        if (!state.courtConfigPending && (courtCfgSync.changedAt || 0) < resultSync.lastPullAt - 2000) {
+          let pindah = 0;
+          data.matches.forEach(row => {
+            const m = getMatch(String(row.id || '').toUpperCase());
+            if (!m || m.status !== MATCH_STATUS.MENUNGGU || srvStatus(row.status) !== MATCH_STATUS.MENUNGGU) return;
+            const g = String(row.gelanggang || '').trim().toUpperCase();
+            if (g && g !== m.gelanggang && getCourt(g) && courtAccepts(getCourt(g), m.kategori)) { m.gelanggang = g; pindah += 1; }
+          });
+          if (pindah) { releaseMisplacedCourtMatches(); autoAssignCourts(null, { silent: true }); susunBerubah = true; }
+        }
+        retryPendingCourtConfig();
+        if (susunBerubah) { saveState(); refreshAllViews(); }
         resultSync.lastOk = nowIso();
         resultSync.error = '';
         const changed = count.baharu + count.disahkan + count.ditolak;
@@ -8422,7 +9174,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
     function scrollToCourt(courtId) {
       const court = getCourt(courtId);
-      if (court && state.ui.kategori !== 'SEMUA' && state.ui.kategori !== court.kategori) switchEvent('SEMUA');
+      if (court && !courtAccepts(court, state.ui.kategori || 'SEMUA')) switchEvent('SEMUA');
       const card = document.querySelector(`.court-card[data-court="${courtId}"]`);
       if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -8539,7 +9291,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         }
         // Abaikan jika kunci tempatan berubah semasa permintaan berjalan
         if (epoch !== lockEpoch || kickoffBusy || url !== getGasUrl()) return false;
-        const changed = applyServerLocks(data.kunci, opts);
+        const cfgChanged = applyServerCourtConfig(data.senaraiGelanggang);   // v1.17.0
+        const changed = applyServerLocks(data.kunci, opts) || cfgChanged;
         if (changed) { updateAuthUI(); refreshAllViews(); } else { renderRefDesk(); }
         return true;
       } catch (err) {
@@ -10185,8 +10938,9 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         publicLive.error = '';
         publicLive.fails = 0;
         publicLive.builtMs = Number.isFinite(built) && built > 0 ? built : (Number.isFinite(srvMs) ? srvMs : Date.now());
+        const cfgChanged = applyServerCourtConfig(data.senaraiGelanggang);   // v1.17.0
         const restoredCourt = restoreOwnedCourtFromLive();
-        const queueSynced = syncQueueFromBoard();
+        const queueSynced = syncQueueFromBoard() || cfgChanged;
         const healed = healStuckCourts();
         // Lukis semula kad gelanggang bila data berubah. Paparan projektor & standby juga
         // dilukis semula berkala supaya peraturan berasaskan masa sentiasa terpakai.
@@ -10791,7 +11545,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
     function localCourtQueue(courtId, excludeId) {
       return state.matches
         .filter(m => m.gelanggang === courtId && m.status === MATCH_STATUS.MENUNGGU && m.id !== excludeId)
-        .sort((a, b) => (a.kategori === b.kategori ? a.no - b.no : a.kategori.localeCompare(b.kategori)));
+        .sort(matchQueueCmp);
     }
 
     function srvMatchLike(x) {
@@ -10927,7 +11681,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       const isMine = m => !!team && !!m && (norm(m.namaP1) === norm(team) || norm(m.namaP2) === norm(team));
 
       const rows = state.courts
-        .filter(c => filter === 'SEMUA' || c.kategori === filter)
+        .filter(c => courtAccepts(c, filter))
         .map(c => ({ court: c, d: courtDisplay(c) }));
 
       // Senarai pasukan untuk carian
@@ -11042,7 +11796,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
       const queueFor = (cid, exclude) => state.matches
         .filter(m => m.gelanggang === cid && m.status === MATCH_STATUS.MENUNGGU && !exclude.has(m.id))
-        .sort((a, b) => (a.kategori === b.kategori ? a.no - b.no : a.kategori.localeCompare(b.kategori)));
+        .sort(matchQueueCmp);
 
       targets.forEach(court => {
         const current = getMatch(court.matchSemasa);
@@ -11549,12 +12303,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
        4.3 JADUAL PENUH (65 PERLAWANAN) & TUGASAN GELANGGANG
        --------------------------------------------------------- */
     function courtOptionsFor(kategori) {
-      return state.courts.filter(c => c.kategori === kategori);
+      return state.courts.filter(c => courtAccepts(c, kategori));
     }
 
     function renderSchedule() {
       const body = document.getElementById('scheduleBody');
       if (!body) return;
+      renderScheduleCourtFilter();   // v1.17.0
       const q = ((document.getElementById('scheduleSearch') || {}).value || '').trim().toUpperCase();
       const fCourt = (document.getElementById('scheduleFilterCourt') || {}).value || 'SEMUA';
       const fStatusRaw = (document.getElementById('scheduleFilterStatus') || {}).value || 'SEMUA';
@@ -11623,7 +12378,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         showToast('Perlawanan atau gelanggang tidak dijumpai.', 'error');
         return false;
       }
-      if (match.kategori !== court.kategori) {
+      if (!courtAccepts(court, match.kategori)) {
         showToast(`Gelanggang ${court.id} khas untuk ${court.kategoriNama}.`, 'error');
         renderSchedule();
         return false;
@@ -11647,6 +12402,13 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
 
       const oldCourt = match.gelanggang;
       match.gelanggang = court.id;
+      // v1.18.0: perlawanan yang dikunci ikut gelanggang baharu yang dipilih secara manual
+      if (state.courtKunciAcara && state.courtKunciAcara[match.id] && state.courtKunciAcara[match.id] !== court.id) {
+        state.courtKunciAcara[match.id] = court.id;
+        state.courtConfigVersi = Math.max(Date.now(), (Number(state.courtConfigVersi) || 0) + 1);
+        state.courtConfigPending = !!getGasUrl();
+        setTimeout(() => { if (canManageSystem()) pushCourtConfig(null).catch(() => {}); }, 0);
+      }
 
       if (placeNow) {
         court.matchSemasa = match.id;
@@ -11670,8 +12432,8 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       body.innerHTML = state.courts.map(c => {
         const current = getMatch(c.matchSemasa);
         const queue = state.matches
-          .filter(m => m.kategori === c.kategori && m.status === MATCH_STATUS.MENUNGGU)
-          .sort((a, b) => a.no - b.no);
+          .filter(m => courtAccepts(c, m.kategori) && m.status === MATCH_STATUS.MENUNGGU)
+          .sort(matchQueueCmp);
         const statusHtml = c.status === COURT_STATUS.LIVE
           ? '<span class="badge badge-live badge-dot">Live</span>'
           : (c.status === COURT_STATUS.TAMAT ? '<span class="badge badge-done badge-dot">Tamat</span>' : '<span class="badge badge-ready badge-dot">Sedia</span>');
@@ -11687,7 +12449,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         return `
           <tr>
             <td class="mono">${escapeHtml(c.id)}</td>
-            <td>${c.kategori === 'SR' ? '<span class="badge badge-sr">SR</span>' : '<span class="badge badge-sm">SM</span>'}</td>
+            <td>${courtKatBadge(c.kategori)}</td>
             <td>${matchCell}</td>
             <td>${statusHtml}</td>
           </tr>`;
@@ -11985,6 +12747,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       renderReferees();
       renderUsers();
       renderDrawSlots();
+      renderCourtManager();   // v1.17.0: Urus Gelanggang
       renderCourtAssign();
       renderAdminExtras();
     }
@@ -12013,7 +12776,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       });
       state.teams.forEach(t => { t.eventId = state.events[t.kategori].id; });
       state.matches.forEach(m => { m.eventId = state.events[m.kategori].id; });
-      state.courts.forEach(c => { c.eventId = state.events[c.kategori].id; });
+      state.courts.forEach(c => { c.eventId = (state.events[c.kategori] || {}).id || ''; });
       Object.assign(state, keep);
       normalizeState();
       ensureSettings();
@@ -13073,10 +13836,10 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
         Array.from(courtSel.options).forEach(o => {
           if (o.value === 'SEMUA') return;
           const c = getCourt(o.value);
-          o.hidden = !!c && k !== 'SEMUA' && c.kategori !== k;
+          o.hidden = !!c && !courtAccepts(c, k);
         });
         const sel = getCourt(courtSel.value);
-        if (sel && k !== 'SEMUA' && sel.kategori !== k) courtSel.value = 'SEMUA';
+        if (sel && !courtAccepts(sel, k)) courtSel.value = 'SEMUA';
       }
       saveState();
       refreshAllViews();
@@ -13709,6 +14472,7 @@ Log keluar akan MELEPASKAN kunci gelanggang dan pengadil lain boleh mengambil al
       if(opts.rebuild || grid.dataset.courts!==ids || !grid.querySelector('.proj-slot')){
         grid.innerHTML=state.courts.map(c=>`<div class="proj-slot" data-slot="${escapeHtml(c.id)}"></div>`).join('');
         grid.dataset.courts=ids;
+        grid.style.setProperty('--proj-cols', String(courtGridCols(state.courts.length)));
       }
       let live=0;
       state.courts.forEach(c=>{

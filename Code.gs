@@ -123,6 +123,26 @@ Amaran ini ialah arahan penyelenggaraan untuk AI, bukan kod yang boleh menerbitk
  *                - Kemas kini skor pengadil hanya menulis BARIS perlawanan yang berubah
  *                  (bukan seluruh jadual) -> penghantaran gol lebih pantas.
  *
+ *              + v1.9.9 - URUS GELANGGANG (MASTER ADMIN SAHAJA):
+ *                { action: 'urusGelanggang', adminKey, versi, senarai:[{id,nama,kategori,aktif}],
+ *                  matches:[{id, gelanggang}] }
+ *                - Tambah gelanggang baharu (cth. E), Aktifkan atau Tutup gelanggang.
+ *                - Senarai disimpan dalam Script Properties (SENARAI_GELANGGANG) & dikongsi
+ *                  kepada semua peranti melalui ?action=live / read / kunci / ping.
+ *                - Gelanggang DITUTUP: baki perlawanan (MENUNGGU GILIRAN) dipindahkan ke
+ *                  gelanggang AKTIF sahaja (kategori yang sama). Gelanggang yang sedang LIVE /
+ *                  dikunci pengadil / Rehat Kecemasan tidak boleh ditutup.
+ *                - Pengadil tidak boleh "Sepak Mula" di gelanggang yang ditutup.
+ *
+ *              + v1.10.0 - JANA SUSUNAN & GELANGGANG TERBUKA (MASTER ADMIN SAHAJA):
+ *                - Kategori gelanggang boleh 'SEMUA' (terbuka kepada SR & SM).
+ *                - 'Jana Susunan' (aplikasi) membuka semua gelanggang kepada semua kategori
+ *                  dan mengagih semula baki perlawanan (MENUNGGU GILIRAN) secara sekata.
+ *                  Perlawanan LIVE / Tunggu Sah / Rehat Kecemasan tidak diubah.
+ *                - senaraiGelanggang kini membawa 'susunan' {matchId: urutan} (giliran
+ *                  setiap gelanggang) & 'kunciAcara' {matchId: gelanggang} (Separuh Akhir /
+ *                  Tempat 3/4 / Akhir dikunci ke gelanggang tertentu sebelum dijana).
+ *
  *  Lajur dikesan melalui NAMA TAJUK (baris 1), jadi susunan lajur Bahagian 1
  *  boleh dikekalkan. Lajur yang tiada akan ditambah automatik di hujung.
  * =========================================================
@@ -140,9 +160,9 @@ const PEMBETULAN_HEADER = ['Masa', 'Versi', 'ID Match', 'Kategori', 'Peringkat',
   'Penalti Lama', 'Penalti Baharu', 'Sebab', 'Mod Rombakan', 'Perlawanan Terkesan', 'Oleh'];
 const TIMEZONE = 'Asia/Kuala_Lumpur';
 // FASA 4.1: versi API (aplikasi menyemak nilai ini untuk mengesan Code.gs lama)
-const API_VERSI = '1.9.8';   // v1.9.8: Backup & Restore (tab Sandaran_Data)
+const API_VERSI = '1.10.0';  // v1.10.0: Jana Susunan (gelanggang terbuka semua kategori + kunci Separuh Akhir / Akhir)
 const GILIRAN_MAX = 6;                     // bil. perlawanan seterusnya dipaparkan per gelanggang
-const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus', 'papanPintar', 'keputusanLewat', 'papanSegera', 'sandaran'];
+const API_CIRI = ['pengadil', 'kunciGelanggang', 'tangguh', 'pembetulan', 'rehatKecemasan', 'sahPengadil', 'petiKelulusan', 'giliranStandby', 'papanCache', 'sepakMulaTerus', 'papanPintar', 'keputusanLewat', 'papanSegera', 'sandaran', 'urusGelanggang', 'janaSusunan'];
 // v1.9.0: Papan live disimpan dalam CacheService supaya ?action=live sangat pantas
 // (paparan dashboard boleh disegerak setiap beberapa saat). Cache dibuang serta-merta
 // setiap kali ada penulisan (doPost), jadi data tidak pernah ketinggalan lebih ~1 tinjauan.
@@ -155,7 +175,7 @@ const LIVE_TERBIAR_MINIT = 40;             // v1.9.2: baris LIVE tanpa kunci & t
 const TANGGUH_PAPAN_MINIT = 20;            // v1.9.2: perlawanan ditangguh dipaparkan sebagai 'semasa' selama ini
 // v1.9.2: tindakan yang tidak mengubah papan live -> cache tidak dibuang
 const ACTIONS_TANPA_UBAH_PAPAN = ['ping', 'loginpengadil', 'statusgelanggang', 'senaraipengadil', 'logpembetulan',
-  'simpansandaran', 'senaraisandaran', 'ambilsandaran', 'padamsandaran'];
+  'simpansandaran', 'senaraisandaran', 'ambilsandaran', 'padamsandaran', 'senaraigelanggang'];
 // FASA 6: log pengesahan keputusan oleh pengadil (tambah sahaja, tidak ditulis ganti)
 const SHEET_SAH_PENGADIL = 'Log_Sah_Pengadil';
 const SAH_PENGADIL_HEADER = ['Masa', 'ID Match', 'Gelanggang', 'Pasukan 1', 'Skor', 'Pasukan 2', 'Menang Penalti', 'Pengadil', 'ID Pengadil'];
@@ -192,13 +212,24 @@ const PENGADIL_ACTIONS = [
   // Fasa 5: rehat kecemasan & ambil alih pengadil
   'rehatkecemasan', 'ambilalihgelanggang', 'sambungperlawanan',
   // v1.9.8: Backup & Restore (Master Admin sahaja)
-  'simpansandaran', 'senaraisandaran', 'ambilsandaran', 'padamsandaran'
+  'simpansandaran', 'senaraisandaran', 'ambilsandaran', 'padamsandaran',
+  // v1.9.9: Urus Gelanggang (Master Admin sahaja) & senarai gelanggang (semua)
+  'urusgelanggang', 'senaraigelanggang'
 ];
 const PENGADIL_LOGIN_MAX_GAGAL = 5;        // cubaan gagal sebelum dikunci
 const PENGADIL_LOGIN_KUNCI_SAAT = 300;     // tempoh kunci (5 minit)
 
 /* ---------- FASA 2: SESI PENGADIL & KUNCI GELANGGANG ---------- */
-const GELANGGANG_SAH = ['A', 'B', 'C', 'D'];
+// v1.9.9: senarai gelanggang kini DINAMIK (Master Admin boleh tambah / aktif / tutup).
+// Nilai lalai di bawah dipakai sehingga Master Admin menyimpan senarai baharu.
+const GELANGGANG_LALAI = [
+  { id: 'A', nama: 'Gelanggang A', kategori: 'SM', aktif: true },
+  { id: 'B', nama: 'Gelanggang B', kategori: 'SM', aktif: true },
+  { id: 'C', nama: 'Gelanggang C', kategori: 'SR', aktif: true },
+  { id: 'D', nama: 'Gelanggang D', kategori: 'SR', aktif: true }
+];
+const PROP_GELANGGANG = 'SENARAI_GELANGGANG';   // Script Properties (JSON)
+const GELANGGANG_MAX = 12;
 const KUNCI_HEADER = ['Gelanggang', 'ID Pengadil', 'Nama Pengadil', 'ID Match', 'Dikunci Pada', 'Aktiviti Terakhir',
   'Status Kunci', 'Data Rehat'];   // FASA 5: lajur 7 & 8 (Rehat Kecemasan)
 const KUNCI_STATUS_REHAT = 'REHAT KECEMASAN';
@@ -294,6 +325,7 @@ const FASA_MASA_MAP = {
    ?id=SR-01           -> satu perlawanan
    ?kategori=SR|SM     -> tapis kategori
    ?gelanggang=A..D    -> tapis gelanggang
+   ?action=gelanggang  -> senarai gelanggang (aktif / ditutup) - v1.9.9
    ?callback=namaFungsi -> JSONP
    ========================================================= */
 function doGet(e) {
@@ -302,13 +334,17 @@ function doGet(e) {
     const action = String(p.action || 'read').toLowerCase();
     if (action === 'ping') {
       return output_({ ok: true, message: 'Live Futsal PK KBB API aktif', versi: API_VERSI, ciri: API_CIRI,
-        sheetPengadil: SHEET_PENGADIL, masa: new Date().toISOString() }, p.callback);
+        sheetPengadil: SHEET_PENGADIL, senaraiGelanggang: bacaGelanggang_(), masa: new Date().toISOString() }, p.callback);
+    }
+    if (action === 'gelanggang' || action === 'senaraigelanggang') {
+      return output_({ ok: true, senaraiGelanggang: bacaGelanggang_(), masa: new Date().toISOString() }, p.callback);
     }
     if (action === 'live' || action === 'papanlive') {
       return output_(papanLiveCached_(), p.callback);
     }
     if (action === 'kunci' || action === 'statusgelanggang') {
-      return output_({ ok: true, masa: new Date().toISOString(), basiSaat: KUNCI_BASI_SAAT, kunci: statusKunci_() }, p.callback);
+      return output_({ ok: true, masa: new Date().toISOString(), basiSaat: KUNCI_BASI_SAAT, kunci: statusKunci_(),
+        senaraiGelanggang: bacaGelanggang_() }, p.callback);
     }
     if (action !== 'read') {
       return output_({ ok: false, error: 'Tindakan tidak dikenali: ' + action }, p.callback);
@@ -327,6 +363,7 @@ function doGet(e) {
       sheet: SHEET_JADUAL,
       count: rows.length,
       dikemaskini: new Date().toISOString(),
+      senaraiGelanggang: bacaGelanggang_(),   // v1.9.9
       matches: p.id ? undefined : rows,
       match: p.id ? (rows[0] || null) : undefined
     }, p.callback);
@@ -656,6 +693,8 @@ function handlePengadil_(action, body) {
     case 'rehatkecemasan':      return rehatKecemasan_(body);
     case 'ambilalihgelanggang': return ambilAlihGelanggang_(body);
     case 'sambungperlawanan':   return sambungPerlawanan_(body);
+    // v1.9.9: senarai gelanggang (semua peranti, tiada data sulit)
+    case 'senaraigelanggang':   return { ok: true, senaraiGelanggang: bacaGelanggang_() };
   }
 
   // FASA 4: sekat cubaan meneka PIN Master Admin
@@ -681,6 +720,8 @@ function handlePengadil_(action, body) {
     case 'senaraisandaran': return senaraiSandaran_();
     case 'ambilsandaran':   return ambilSandaran_(body.id);
     case 'padamsandaran':   return padamSandaran_(body.id);
+    // v1.9.9: Urus Gelanggang
+    case 'urusgelanggang':  return urusGelanggang_(body);
     default:                return { ok: false, error: 'Tindakan pengadil tidak dikenali.' };
   }
 }
@@ -956,7 +997,7 @@ function syncPengadil_(list) {
   const aktif = {};
   clean.forEach(function (p) { if (p.status === 'AKTIF') aktif[p.id] = p.nama; });
   const kdb = readKunci_();
-  GELANGGANG_SAH.forEach(function (g) {
+  gelanggangSah_().forEach(function (g) {
     const k = kdb.map[g];
     if (k && k.pengadilId && !aktif[k.pengadilId]) kosongKunci_(kdb.sheet, k);
   });
@@ -1056,9 +1097,176 @@ function sahkanSesi_(token) {
   return { ok: true, ref: ref, token: t };
 }
 
+/* ---------- v1.9.9: SENARAI GELANGGANG DINAMIK ---------- */
+let gelanggangCache_ = null;   // cache satu pelaksanaan sahaja
+
+function bersihSenaraiGelanggang_(list) {
+  const out = [];
+  const ada = {};
+  (Array.isArray(list) ? list : []).forEach(function (g) {
+    if (!g) return;
+    const id = String(g.id || '').trim().toUpperCase();
+    if (!/^[A-Z0-9]{1,3}$/.test(id) || ada[id]) return;
+    const kat = String(g.kategori || '').trim().toUpperCase();
+    if (kat !== 'SR' && kat !== 'SM' && kat !== 'SEMUA') return;   // v1.10.0: SEMUA = terbuka
+    ada[id] = true;
+    out.push({
+      id: id,
+      nama: String(g.nama || ('Gelanggang ' + id)).replace(/\s+/g, ' ').trim().slice(0, 40) || ('Gelanggang ' + id),
+      kategori: kat,
+      aktif: !(g.aktif === false || g.aktif === 'false')
+    });
+  });
+  return out.slice(0, GELANGGANG_MAX);
+}
+
+// v1.10.0: urutan giliran hasil Jana Susunan { 'SM-12': 0, 'SR-03': 1, ... }
+function bersihSusunan_(obj) {
+  const out = {};
+  if (!obj || typeof obj !== 'object') return out;
+  Object.keys(obj).slice(0, 200).forEach(function (k) {
+    const id = normMatchId_(k);
+    const n = Number(obj[k]);
+    if (id && isFinite(n) && n >= 0) out[id] = Math.floor(n);
+  });
+  return out;
+}
+
+// v1.10.0: Separuh Akhir / Tempat 3/4 / Akhir dikunci ke gelanggang { 'SM-30': 'A' }
+function bersihKunciAcara_(obj, senarai) {
+  const out = {};
+  if (!obj || typeof obj !== 'object') return out;
+  const sah = {};
+  (senarai || []).forEach(function (g) { sah[g.id] = true; });
+  Object.keys(obj).slice(0, 60).forEach(function (k) {
+    const id = normMatchId_(k);
+    const g = String(obj[k] || '').trim().toUpperCase();
+    if (id && sah[g]) out[id] = g;
+  });
+  return out;
+}
+
+// Gelanggang menerima kategori perlawanan? (SEMUA = terbuka kepada semua kategori)
+function gelanggangTerima_(g, kat) {
+  return !!g && (g.kategori === 'SEMUA' || g.kategori === kat);
+}
+
+function bacaGelanggang_() {
+  if (gelanggangCache_) return gelanggangCache_;
+  let v = null;
+  try { v = JSON.parse(PropertiesService.getScriptProperties().getProperty(PROP_GELANGGANG) || 'null'); } catch (err) { v = null; }
+  const senarai = v ? bersihSenaraiGelanggang_(v.senarai) : [];
+  gelanggangCache_ = senarai.length
+    ? { versi: Number(v.versi) || 0, senarai: senarai, dikemaskini: v.dikemaskini || null,
+        susunan: bersihSusunan_(v.susunan), kunciAcara: bersihKunciAcara_(v.kunciAcara, senarai) }
+    : { versi: 0, senarai: JSON.parse(JSON.stringify(GELANGGANG_LALAI)), dikemaskini: null, susunan: {}, kunciAcara: {} };
+  return gelanggangCache_;
+}
+
+// Semua gelanggang (aktif & ditutup) - untuk kunci, keputusan lewat & rekod lama
+function gelanggangSah_() {
+  return bacaGelanggang_().senarai.map(function (g) { return g.id; });
+}
+
+// Gelanggang AKTIF sahaja - untuk papan live & Sepak Mula
+function gelanggangAktif_() {
+  return bacaGelanggang_().senarai.filter(function (g) { return g.aktif; }).map(function (g) { return g.id; });
+}
+
+function isGelanggangAktif_(g) {
+  return gelanggangAktif_().indexOf(String(g || '').toUpperCase()) >= 0;
+}
+
+// Master Admin: simpan senarai gelanggang & pindahkan baki perlawanan ke gelanggang aktif
+function urusGelanggang_(body) {
+  const semasa = bacaGelanggang_();
+  const senarai = bersihSenaraiGelanggang_(body.senarai);
+  if (!senarai.length) return { ok: false, error: 'Senarai gelanggang kosong / tidak sah.', senaraiGelanggang: semasa };
+  const versi = Number(body.versi) || Date.now();
+  if (semasa.versi && versi < semasa.versi) {
+    return { ok: false, kod: 'LAPUK', error: 'Senarai gelanggang telah dikemas kini oleh peranti lain. Senarai terkini dimuatkan.',
+      senaraiGelanggang: semasa };
+  }
+  // Setiap kategori mesti ada sekurang-kurangnya satu gelanggang aktif
+  const katTanpa = ['SR', 'SM'].filter(function (k) {
+    return !senarai.some(function (g) { return g.aktif && gelanggangTerima_(g, k); });
+  });
+  if (katTanpa.length) {
+    return { ok: false, error: 'Mesti ada sekurang-kurangnya satu gelanggang AKTIF untuk ' + katTanpa.join(' & ') + '.', senaraiGelanggang: semasa };
+  }
+  const aktifBaru = {};
+  senarai.forEach(function (g) { if (g.aktif) aktifBaru[g.id] = g; });
+  const lamaAktif = {};
+  semasa.senarai.forEach(function (g) { if (g.aktif) lamaAktif[g.id] = true; });
+  const ditutup = Object.keys(lamaAktif).filter(function (id) { return !aktifBaru[id]; });
+
+  // Gelanggang yang sedang digunakan tidak boleh ditutup
+  const table = readTable_(getJadualSheet_());
+  if (ditutup.length) {
+    const db = readKunci_();
+    for (let i = 0; i < ditutup.length; i++) {
+      const g = ditutup[i];
+      const k = db.map[g];
+      if (k && (k.pengadilId || k.rehat)) {
+        return { ok: false, kod: 'SEDANG_DIGUNAKAN', error: 'Gelanggang ' + g + ' sedang dikunci pengadil' +
+          (k.nama ? ' (' + k.nama + ')' : '') + (k.rehat ? ' / Rehat Kecemasan' : '') + '. Lepaskan kunci dahulu.', senaraiGelanggang: semasa };
+      }
+      const live = table.rows.filter(function (r) {
+        return normId_(r.data.gelanggang) === g && statusBaris_(r.data) === 'LIVE';
+      })[0];
+      if (live) {
+        return { ok: false, kod: 'SEDANG_DIGUNAKAN', error: 'Gelanggang ' + g + ' masih ada perlawanan LIVE (' + live.data.id + '). Tamatkan / tangguh dahulu.',
+          senaraiGelanggang: semasa };
+      }
+    }
+  }
+
+  // Simpan senarai baharu
+  const simpan = { versi: versi, senarai: senarai, dikemaskini: new Date().toISOString(),
+    susunan: bersihSusunan_(body.susunan), kunciAcara: bersihKunciAcara_(body.kunciAcara, senarai) };
+  PropertiesService.getScriptProperties().setProperty(PROP_GELANGGANG, JSON.stringify(simpan));
+  gelanggangCache_ = simpan;
+  try { getKunciSheet_(); } catch (err) { console.warn('getKunciSheet_', err); }
+
+  // Pindahan baki perlawanan (dikira oleh aplikasi Master Admin) - MENUNGGU GILIRAN sahaja
+  const byId = {};
+  table.rows.forEach(function (r) { byId[String(r.data.id).toUpperCase()] = r.data; });
+  const kemas = [];
+  const diambil = {};
+  (Array.isArray(body.matches) ? body.matches : []).forEach(function (x) {
+    const id = normMatchId_(x && x.id);
+    const g = String(x && x.gelanggang || '').trim().toUpperCase();
+    const d = id ? byId[id] : null;
+    if (!d || diambil[id] || !aktifBaru[g]) return;
+    if (statusBaris_(d) !== 'MENUNGGU GILIRAN') return;
+    if (!gelanggangTerima_(aktifBaru[g], String(d.kategori || id.slice(0, 2)).toUpperCase())) return;
+    diambil[id] = true;
+    if (normId_(d.gelanggang) !== g) kemas.push({ id: id, gelanggang: g });
+  });
+  // Jaring keselamatan: baki perlawanan yang masih di gelanggang ditutup -> gelanggang aktif pertama
+  table.rows.forEach(function (r) {
+    const d = r.data;
+    const id = String(d.id || '').toUpperCase();
+    if (diambil[id] || statusBaris_(d) !== 'MENUNGGU GILIRAN') return;
+    const g = normId_(d.gelanggang);
+    if (aktifBaru[g]) return;
+    const kat = String(d.kategori || id.slice(0, 2)).toUpperCase();
+    const ganti = senarai.filter(function (x) { return x.aktif && gelanggangTerima_(x, kat); })[0];
+    if (ganti) kemas.push({ id: id, gelanggang: ganti.id });
+  });
+  if (kemas.length) upsertMatches_(kemas, { admin: true });
+  try { bustPapanCache_(); } catch (err) { console.warn('bustPapanCache_', err); }   // v1.10.0: giliran baharu terus kelihatan
+
+  return { ok: true, senaraiGelanggang: simpan, dipindah: kemas.length, ditutup: ditutup, masa: new Date().toISOString() };
+}
+
+function normId_(v) {
+  return String(v || '').trim().toUpperCase();
+}
+
 function normGelanggang_(g) {
   const v = String(g || '').trim().toUpperCase();
-  return GELANGGANG_SAH.indexOf(v) >= 0 ? v : '';
+  return gelanggangSah_().indexOf(v) >= 0 ? v : '';
 }
 
 function normMatchId_(id) {
@@ -1086,7 +1294,7 @@ function getKunciSheet_() {
   const ada = last >= 2
     ? sheet.getRange(2, 1, last - 1, 1).getValues().map(function (r) { return String(r[0]).trim().toUpperCase(); })
     : [];
-  const tambah = GELANGGANG_SAH
+  const tambah = gelanggangSah_()
     .filter(function (g) { return ada.indexOf(g) < 0; })
     .map(function (g) { return [g, '', '', '', '', '', '', '']; });
   if (tambah.length) {
@@ -1103,7 +1311,7 @@ function readKunci_() {
   if (last >= 2) {
     sheet.getRange(2, 1, last - 1, KUNCI_HEADER.length).getValues().forEach(function (r, i) {
       const g = String(r[0]).trim().toUpperCase();
-      if (GELANGGANG_SAH.indexOf(g) < 0 || map[g]) return;
+      if (gelanggangSah_().indexOf(g) < 0 || map[g]) return;
       map[g] = {
         row: i + 2,
         gelanggang: g,
@@ -1179,7 +1387,7 @@ function statusKunci_(db) {
   db = db || readKunci_();
   const now = Date.now();
   const out = {};
-  GELANGGANG_SAH.forEach(function (g) { out[g] = kunciAwam_(db.map[g], now); });
+  gelanggangSah_().forEach(function (g) { out[g] = kunciAwam_(db.map[g], now); });
   return out;
 }
 
@@ -1188,7 +1396,7 @@ function lockedMatchIds_() {
   const out = {};
   try {
     const db = readKunci_();
-    GELANGGANG_SAH.forEach(function (g) {
+    gelanggangSah_().forEach(function (g) {
       const k = db.map[g];
       if (k && k.pengadilId && k.matchId) out[k.matchId] = k.nama;
       // FASA 5: perlawanan dalam Rehat Kecemasan kekal dilindungi walaupun tiada pengadil
@@ -1211,7 +1419,7 @@ function lepasKunciMuktamad_() {
     if (st === 'SELESAI' && sah === 'DISAHKAN') muktamad[String(r.data.id).toUpperCase()] = true;
   });
   let n = 0;
-  GELANGGANG_SAH.forEach(function (g) {
+  gelanggangSah_().forEach(function (g) {
     const k = db.map[g];
     if (k && k.matchId && muktamad[String(k.matchId).toUpperCase()]) { kosongKunci_(db.sheet, k, true); n++; }
   });
@@ -1222,7 +1430,7 @@ function lepasKunciPengadil_(refId) {
   if (!refId) return 0;
   const db = readKunci_();
   let n = 0;
-  GELANGGANG_SAH.forEach(function (g) {
+  gelanggangSah_().forEach(function (g) {
     const k = db.map[g];
     if (k && k.pengadilId === refId) { kosongKunci_(db.sheet, k); n++; }
   });
@@ -1234,7 +1442,7 @@ function kemasKunciPengadil_(p) {
   if (!p || !p.id) return;
   if (p.status !== 'AKTIF') { lepasKunciPengadil_(p.id); return; }
   const db = readKunci_();
-  GELANGGANG_SAH.forEach(function (g) {
+  gelanggangSah_().forEach(function (g) {
     const k = db.map[g];
     if (k && k.pengadilId === p.id && k.nama !== p.nama) { k.nama = p.nama; tulisKunci_(db.sheet, k); }
   });
@@ -1252,6 +1460,12 @@ function kunciGelanggang_(body) {
   const now = new Date();
   const nowMs = now.getTime();
   const perbaharui = body.perbaharui === true || body.perbaharui === 'true';
+
+  // v1.9.9: gelanggang DITUTUP oleh Master Admin -> tiada Sepak Mula / kunci baharu
+  if (!perbaharui && !isGelanggangAktif_(g) && !(k && k.pengadilId === ref.id)) {
+    return { ok: false, kod: 'DITUTUP', error: 'Gelanggang ' + g + ' telah DITUTUP oleh Master Admin. Sila pilih gelanggang lain.',
+      kunci: statusKunci_(db) };
+  }
 
   // FASA 5: gelanggang dalam Rehat Kecemasan hanya boleh diambil alih melalui ambilAlihGelanggang
   if (!perbaharui && k.rehat && k.pengadilId !== ref.id) {
@@ -1282,7 +1496,7 @@ function kunciGelanggang_(body) {
   const sediaAda = k.pengadilId === ref.id;
 
   // Seorang pengadil hanya memegang satu gelanggang
-  GELANGGANG_SAH.forEach(function (o) {
+  gelanggangSah_().forEach(function (o) {
     const x = db.map[o];
     if (o !== g && x && x.pengadilId === ref.id) kosongKunci_(db.sheet, x);
   });
@@ -1327,7 +1541,7 @@ function lepasGelanggang_(body) {
   const g = normGelanggang_(body.gelanggang);
   const db = readKunci_();
   if (isMasterAdmin_(body)) {
-    (g ? [g] : GELANGGANG_SAH).forEach(function (x) {
+    (g ? [g] : gelanggangSah_()).forEach(function (x) {
       const k = db.map[x];
       if (k && k.pengadilId) kosongKunci_(db.sheet, k);
     });
@@ -1335,7 +1549,7 @@ function lepasGelanggang_(body) {
   }
   const sesi = sahkanSesi_(body.token);
   if (!sesi.ok) return sesi;
-  const targets = g ? [g] : GELANGGANG_SAH;
+  const targets = g ? [g] : gelanggangSah_();
   for (let i = 0; i < targets.length; i++) {
     const k = db.map[targets[i]];
     if (!k || !k.pengadilId) continue;
@@ -1450,7 +1664,7 @@ function keputusanLewat_(body, g, id, ref, db) {
     return { ok: false, error: 'Perlawanan ' + id + ' bukan di Gelanggang ' + g + '.' };
   }
   let pemegang = null;
-  GELANGGANG_SAH.forEach(function (x) {
+  gelanggangSah_().forEach(function (x) {
     const kk = db.map[x];
     if (!pemegang && kk && kk.matchId === id && (kk.pengadilId || kk.rehat)) pemegang = kk;
   });
@@ -1651,7 +1865,7 @@ function papanLive_() {
   semua.forEach(function (d) { byId[String(d.id).toUpperCase()] = d; });
   // Perlawanan yang dipegang kunci (mana-mana gelanggang) tidak dianggap terbiar
   const dikunci = {};
-  GELANGGANG_SAH.forEach(function (g) {
+  gelanggangSah_().forEach(function (g) {
     const k = kunci.map[g];
     if (k && k.matchId && (k.pengadilId || k.rehat)) dikunci[k.matchId] = true;
   });
@@ -1659,8 +1873,9 @@ function papanLive_() {
   const tangguhMs = TANGGUH_PAPAN_MINIT * 60 * 1000;
   const terkiniDahulu = function (a, b) { return masaBarisMs_(b) - masaBarisMs_(a); };
 
+  const susunan = bacaGelanggang_().susunan || {};   // v1.10.0: urutan Jana Susunan
   const out = {};
-  GELANGGANG_SAH.forEach(function (g) {
+  gelanggangAktif_().forEach(function (g) {   // v1.9.9: gelanggang AKTIF sahaja
     const k = kunci.map[g];
     const diGelanggang = semua.filter(function (d) { return normGelanggang_(d.gelanggang) === g; });
     let m = null;
@@ -1701,6 +1916,10 @@ function papanLive_() {
       if (statusBaris_(d) !== 'MENUNGGU GILIRAN') return false;
       return String(d.id).toUpperCase() !== mId;
     }).sort(function (a, b) {
+      const ra = susunan[String(a.id).toUpperCase()], rb = susunan[String(b.id).toUpperCase()];
+      const ada = typeof ra === 'number', adb = typeof rb === 'number';
+      if (ada && adb && ra !== rb) return ra - rb;
+      if (ada !== adb) return ada ? -1 : 1;
       const ka = String(a.kategori || ''), kb = String(b.kategori || '');
       if (ka !== kb) return ka.localeCompare(kb);
       const na = Number(a.no) || 0, nb = Number(b.no) || 0;
@@ -1738,7 +1957,7 @@ function papanLive_() {
       kemaskini: m ? toIso_(m.kemaskini) : null
     };
   });
-  return { ok: true, versi: API_VERSI, masa: new Date().toISOString(), gelanggang: out };
+  return { ok: true, versi: API_VERSI, masa: new Date().toISOString(), gelanggang: out, senaraiGelanggang: bacaGelanggang_() };
 }
 
 /* =========================================================
@@ -1847,8 +2066,8 @@ function ambilAlihGelanggang_(body) {
     };
   }
   // Pengadil ini tidak boleh sedang memegang perlawanan di gelanggang lain
-  for (let i = 0; i < GELANGGANG_SAH.length; i++) {
-    const o = GELANGGANG_SAH[i];
+  for (let i = 0; i < gelanggangSah_().length; i++) {
+    const o = gelanggangSah_()[i];
     const x = db.map[o];
     if (o === g || !x || x.pengadilId !== ref.id) continue;
     if (x.matchId || x.rehat) {
@@ -2421,4 +2640,10 @@ function testRehatKecemasan() {
   call({ action: 'tangguhAdmin', adminKey: key, gelanggang: 'A', matchId: 'SM-01', sebab: 'Tamat ujian' });
   call({ action: 'logKeluarPengadil', token: a.token });
   call({ action: 'logKeluarPengadil', token: b.token });
+}
+
+// v1.9.9: Ujian Urus Gelanggang (jalankan dari editor). Tidak mengubah apa-apa - hanya papar senarai.
+function testSenaraiGelanggang() {
+  Logger.log(JSON.stringify(bacaGelanggang_()));
+  Logger.log('Aktif: ' + gelanggangAktif_().join(', '));
 }
